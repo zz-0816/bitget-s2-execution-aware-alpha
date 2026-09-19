@@ -246,10 +246,17 @@ def render(recs):
                   "| 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |",
                   "|---|---|---|---|---|---|---|"]
         for r in rs:
-            lines.append("| `%s` | %s | %s | %s | `%s` | %s | %s |"
+            # ⚠️ 运行期文件与本地派生物的哈希**只作参考**，不参与核验。
+            #    直接印一个哈希出来，读者很容易误以为它是契约值 —— 明确标出来。
+            #    标记放在反引号**外面**：`--verify` 是按 `` `hash` `` 找行的。
+            sha = "`%s`" % r["sha"] if r["sha"] else "—"
+            if cls == RUNTIME and r["sha"]:
+                sha += " （参考值，运行期会变）"
+            elif cls == DERIVED and r["sha"]:
+                sha += " （重建后会变）"
+            lines.append("| `%s` | %s | %s | %s | %s | %s | %s |"
                          % (r["rel"], r["status"], format(r["bytes"], ","),
-                            format(r["rows"], ","), r["sha"] or "—",
-                            r["why"], r["by"]))
+                            format(r["rows"], ","), sha, r["why"], r["by"]))
         lines.append("")
     return "\n".join(lines) + "\n"
 

@@ -1,8 +1,8 @@
 # 项目二数据快照（只读引用项目一的采样结果）
 
-- 清单生成：**2026-09-19 07:28 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
+- 清单生成：**2026-09-19 15:53 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
 - 上游导出脚本：`tools/export_p2_snapshot.py`（**项目一仓库内**，可重跑）
-- 合计：**39.6 MB**，26 项（其中冻结快照 16 项）
+- 合计：**40.0 MB**，27 项（其中冻结快照 16 项）
 
 ## ⚠️ 四条必须知道的边界
 
@@ -72,19 +72,20 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 
 | 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |
 |---|---|---|---|---|---|---|
-| `data/derived/rag_index.json` | **本仓库重建** | 1,527,016 | 0 | `6a18c2b1e74c05bc` | RAG 索引（本仓库口径文档 + 本仓库决策案例） | python common/rag_memory.py --build |
-| `data/reports/debate-NVDA-20231114T221320Z.json` | 本项目生成 | 45,468 | 0 | `190cd5a76c8c2cf8` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260917T181814Z-synthetic-viable.json` | 本项目生成 | 33,537 | 0 | `269992098af2a115` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260918T051936Z.json` | 本项目生成 | 33,644 | 0 | `01cb9227095f74d9` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260918T152117Z.json` | 本项目生成 | 39,934 | 0 | `ef2e20162fb61bde` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260918T152138Z.json` | 本项目生成 | 40,076 | 0 | `8af27d8b2848f5cf` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260918T165129Z.json` | 本项目生成 | 42,596 | 0 | `710aa63762771848` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260918T165244Z.json` | 本项目生成 | 46,877 | 0 | `4ba739e028c24900` | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/derived/rag_index.json` | **本仓库重建** | 1,945,238 | 0 | `7a795ae991ef6942` （重建后会变） | RAG 索引（本仓库口径文档 + 本仓库决策案例） | python common/rag_memory.py --build |
+| `data/reports/debate-NVDA-20231114T221320Z.json` | 本项目生成 | 45,468 | 0 | `190cd5a76c8c2cf8` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260917T181814Z-synthetic-viable.json` | 本项目生成 | 33,537 | 0 | `269992098af2a115` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260918T051936Z.json` | 本项目生成 | 33,644 | 0 | `01cb9227095f74d9` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260918T152117Z.json` | 本项目生成 | 39,934 | 0 | `ef2e20162fb61bde` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260918T152138Z.json` | 本项目生成 | 40,076 | 0 | `8af27d8b2848f5cf` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260918T165129Z.json` | 本项目生成 | 42,596 | 0 | `710aa63762771848` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
+| `data/reports/debate-NVDA-20260918T165244Z.json` | 本项目生成 | 46,877 | 0 | `4ba739e028c24900` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 
 ### ③ 运行期可变 —— 采样/事件驱动会写它们，哈希只作参考，**不作为核验依据**
 
 | 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |
 |---|---|---|---|---|---|---|
-| `data/derived/news_latest.json` | 运行期写入 | 38,606 | 0 | `31d0db34f56835d4` | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
-| `data/derived/news_state.json` | 运行期写入 | 9,469 | 0 | `64250591a2605dd3` | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
+| `data/derived/event_driven_state.json` | 本项目生成 | 4,759 | 0 | `1abeeacae97f06e1` （参考值，运行期会变） | 事件驱动闸门的判定缓存（复用上次 LLM 判断 + TTL） | python project2/event_gate.py --selftest |
+| `data/derived/news_latest.json` | 运行期写入 | 38,606 | 0 | `31d0db34f56835d4` （参考值，运行期会变） | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
+| `data/derived/news_state.json` | 运行期写入 | 9,469 | 0 | `a0acd1f7a4e3bc04` （参考值，运行期会变） | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
 

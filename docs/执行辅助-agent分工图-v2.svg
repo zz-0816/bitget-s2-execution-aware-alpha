@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1560" viewBox="0 0 1280 1560" font-family="'Microsoft YaHei','PingFang SC',Segoe UI,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6b7c"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c0392b"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f9e5f"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="1370" fill="#f7f9fb"/>
+
+  <!-- ============ 标题 ============ -->
+  <text x="36" y="48" font-size="26" font-weight="700" fill="#1b2733">执行辅助 · Agent 分工图 v2（优化方案）</text>
+  <text x="36" y="78" font-size="14.5" fill="#5b6b7c">赛道三 AI Trading Desk · 具名子主题「执行辅助」 —— trader 决策后，AI 如何负责<tspan font-weight="700" fill="#1b2733">拆单、盘口深度分析与滑点管理</tspan></text>
+  <text x="36" y="100" font-size="14.5" fill="#5b6b7c">v1 是「开仓前的一次性决策」；v2 把它补成<tspan font-weight="700" fill="#1b2733">执行中的闭环</tspan>：<tspan fill="#2f9e5f" font-weight="700">绿色 = 本方案新增</tspan>，其余为现有实现（已可跑、可自检）</text>
+
+  <!-- ============ 输入层 ============ -->
+  <rect x="36" y="118" width="396" height="86" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="54" y="144" font-size="14" font-weight="700" fill="#1b5a8a">① 自采数据（只读）</text>
+  <text x="54" y="168" font-size="12.5" fill="#33475b">盘口 5 档 · 逐笔成交 · 点差/中间价 · 费率</text>
+  <text x="54" y="190" font-size="12" fill="#8a97a6">交易所无历史接口 → 停止采样即永久丢失</text>
+
+  <rect x="442" y="118" width="396" height="86" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="460" y="144" font-size="14" font-weight="700" fill="#1b5a8a">② 口径（唯一实现）</text>
+  <text x="460" y="168" font-size="12.5" fill="#33475b">route ≠ session · time_basis（决策基准时间）</text>
+  <text x="460" y="190" font-size="12" fill="#8a97a6">全项目只此一处实现，其它一律 import</text>
+
+  <rect x="848" y="118" width="396" height="86" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="866" y="144" font-size="14" font-weight="700" fill="#1b5a8a">③ 事件源</text>
+  <text x="866" y="168" font-size="12.5" fill="#33475b">SEC EDGAR 一手申报 · 官方 RSS · 财报日历</text>
+  <text x="866" y="190" font-size="12" fill="#8a97a6">EDGAR 重大申报 → 跳过缓存立即重判</text>
+
+  <line x1="640" y1="206" x2="640" y2="238" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 感知层 ============ -->
+  <text x="36" y="258" font-size="16" font-weight="700" fill="#1b2733">① 感知层 · 7 路独立取证</text>
+  <text x="300" y="258" font-size="13" fill="#8a97a6">每路只拿自己那一路数据，互不读对方结论</text>
+
+  <rect x="36" y="272" width="290" height="96" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="52" y="296" font-size="13.5" font-weight="700" fill="#1b5a8a">📊 基差成本 analyst_basis</text>
+  <text x="52" y="318" font-size="12" fill="#33475b">摩擦预算 · 资金费 48h 收入</text>
+  <text x="52" y="338" font-size="12" fill="#33475b">净收益 vs 门槛 11.34 bp</text>
+  <text x="52" y="358" font-size="11.5" fill="#8a97a6">conf 0.80 ｜ 证据 5 条</text>
+
+  <rect x="352" y="272" width="290" height="96" rx="9" fill="#f2f4f7" stroke="#98a4b3" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="368" y="296" font-size="13.5" font-weight="700" fill="#5b6b7c">😱 情绪拥挤度 analyst_sentiment</text>
+  <text x="368" y="318" font-size="12" fill="#33475b">资金费结构（正费率占比）</text>
+  <text x="368" y="338" font-size="12" fill="#8a6242">⚠️ 源不可用 → conf 压到 0.45</text>
+  <text x="368" y="358" font-size="11.5" fill="#8a97a6">建议：降为可选路 / 换可自采替代源</text>
+
+  <rect x="668" y="272" width="290" height="96" rx="9" fill="#f3e9fb" stroke="#7a4ac4" stroke-width="1.5"/>
+  <text x="684" y="296" font-size="13.5" font-weight="700" fill="#5a2f9e">📰 事件新闻 analyst_news</text>
+  <text x="684" y="318" font-size="12" fill="#33475b">LLM 在运行期的<tspan font-weight="700">唯一</tspan>职责</text>
+  <text x="684" y="338" font-size="12" fill="#33475b">reason 必须能回溯到标题</text>
+  <text x="684" y="358" font-size="11.5" fill="#8a97a6">prompt v3 + SHA256 指纹</text>
+
+  <rect x="984" y="272" width="260" height="96" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="1000" y="296" font-size="13.5" font-weight="700" fill="#1b5a8a">📈 盘口与成交 analyst_technical</text>
+  <text x="1000" y="318" font-size="12" fill="#33475b">成交率 · 逆向选择 f_dmid</text>
+  <text x="1000" y="338" font-size="12" fill="#33475b">盘口形状（我方独有）</text>
+  <text x="1000" y="358" font-size="11.5" fill="#8a97a6">conf 0.70 ｜ 证据 10 条</text>
+
+  <rect x="36" y="382" width="290" height="96" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.5"/>
+  <text x="52" y="406" font-size="13.5" font-weight="700" fill="#1b5a8a">🛡️ 执行风险 analyst_execution_risk</text>
+  <text x="52" y="428" font-size="12" fill="#33475b">把"这一单可能怎么死"</text>
+  <text x="52" y="448" font-size="12" fill="#33475b">写成<tspan font-weight="700">可证伪假设</tspan></text>
+  <text x="52" y="468" font-size="11.5" fill="#8a97a6">四要素齐备，缺一即丢弃并留痕</text>
+
+  <rect x="352" y="382" width="290" height="96" rx="9" fill="#e9fbef" stroke="#2f9e5f" stroke-width="2"/>
+  <rect x="556" y="374" width="76" height="20" rx="10" fill="#2f9e5f"/>
+  <text x="594" y="388" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">新增</text>
+  <text x="368" y="406" font-size="13.5" font-weight="700" fill="#1d6b41">🔬 微观结构 microstructure</text>
+  <text x="368" y="428" font-size="12" fill="#33475b">队列位置估计 · 撤单率</text>
+  <text x="368" y="448" font-size="12" fill="#33475b">盘口不平衡 · 点差时序波动</text>
+  <text x="368" y="468" font-size="11.5" fill="#2f9e5f">补的是现成局限：无挂单队列位置模型</text>
+
+  <rect x="668" y="382" width="290" height="96" rx="9" fill="#e9fbef" stroke="#2f9e5f" stroke-width="2"/>
+  <rect x="872" y="374" width="76" height="20" rx="10" fill="#2f9e5f"/>
+  <text x="910" y="388" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">新增</text>
+  <text x="684" y="406" font-size="13.5" font-weight="700" fill="#1d6b41">⏱️ 执行进度 execution_tracker</text>
+  <text x="684" y="428" font-size="12" fill="#33475b">挂单/部分成交的实际进度</text>
+  <text x="684" y="448" font-size="12" fill="#33475b">vs 预期（按证伪条件监控）</text>
+  <text x="684" y="468" font-size="11.5" fill="#2f9e5f">补的是结构性缺口：只有开仓前一次</text>
+
+  <rect x="984" y="382" width="260" height="96" rx="9" fill="#fdecea" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="1000" y="408" font-size="13.5" font-weight="700" fill="#8a2b1d">🔴 一条铁律（对全部 7 路）</text>
+  <text x="1000" y="432" font-size="12" fill="#33475b">没有引用<tspan font-weight="700">已实测的量</tspan>的结论</text>
+  <text x="1000" y="452" font-size="12.5" font-weight="700" fill="#8a2b1d">一律作废</text>
+  <text x="1000" y="472" font-size="11.5" fill="#8a97a6">缺证据 → 不进辩论层（validate()）</text>
+
+  <line x1="640" y1="490" x2="640" y2="520" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 对抗层 ============ -->
+  <rect x="36" y="526" width="1208" height="118" rx="10" fill="#ffffff" stroke="#4a90c4" stroke-width="1.6"/>
+  <text x="54" y="552" font-size="16" font-weight="700" fill="#1b2733">② 对抗层 · 多空辩论（强制对抗，不站中立）</text>
+  <rect x="54" y="566" width="250" height="60" rx="8" fill="#e9f7ef" stroke="#2f9e5f" stroke-width="1.4"/>
+  <text x="70" y="590" font-size="13" font-weight="700" fill="#1d6b41">🐂 多头立论</text>
+  <text x="70" y="612" font-size="11.5" fill="#33475b">只引用与自己立场一致的结论</text>
+  <rect x="330" y="566" width="250" height="60" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="346" y="590" font-size="13" font-weight="700" fill="#8a2b1d">🐻 空头立论</text>
+  <text x="346" y="612" font-size="11.5" fill="#33475b">每条论点必须给<tspan font-weight="700">证伪条件</tspan></text>
+  <rect x="606" y="566" width="290" height="60" rx="8" fill="#fff8e6" stroke="#d9a441" stroke-width="1.4"/>
+  <text x="622" y="590" font-size="13" font-weight="700" fill="#8a6412">⚔️ 交叉质证（结构上防各说各话）</text>
+  <text x="622" y="612" font-size="11.5" fill="#33475b">必须指名对方最强一条 + 复述其证伪条件</text>
+  <rect x="922" y="566" width="304" height="60" rx="8" fill="#fff8e6" stroke="#d9a441" stroke-width="1.4"/>
+  <text x="938" y="588" font-size="13" font-weight="700" fill="#8a6412">裁决（确定性代码，不是 LLM）</text>
+  <text x="938" y="608" font-size="11.5" fill="#33475b">得分 = Σ(置信度 × 证据强度)；差值 ≥0.25 才有倾向</text>
+  <text x="938" y="624" font-size="11.5" fill="#8a97a6">同一证伪条件只算一条｜方向矛盾 −0.15/条</text>
+
+  <line x1="640" y1="650" x2="640" y2="680" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 事件闸门 ============ -->
+  <rect x="36" y="686" width="1208" height="106" rx="10" fill="#f3e9fb" stroke="#7a4ac4" stroke-width="1.8"/>
+  <text x="54" y="712" font-size="16" font-weight="700" fill="#5a2f9e">③ 事件闸门 · LLM 的唯一职责（+ 确定性日历，取更严的一侧）</text>
+  <text x="54" y="736" font-size="12.5" fill="#33475b">输出 severity ∈ none / caution / block ｜ prompt 版本化 + SHA256 指纹进留痕 ｜ 无 key 时如实标注"本次未使用 LLM"</text>
+  <rect x="54" y="748" width="1172" height="32" rx="7" fill="#fdecea" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="70" y="769" font-size="13" font-weight="700" fill="#8a2b1d">🔴 硬闸门：severity = block → 挂单类方案直接作废（agent 与 LLM 都不能推翻）</text>
+  <text x="700" y="769" font-size="12" fill="#8a2b1d">v2 修复：LLM 判出的 block 现在真的进硬闸门（此前只到辩论层）</text>
+
+  <line x1="640" y1="798" x2="640" y2="828" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 执行层 ============ -->
+  <text x="36" y="848" font-size="16" font-weight="700" fill="#1b2733">④ 执行层 · 把「做不做」变成可执行订单</text>
+
+  <rect x="36" y="862" width="396" height="126" rx="9" fill="#e9fbef" stroke="#2f9e5f" stroke-width="2"/>
+  <rect x="356" y="854" width="76" height="20" rx="10" fill="#2f9e5f"/>
+  <text x="394" y="868" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">新增</text>
+  <text x="52" y="892" font-size="13.5" font-weight="700" fill="#1d6b41">✂️ 拆单规划器 slice_planner</text>
+  <text x="52" y="914" font-size="12" fill="#33475b">按流动性自适应，替代固定 2000 USD 粒度</text>
+  <text x="52" y="934" font-size="12" fill="#33475b">给出笔数 + 时间表（窗口内铺开）</text>
+  <text x="52" y="956" font-size="11.5" fill="#2f9e5f">补：拆单粒度对流动性不敏感</text>
+  <text x="52" y="976" font-size="11.5" fill="#8a97a6">⚠️ 确定性算法，不是 agent（不能产出数字）</text>
+
+  <rect x="442" y="862" width="396" height="126" rx="9" fill="#eaf3fb" stroke="#4a90c4" stroke-width="1.6"/>
+  <text x="458" y="892" font-size="13.5" font-weight="700" fill="#1b5a8a">💰 交易员 trader（现有）</text>
+  <text x="458" y="914" font-size="12" fill="#33475b">方式 = argmin(全挂单 / 现货挂+永续吃 / 全吃单)</text>
+  <text x="458" y="934" font-size="12" fill="#33475b">规模 = min(请求, 可捕获名义额, 首档深度×25%)</text>
+  <text x="458" y="954" font-size="12" fill="#33475b">价位 = 中价 ± 实测半幅点差（不做价格预测）</text>
+  <text x="458" y="976" font-size="11.5" fill="#8a97a6">不新造阈值、不做价格预测</text>
+
+  <rect x="848" y="862" width="396" height="126" rx="9" fill="#e9fbef" stroke="#2f9e5f" stroke-width="2"/>
+  <rect x="1168" y="854" width="76" height="20" rx="10" fill="#2f9e5f"/>
+  <text x="1206" y="868" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">新增</text>
+  <text x="864" y="892" font-size="13.5" font-weight="700" fill="#1d6b41">⏱️ 执行进度官（执行中闭环）</text>
+  <text x="864" y="914" font-size="12" fill="#33475b">成交进度 vs 预期 → 未达则触发证伪条件</text>
+  <text x="864" y="934" font-size="12" fill="#33475b">建议动作：撤单 / 改价 / 追单 / 降级吃单</text>
+  <text x="864" y="956" font-size="11.5" fill="#2f9e5f">补：挂单没成交时没人负责</text>
+  <text x="864" y="976" font-size="11.5" fill="#8a97a6">⚠️ 只提"该复核"的触发条件，不产出数字</text>
+
+  <line x1="640" y1="994" x2="640" y2="1024" stroke="#c0392b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <!-- ============ 风控官 ============ -->
+  <rect x="36" y="1030" width="1208" height="104" rx="10" fill="#fdecea" stroke="#c0392b" stroke-width="1.8"/>
+  <text x="54" y="1056" font-size="16" font-weight="700" fill="#8a2b1d">⑤ 风控官 · 一票否决（只收紧，不放松）</text>
+  <rect x="54" y="1068" width="380" height="50" rx="7" fill="#ffffff" stroke="#c0392b" stroke-width="1.3"/>
+  <text x="68" y="1090" font-size="12.5" font-weight="700" fill="#8a2b1d">固定规则 9 条（确定性）</text>
+  <text x="68" y="1109" font-size="11.5" fill="#33475b">事件窗口禁挂单 / 成本越线 / 逆向选择 / 缺数据按最保守</text>
+  <rect x="450" y="1068" width="380" height="50" rx="7" fill="#ffffff" stroke="#c0392b" stroke-width="1.3"/>
+  <text x="464" y="1090" font-size="12.5" font-weight="700" fill="#8a2b1d">agent 假设驱动规则（agent: 前缀）</text>
+  <text x="464" y="1109" font-size="11.5" fill="#33475b">每条留痕：引用什么 · 触发做什么 · <tspan font-weight="700">什么条件撤销</tspan></text>
+  <rect x="846" y="1068" width="380" height="50" rx="7" fill="#e9fbef" stroke="#2f9e5f" stroke-width="1.6"/>
+  <text x="860" y="1090" font-size="12.5" font-weight="700" fill="#1d6b41">新增 · 账户级规则</text>
+  <text x="860" y="1109" font-size="11.5" fill="#33475b">单日累计规模 / 同标的重复下单间隔 / 跨标的敞口</text>
+
+  <line x1="640" y1="1140" x2="640" y2="1168" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 复核官 ============ -->
+  <rect x="36" y="1174" width="1208" height="76" rx="10" fill="#e9fbef" stroke="#2f9e5f" stroke-width="2"/>
+  <rect x="1140" y="1166" width="76" height="20" rx="10" fill="#2f9e5f"/>
+  <text x="1178" y="1180" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">新增</text>
+  <text x="54" y="1200" font-size="15" font-weight="700" fill="#1d6b41">⑥ 复核官 · 把「可复跑」从事后工具变成链路里的一环</text>
+  <text x="54" y="1224" font-size="12.5" fill="#33475b">每次决策后自动跑一次契约投影比对（同 <tspan font-family="monospace">--replay</tspan> 的口径）：契约字段不一致 → <tspan font-weight="700" fill="#8a2b1d">降级 stand_down + 报警</tspan>，而不是照常下单</text>
+  <text x="54" y="1243" font-size="11.5" fill="#8a97a6">现有能力：参数 + 全部阈值 + 输入 SHA256 + 四层留痕 + decision_hash 都已落盘，只差"每次都自动比一遍"这一步</text>
+
+  <line x1="640" y1="1254" x2="640" y2="1282" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ============ 输出 ============ -->
+  <rect x="36" y="1288" width="1208" height="72" rx="10" fill="#fff8e6" stroke="#d9a441" stroke-width="1.8"/>
+  <text x="54" y="1314" font-size="15" font-weight="700" fill="#8a6412">输出 · 最终决策 + 可复跑留痕（不代下单）</text>
+  <text x="54" y="1338" font-size="12.5" fill="#33475b">单调性硬约束：<tspan font-weight="700">最终立场 ≤ 辩论立场</tspan> ｜ <tspan font-weight="700">最终规模 ≤ 交易员 ≤ 风控上限</tspan>（3 立场 × 3 闸门状态穷举自检）</text>
+  <text x="700" y="1338" font-size="12.5" fill="#33475b">v2 新增 LUI：把 rationale / warnings / conditions 组织成人读的一页，数字仍来自代码</text>
+
+  <!-- ============ 底部：红线 + 缺口映射 ============ -->
+  <rect x="36" y="1380" width="596" height="158" rx="10" fill="#ffffff" stroke="#c0392b" stroke-width="1.8"/>
+  <text x="54" y="1406" font-size="15" font-weight="700" fill="#8a2b1d">🔴 三条设计红线（新增角色也不能破）</text>
+  <text x="54" y="1432" font-size="12.5" fill="#33475b"><tspan font-weight="700" fill="#8a2b1d">1 · agent 不产出数字</tspan>（规模 / 价位 / 门槛）—— 否则 --replay 失效、报告里的数字无法验证</text>
+  <text x="54" y="1456" font-size="12.5" fill="#33475b"><tspan font-weight="700" fill="#8a2b1d">2 · agent 只收紧，不能放松</tspan> —— 风控官的一票否决不可被任何 agent 推翻</text>
+  <text x="54" y="1480" font-size="12.5" fill="#33475b"><tspan font-weight="700" fill="#8a2b1d">3 · 任何结论都要有实测量 + 证伪条件</tspan> —— 这是对抗"多 agent 表演化"的唯一手段</text>
+  <text x="54" y="1506" font-size="12" fill="#8a97a6">落地检查：新增的 5 个角色里，只有拆单规划器产出数字 —— 所以它被明确放进"确定性代码"层，不是 agent。</text>
+  <text x="54" y="1526" font-size="12" fill="#8a97a6">新增角色的 prompt 也必须与事件闸门同规格：外置 + 版本号 + SHA256 指纹。</text>
+
+  <rect x="660" y="1380" width="584" height="158" rx="10" fill="#ffffff" stroke="#2f9e5f" stroke-width="1.8"/>
+  <text x="678" y="1406" font-size="15" font-weight="700" fill="#1d6b41">🎯 每个新增角色，对应一个<tspan font-weight="700">已经写在局限里的缺口</tspan></text>
+  <text x="678" y="1432" font-size="12.5" fill="#33475b">无挂单队列位置模型　　→　🔬 微观结构分析师</text>
+  <text x="678" y="1456" font-size="12.5" fill="#33475b">只在开仓前决策一次　　→　⏱️ 执行进度官</text>
+  <text x="678" y="1480" font-size="12.5" fill="#33475b">拆单粒度固定 2000 USD　→　✂️ 拆单规划器（确定性）</text>
+  <text x="678" y="1504" font-size="12.5" fill="#33475b">无账户级约束　　　　　→　⑤ 风控官 · 账户级规则</text>
+  <text x="678" y="1528" font-size="12.5" fill="#33475b">可复跑只是事后工具　　→　⑥ 复核官（进链路）</text>
+</svg>

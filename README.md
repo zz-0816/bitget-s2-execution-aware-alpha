@@ -16,7 +16,7 @@
 三种跑法，**都不需要网络、不需要 API key、不需要 pip install**：
 
 ```powershell
-python run_p2.py --selftest      # ① 全量自检（12 步，含 HTTP 冒烟 + 页面渲染冒烟）
+python run_p2.py --selftest      # ① 全量自检（13 步，含 HTTP 冒烟 + 页面渲染冒烟）
 python run_p2.py --demo NVDA     # ② 命令行跑完整决策链（不用浏览器）
 python run_p2.py                 # ③ 起网页 http://127.0.0.1:8788
 ```
@@ -30,8 +30,22 @@ python run_p2.py                 # ③ 起网页 http://127.0.0.1:8788
 python run_p2.py --tunnel        # 起网页 + 临时公网链接（cloudflared，免账号）
 ```
 
+**评审期推荐用保活启动**（进程崩了自己回来，公网地址固定落盘、随时可查）：
+
+```powershell
+# Windows：双击 启动Demo.bat（前台保活）/ 后台运行Demo.bat（关窗口也不停）
+# 任意平台：
+python tools/keep_alive.py            # 保活：本机服务 + 公网隧道
+python tools/keep_alive.py --status   # 看状态（含**当前**公网地址）
+python tools/keep_alive.py --stop     # 停止（连子进程树一起收）
+```
+
+> ⚠️ 临时隧道的域名**每次重启都会变**，所以"当前链接是什么"要以
+> `data/run/public_url.txt`（或 `查看Demo状态.bat`）为准，**不要用旧截图里的地址**。
+
 完整的三条部署路线（临时隧道 / Render / Fly / Docker）与**实测记录**见
-**`docs/43-公网可访问.md`**。
+**`docs/43-公网可访问.md`**；保活的原理、边界与开机自启见
+**`docs/44-长期运行与保活.md`**。
 
 > 不配 LLM key 也能跑：事件判断会退化为确定性日历，并在输出里**如实标注
 > 「本次未使用 LLM」**——不假装跑过。
@@ -131,7 +145,7 @@ python tools/snapshot_manifest.py --verify     # 就地核验，冻结项不一�
 
 ---
 
-## 4. 一键自检（12 步，离线）
+## 4. 一键自检（13 步，离线）
 
 ```powershell
 python run_p2.py --selftest        # 加 --net 会额外跑联网的消息面源检查
@@ -149,11 +163,12 @@ python run_p2.py --selftest        # 加 --net 会额外跑联网的消息面源
 | ⑧ | 配置解析（.env 优先级） | key 泄露 / 配置没生效 |
 | ⑨ | 事件判定校准集（schema + 覆盖 + 留出规则） | 拿答案喂模型还自称校准过 |
 | ⑩ | 盘口重截断（保留最后 N 轮） | 盘口与成交来自**两个不同时段** |
-| ⑪ | **HTTP 冒烟** | 页面调用的端点**根本不存在** |
-| ⑫ | **页面渲染冒烟**（Node 最小 DOM 里真跑一遍 `web/app.js`） | 页面**整页空白**而自检全绿 |
-| ⑬ | 消息面源可用性（`--net`） | 事件源悄悄失效 |
+| ⑪ | 保活守护（地址解析 / 退避 / 状态落盘 / 隧道默认值） | 链接悄悄死掉、地址抓错 |
+| ⑫ | **HTTP 冒烟** | 页面调用的端点**根本不存在** |
+| ⑬ | **页面渲染冒烟**（Node 最小 DOM 里真跑一遍 `web/app.js`） | 页面**整页空白**而自检全绿 |
+| ⑭ | 消息面源可用性（`--net`） | 事件源悄悄失效 |
 
-> ⑪⑫ 是**被真实故障逼出来的**：本仓库最初把项目一的 `web/` 一起复制了过来，
+> ⑫⑬ 是**被真实故障逼出来的**：本仓库最初把项目一的 `web/` 一起复制了过来，
 > 而它调用的 `/api/overview`、`/api/timeline` 只有项目一的服务才有 ——
 > 独立跑起来**整页是空的**，当时所有自检却都是绿的（没有一个自检去碰页面）。
 > 现在：端点集合集中写在前端 `API` 对象里，自检照着它真的打一遍；
@@ -172,8 +187,11 @@ python run_p2.py --selftest        # 加 --net 会额外跑联网的消息面源
 ├── Dockerfile           python:3.12-slim + tzdata（slim 镜像缺 tz 数据会崩）
 ├── render.yaml          Render 一键部署（Blueprint）
 ├── fly.toml             Fly.io 一键部署
-├── 一键开公网Demo.cmd    Windows 双击：自检 → 起服务 → 开公网链接
-├── start_demo.sh        Linux/macOS/WSL 同上
+├── 启动Demo.bat          Windows 双击：**保活**启动（进程掉了自动拉起 + 公网地址落盘）
+├── 后台运行Demo.bat      Windows 双击：后台保活（关掉窗口也不停）
+├── 查看Demo状态.bat      Windows 双击：看状态 + **当前公网地址** + 最近日志
+├── 停止Demo.bat          Windows 双击：停止（连子进程树一起收，不留孤儿隧道）
+├── start_demo.sh        Linux/macOS/WSL：一键起服务 + 公网链接
 ├── .env.example         LLM 配置模板（任意 OpenAI 兼容端点；不配也能跑）
 ├── prompts/             🔸事件判断 prompt（版本化，可回溯到具体版本 + SHA256）
 ├── common/              冻结副本：config / console / market_calendar / rag_memory

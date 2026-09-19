@@ -480,18 +480,33 @@ def serve(host, port, tunnel=False, open_browser=False):
         print("  %-26s %s" % (p, why))
     print("  Ctrl+C 退出", flush=True)
 
-    if tunnel:
-        start_tunnel(real_port)
-
     if open_browser:
         import webbrowser
         threading.Timer(0.6, lambda: webbrowser.open(
             "http://127.0.0.1:%d" % real_port)).start()
 
+    tproc = start_tunnel(real_port) if tunnel else None
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n已停止")
+    finally:
+        # ⚠️ 必须收掉隧道子进程：cloudflared 是**独立进程**，不主动收它就会变成
+        #    孤儿，一直挂在那儿占着一条隧道（保活守护反复重启时会越攒越多）。
+        if tproc is not None and tproc.poll() is None:
+            try:
+                if os.name == "nt":
+                    subprocess.run(["taskkill", "/F", "/T", "/PID",
+                                    str(tproc.pid)], capture_output=True)
+                else:
+                    tproc.terminate()
+                    try:
+                        tproc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        tproc.kill()
+                print("  已收掉公网隧道进程（PID %d）" % tproc.pid)
+            except Exception:  # noqa: BLE001
+                pass
     return 0
 
 
@@ -674,19 +689,21 @@ def selftest(with_net=False):
              "⑨ 事件判定校准集（schema + 覆盖 + **校准集不得进 RAG** 的留出检查）"),
             ([py, os.path.join("tools", "retruncate_orderbook.py"), "--selftest"],
              "⑩ 盘口重截断（保留最后 N 轮 —— 与 trades 尾部对齐）"),
+            ([py, os.path.join("tools", "keep_alive.py"), "--selftest"],
+             "⑪ 保活守护（地址解析 / 退避 / 状态文件 / 隧道默认值 / 杀进程树）"),
     ):
         rc |= _run(cmd, label)
 
     print("-" * 78)
-    print("▶ ⑪ HTTP 冒烟（页面调用的每个端点都真打一遍）")
+    print("▶ ⑫ HTTP 冒烟（页面调用的每个端点都真打一遍）")
     rc |= http_smoke()
 
     rc |= _run([py, os.path.join("tools", "web_smoke.py")],
-               "⑫ 页面渲染冒烟（Node 最小 DOM 里真跑一遍 web/app.js）")
+               "⑬ 页面渲染冒烟（Node 最小 DOM 里真跑一遍 web/app.js）")
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],
-                   "⑬ 消息面源可用性（联网）")
+                   "⑭ 消息面源可用性（联网）")
 
     print("=" * 92)
     print("全量自检%s" % ("通过" if rc == 0 else "**失败**"))

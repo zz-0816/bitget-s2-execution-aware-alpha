@@ -51,7 +51,9 @@ market_calendar · rag_memory，**冻结副本**）、`tools/`（消息面 · �
 | `prompts/` | 事件判断 prompt 外部化 + 版本化 |
 | `data/reports/debate-*.json|.md`（14 个） | 让 RAG 的"决策案例"**出处真实存在**（原来 7 条案例指向的文件根本没复制进来） |
 | `Dockerfile` `render.yaml` `fly.toml` `requirements.txt` `.dockerignore` | 一键部署 |
-| `一键开公网Demo.cmd` `start_demo.sh` | 双击/一条命令起服务 + 公网链接 |
+| `启动Demo.bat` `后台运行Demo.bat` `查看Demo状态.bat` `停止Demo.bat` `start_demo.sh` | 双击/一条命令起服务 + 公网链接；**带保活**（崩溃自愈、公网地址落盘） |
+| `tools/keep_alive.py` `tools/demo_launcher.py` | 保活守护与启动器（`.bat` 只做 ASCII 壳，中文与逻辑都在 Python 侧） |
+| `docs/44-长期运行与保活.md` | 保活的原理、边界（能扛什么/扛不住什么）与开机自启 |
 | `docs/40` `docs/41` `docs/42` `docs/43` `SUBMISSION-CHECKLIST.md` | 提交材料、赛道接口、prompt 与事件驱动、部署 |
 
 ### 1.3 本次修掉的三处"说了没做"

@@ -9,6 +9,8 @@ __pycache__/
 data/positions/open.json
 data/positions/alerts.json
 data/reports/_*.txt
+# 保活守护的运行期产物（PID / 状态 / 公网地址 / 日志）—— 不进库
+data/run/
 # 事件驱动降本的状态（T4-B）：运行时产物，不进库（news_state.json 仍由 news_sources.py 管理）
 data/derived/event_driven_state.json
 _tmp_*

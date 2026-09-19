@@ -120,12 +120,21 @@ python -c "import urllib.request,os;u='https://github.com/cloudflare/cloudflared
 # 也可以直接指定：python run_p2.py --tunnel --cloudflared "<路径>"
 ```
 
-- [ ] **步骤 3 · 一条命令起网页 + 隧道**（Windows 可直接双击 `一键开公网Demo.cmd`）：
+- [ ] **步骤 3 · 一条命令起网页 + 隧道**（评审期建议用**保活**方式，见 `docs/44`）：
 
 ```powershell
-python -u run_p2.py --tunnel --port 8788
+# Windows：双击 启动Demo.bat（前台保活）或 后台运行Demo.bat（关掉窗口也不停）
+# 任意平台：
+python -u tools/keep_alive.py --port 8788
 # 输出里会有一行：  ✅ 公网地址：https://<随机>.trycloudflare.com
+# 它同时写进 data/run/public_url.txt —— 随时用 查看Demo状态.bat 查当前地址
+
+# 不想保活、只想起一次（临时看两眼）：
+python -u run_p2.py --tunnel --port 8788
 ```
+
+  > ⚠️ 临时隧道的域名**每次重启都会变**。所以"当前地址"必须现场查
+  > （`查看Demo状态.bat` 或 `data/run/public_url.txt`），**不要用旧截图里的**。
 
 - [ ] **步骤 4 · 从公网侧验证**（不要只看隧道进程有没有打印成功）：
 

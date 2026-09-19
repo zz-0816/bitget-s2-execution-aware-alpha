@@ -119,7 +119,13 @@ async function fetchJSON(url, tries = 60) {
     } catch (_) {}
     await sleep(250);
   }
-  throw new Error("无法连接调试端口：" + url);
+  // ⚠️ 这条是**环境问题**，不是页面问题：浏览器没起来 / 调试端口连不上。
+  //    用 `envFailure` 标记，交给上层按"跳过"处理（见文件末尾的 catch 与
+  //    ui_check.py）。这样"装了浏览器但起不来"的机器（受限策略、无桌面会话、
+  //    profile 被锁）不会把整套自检染红 —— 与"没装浏览器"同等对待。
+  const e = new Error("无法连接调试端口：" + url);
+  e.envFailure = true;
+  throw e;
 }
 
 // ---------------------------------------------------------------- 主流程
@@ -292,4 +298,17 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error("[FAIL] " + (e && e.stack || e)); process.exit(1); });
+main().catch((e) => {
+  if (e && e.envFailure) {
+    // 环境问题（浏览器起不来 / 调试端口连不上）：**退出码 3 = 跳过**，
+    // 与"页面检查不通过"（退出码 1）区分开。ui_check.py 据此返回 0。
+    console.error("[skip] 浏览器起不来或调试端口连不上 —— 本次前端验收跳过，"
+      + "不判失败。");
+    console.error("       " + (e && e.message || e));
+    console.error("       常见原因：受限策略禁止启动浏览器、无桌面会话、"
+      + "profile 目录被占用。");
+    process.exit(3);
+  }
+  console.error("[FAIL] " + (e && e.stack || e));
+  process.exit(1);
+});

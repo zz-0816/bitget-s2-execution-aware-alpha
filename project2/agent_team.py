@@ -279,7 +279,8 @@ def _latest_sentiment(base):
 CONF_CAP_NO_SOURCE = 0.4
 
 
-def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True):
+def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True,
+                 assess_override=None):
     """📰 新闻/事件分析师 —— 这一段是**大模型在运行期的唯一职责**。
 
     ⚠️ 2026-09-18 修一个**实现缺口**：此前这里**硬编码 `mode="static"`**，
@@ -297,14 +298,25 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
       * ``llm``   ：把标题喂给 OpenAI 兼容端点分类（需要 key）
       * ``auto``  ：有 key（含 `.env` 里的）就用 llm，否则 static ——
                     但会在 notes 里**明确写出"本次未使用 LLM"**，不含糊。
+
+    ``assess_override``：**冻结的事件判定**（复跑用）。给了它就**完全不调 LLM**，
+    直接拿这份判定继续 —— 因为 LLM 是活输入（有随机性、新闻每天在变），
+    而硬闸门现在依赖它，不冻结就没法复跑。见 `run_decision(llm_event=...)`。
+
+    ⭐ 返回的报告里额外带一个 ``event`` 字段（严重度 / 来源 / 理由 / 是否冻结），
+    供 `run_decision` 与**硬闸门**合并 —— 这是 2026-09-19 修的第二处"说了没做"：
+    在此之前 LLM 判出的 `block` **只到了辩论层**，硬闸门读的始终是确定性日历。
     """
     e = []
     note = ""
+    sev, src, reason = None, None, ""
+    _ev_probe = {}          # 事件判定里那几个"可复现"字段（prompt 指纹/缓存信息）
+    frozen = assess_override is not None
     # ⚠️ `headlines=None` = 调用方没指定 -> 自动取消息面；
     #    `headlines=[]`   = 调用方**显式要求不带标题**（自检/复跑要冻结外部输入）-> 不取。
     #    初版写成 `if headlines is None and auto_fetch` 之后再判 `if headlines`，
     #    于是显式传 [] 也会去自动抓 —— 真 LLM 接上后**自检变得间歇性失败**（踩到）。
-    if headlines is None and auto_fetch:
+    if headlines is None and auto_fetch and not frozen:
         headlines, hsrc = _headlines_from_news(base)
         if headlines:
             note = "标题来源：%s。" % hsrc
@@ -312,12 +324,40 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
             note = "（%s）" % hsrc
     try:
         import event_gate as _eg
-        sev = None
         try:
-            a = _eg.assess(base, now_ms=now_ms, mode=mode, headlines=headlines
-                           if headlines else None)
+            if frozen:
+                # 冻结判定是**小的 event 字典**（不是完整的 assess 结果）：
+                # 它就是要进日志、要参与硬闸门的那几个字段，紧凑且可长期保存。
+                # 这里把它包成 assess 的形状，让下游代码（notes/证据）不用分叉。
+                fe = dict(assess_override or {})
+                a = {
+                    "event": {"in_window": (fe.get("severity") or "none") != "none",
+                              "severity": fe.get("severity") or "none",
+                              "reason": fe.get("reason") or "",
+                              "source": fe.get("source") or "llm(frozen)",
+                              "fail_closed": False,
+                              "cache_reused": fe.get("cache_reused"),
+                              "cache_age_min": fe.get("cache_age_min"),
+                              "prompt_version": fe.get("prompt_version"),
+                              "prompt_source": fe.get("prompt_source"),
+                              "prompt_sha256": fe.get("prompt_sha256")},
+                    "confidence": float(fe.get("confidence") or 0.4),
+                    "sources": [], "rationale": [], "warnings": [], "conditions": {},
+                    "event_driven": fe.get("event_driven") or {},
+                    "llm": {"used": str(fe.get("source", "")).startswith("llm"),
+                            "err": None, "fail_closed": False,
+                            "prompt_version": fe.get("prompt_version")},
+                    "rag_used": False,
+                }
+                note += ("🔒 **复用冻结的事件判定**（复跑/复现用，本次**不调 LLM**）："
+                         "severity=%s。" % (fe.get("severity") or "none"))
+            else:
+                a = _eg.assess(base, now_ms=now_ms, mode=mode,
+                               headlines=headlines if headlines else None)
             sev = a["event"]["severity"]
             src = a["event"].get("source", "static")
+            reason = a["event"].get("reason", "") or ""
+            _ev_probe = a.get("event") or {}
             e.append(ev("事件严重度", sev, "project2/event_gate.py"))
             e.append(ev("判断置信度（受来源约束）", "%.2f" % a["confidence"],
                         "project2/event_gate.py"))
@@ -379,8 +419,23 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
     verdict = "unfavorable" if sev == "block" else (
         "neutral" if sev == "caution" else "favorable")
     # 置信度：有可回溯来源（LLM 判断成功）才允许高；否则封顶 0.40
-    conf = 0.85 if "✅ 本次由" in note else 0.4
-    return report("news", verdict, conf, e, note)
+    conf = 0.85 if ("✅ 本次由" in note or "♻️" in note) else 0.4
+    r = report("news", verdict, conf, e, note)
+    # ⭐ 把**原始严重度**带出去：硬闸门要用它（不止辩论层）。
+    #    之前只留了 verdict（favorable/neutral/unfavorable），硬闸门拿不到
+    #    "这是 block 还是 caution"，于是 LLM 判出的 block 根本进不了硬闸门。
+    #    这个字段同时是**日志里的 llm_event**（复跑时原样传回来冻结输入）。
+    r["event"] = {"severity": (sev or "none"), "source": src or "static",
+                  "reason": reason, "frozen": bool(frozen),
+                  "confidence": conf,
+                  # 下面几个只在真的调过 LLM 时有值；冻结复用会把它们带回来，
+                  # 这样 notes 里的 prompt 指纹在复跑时也能如实重现。
+                  "prompt_version": _ev_probe.get("prompt_version"),
+                  "prompt_source": _ev_probe.get("prompt_source"),
+                  "prompt_sha256": _ev_probe.get("prompt_sha256"),
+                  "cache_reused": _ev_probe.get("cache_reused"),
+                  "cache_age_min": _ev_probe.get("cache_age_min")}
+    return r
 
 
 # ---------------------------------------------------------------- ④ 技术面
@@ -891,15 +946,19 @@ def analyst_execution_risk(base, cost=None, now_ms=None, size_usd=None):
 # ---------------------------------------------------------------- 汇总
 
 def run_team(base, cost=None, now_ms=None, news_mode="auto", headlines=None,
-             size_usd=None):
+             size_usd=None, news_assess=None):
     """跑齐五个"分析师"。**相互独立**：每个只拿自己那一路数据。
 
     第 5 个（`execution_risk`）是**agent 做的风险评估层** —— 它不碰数字，
     只把"这一单可能怎么死"组织成可证伪的假设，交给辩论层与风控官。
 
+    ``news_assess``：**冻结的事件判定**（复跑用）—— 直接透传给 `analyst_news`，
+    该路就完全不调 LLM。见 `analyst_news(assess_override=...)`。
+
     ⚠️ 外部输入的可控性：`news_mode="llm"` 与自动抓新闻都是**活的输入**
     （LLM 输出有随机性、新闻每天在变），所以**确定性自检/复跑必须显式冻结**：
-    传 `news_mode="static"` + `headlines=[]`（见 `run_decision(freeze_news=True)`）。
+    传 `news_mode="static"` + `headlines=[]`（见 `run_decision(freeze_news=True)`），
+    或传 `news_assess=<冻结判定>`。
     真 LLM 接上后，不冻结会让"端到端复跑一致"这条断言**间歇性失败**（实测踩到）。
     """
     risk_rep, hyps, dropped = analyst_execution_risk(
@@ -907,7 +966,8 @@ def run_team(base, cost=None, now_ms=None, news_mode="auto", headlines=None,
     reps = [
         analyst_basis(base, cost=cost),
         analyst_sentiment(base),
-        analyst_news(base, now_ms=now_ms, mode=news_mode, headlines=headlines),
+        analyst_news(base, now_ms=now_ms, mode=news_mode, headlines=headlines,
+                     assess_override=news_assess),
         analyst_technical(base),
         risk_rep,
     ]
@@ -2205,7 +2265,11 @@ DECISION_FIELDS = ("kind", "mode", "qty_usd", "slices", "cost_bp",
                    "all_modes_bp", "barred_modes")
 PARAM_FIELDS = ("base", "qty_usd", "miss_bp", "urgent", "slice_usd",
                 "depth_take_ratio", "now_ms", "log_format", "synthetic",
-                "scenario")
+                "scenario",
+                # ⭐ LLM 事件判定进契约：硬闸门依赖它，复跑必须拿同一份。
+                #    （旧日志里没有这个字段 -> 复跑时会真调一次 LLM，
+                #      结果不一致是**如实暴露**，不是 bug；见 docs/46）
+                "llm_event")
 
 
 def sha256_file(path):
@@ -2238,11 +2302,24 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
                    urgent, now_ms=None, book=None, slice_usd=SLICE_USD,
                    depth_take_ratio=DEPTH_TAKE_RATIO):
     scenario = (decision or {}).get("scenario")
+    # 🔴 parameters.now_ms 必须是**决策实际使用的时刻**（time_basis 的结果），
+    #    不能是墙钟：否则 --replay 用另一个时刻重算，按龄判据（行情停滞/停牌）
+    #    会得出不同结论 —— 实测到"停滞 13.6 分钟"与"572.1 分钟"两种结果，
+    #    契约字段 rules_skeleton / degrade 直接不一致。
+    _tb = (decision or {}).get("time_basis") or {}
+    eff_now = _tb.get("now_ms") or now_ms
+    # 🔴 llm_event 是**判定内容**，要进契约；但 "frozen" 只是"这份判定是实时拿到的
+    #    还是复跑时冻结输入的"，两次运行必然一个 false 一个 true ——
+    #    它是**过程信息**，留在 parameters.llm_event 里会让复跑必然不一致。
+    #    （展示上仍然照实说：report 里的 event 保留 frozen 标记。）
+    le = (decision or {}).get("llm_gate_used")
+    if isinstance(le, dict):
+        le = {k: v for k, v in le.items() if k != "frozen"}
     return {
         "log_format": LOG_FORMAT, "base": base, "qty_usd": qty_usd,
         "miss_bp": miss_bp, "urgent": bool(urgent),
         "slice_usd": slice_usd, "depth_take_ratio": depth_take_ratio,
-        "now_ms": now_ms,
+        "now_ms": eff_now,
         # 🔴 合成标记：合成场景的结论**不得**被当成实测结论引用
         "synthetic": bool(scenario),
         "scenario": scenario,
@@ -2257,6 +2334,11 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
         "gate": {"severity": (cost or {}).get("gate_severity"),
                  "source": (cost or {}).get("gate_source"),
                  "reason": (cost or {}).get("gate_reason")},
+        # 🔴 LLM 事件判定**是决策契约的一部分**（硬闸门现在依赖它）：
+        #    所以必须进日志、并且复跑时**读回来当冻结输入**，否则 LLM 的随机性
+        #    会让 `--replay` 的契约字段（最终立场/规模）偶发不一致。
+        #    它也可能是 None（无 key / 未启用）——那表示这次没有 LLM 判定参与。
+        "llm_event": le,
         "data_used": {
             "analysts": sorted({e["source"] for i in items if i.get("valid")
                                 for e in i["report"]["evidence"]}),
@@ -2341,7 +2423,17 @@ def build_log(*, base, items, debate, cost, decision, qty_usd, miss_bp, urgent,
         "parameters": collect_params(base, items=items, debate=debate,
                                      decision=decision, cost=cost, qty_usd=qty_usd,
                                      miss_bp=miss_bp, urgent=urgent,
-                                     now_ms=now_ms or generated_ms, book=book),
+                                     # ⚠️ 这里原来传的是 `now_ms or generated_ms`
+                                     #    （= **墙钟**），但决策实际用的是
+                                     #    `time_basis()` 定出来的**基准时刻**（读冻结快照
+                                     #    时 = 数据自带时刻）。两者能差好几个小时，
+                                     #    于是 `--replay` 会用一个**不同的时刻**重算：
+                                     #    "行情停滞/停牌"这类**按龄判据**得出不同结论，
+                                     #    契约字段（rules_skeleton / degrade）直接不一致。
+                                     #    实测踩到：现货腿停滞 13.6 分钟 vs 572.1 分钟。
+                                     #    传给 collect_params 的 now_ms 只作兜底，
+                                     #    它内部优先取 decision.time_basis 的实际时刻。
+                                     now_ms=now_ms, book=book),
         "input_manifest": input_manifest(paths or default_paths),
         "data_snapshot": {
             "orderbook_snapshot_ts": (book or {}).get("snapshot_ts"),
@@ -2804,9 +2896,96 @@ def selftest():
 
 # ------------------------------------------------- 单次决策（CLI 与复跑共用）
 
+# 严重度排序：只允许往更保守的方向合并（与全项目"只收紧不放松"一致）
+SEVERITY_RANK = {"none": 0, "caution": 1, "block": 2}
+SEVERITY_ORDER = ("none", "caution", "block")
+
+
+def merge_gate(static_gate, llm_event):
+    """把**确定性日历闸门**与**LLM 事件判定**合并成**唯一一个硬闸门**。
+
+    🔴 为什么必须合并（2026-09-19 修的第二处"说了没做"）
+    ---------------------------------------------------
+    文档写的是「severity=block → **挂单类方案直接作废**（硬规则，agent 不能推翻）」，
+    但实现里硬闸门走的是：
+
+        run_decision -> execution_cost.consult_gate() -> event_gate.static_gate()
+
+    也就是**只读确定性日历、从不问 LLM**；LLM 的判定只到了辩论层（变成一条证据）。
+    后果有两条：
+      ① 安全上：LLM 判出 block（例如刚披露的 8-K）时，**挂单类方案照样生成**——
+         而"挡不住突发新闻与财报"恰恰是我们自己写在局限里的最大缺口；
+      ② 观感上：把 key 配上之后页面会自相矛盾——闸门区块写"本次未使用 LLM"，
+         而它上面的新闻分析师写"✅ 本次由 LLM 判事件"。
+
+    实测证据（把 `assess` 打桩成必定返回 block，跑全部 10 个标的）：
+        news 分析师收到 block：True
+        硬闸门收到 block     ：False（cost['gate_severity']='none'、maker_allowed=True）
+
+    ⚠️ 当时**没有改变任何结论**：那 10 个标的都因别的原因（现货腿停滞等）已经
+    `stand_down`。所以它是**潜伏**缺陷 —— 等现货腿恢复成交、策略真正可执行时才会咬人，
+    而那正是最需要事件闸门的时候。
+
+    合并规则（**只取更保守的一侧**）：
+      * 两侧取严重度更高的那个；
+      * 谁更严就让谁当 `source`，并在 reason 里写明另一侧说了什么 —— 不藏；
+      * 返回 (severity, reason, source, maker_allowed)。
+
+    ⚠️ 调用方必须同时把结果写回 `cost`（见 `apply_gate_to_cost`），
+       否则会出现"闸门说 block、可 cost 里最优方式仍是挂单"的自相矛盾。
+    """
+    sev_s, why_s, src_s = (static_gate or ("none", "", "static"))[:3]
+    ev = llm_event or {}
+    sev_l = ev.get("severity") or "none"
+    src_l = ev.get("source") or "?"
+    tag_l = "LLM 判定 %s（%s）" % (sev_l, (ev.get("reason") or "")[:60])
+    r_s = SEVERITY_RANK.get(sev_s, 1)
+    r_l = SEVERITY_RANK.get(sev_l, 1)
+
+    if r_l > r_s:
+        # LLM 更严 -> 以它为准（这就是本次修的核心：block 真的能作废挂单）
+        src = src_l if src_l.startswith("llm") else "llm"
+        if ev.get("frozen"):
+            src += "(frozen)"          # 复跑时用的是冻结判定，必须说清楚
+        return (sev_l, "%s｜确定性日历=%s（更宽松，不采信）" % (tag_l, sev_s),
+                src, sev_l != "block")
+    if r_s > r_l:
+        return (sev_s, "%s｜%s（更宽松，不采信）" % (why_s, tag_l),
+                src_s, sev_s != "block")
+    # 同级：保留确定性日历的理由，但把 LLM 也做过判断这件事记下来
+    if sev_s == "none" and sev_l == "none":
+        return (sev_s, why_s, src_s, True)
+    return (sev_s, "%s｜%s（同级，一致）" % (why_s, tag_l), src_s,
+            sev_s != "block")
+
+
+def apply_gate_to_cost(cost, gate):
+    """把**合并后的闸门**写回 `cost` —— trader / 风控官读的就是这几个字段。
+
+    复刻 `execution_cost.analyse_two_leg()` 里闸门生效时的**同一套**处理
+    （挂单类方案直接作废、并从候选里剔除），否则会出现自相矛盾：
+    闸门字段说 block，而 `best_mode` 还是"双腿全挂单"、`maker_allowed` 还是 True。
+    """
+    if not isinstance(cost, dict):
+        return cost
+    sev, reason, src, maker_allowed = gate
+    cost["gate_severity"] = sev
+    cost["gate_reason"] = reason
+    cost["gate_source"] = src
+    cost["maker_allowed"] = bool(maker_allowed)
+    if not maker_allowed:
+        rows = [("双腿全挂单", cost.get("cost_mm")),
+                ("现货挂单+永续吃单", cost.get("cost_mix")),
+                ("双腿全吃单", cost.get("cost_tk"))]
+        cost["invalidated"] = [n for n, _c in rows if n != "双腿全吃单"]
+        if cost.get("cost_tk") is not None:
+            cost["best_mode"], cost["best_cost"] = "双腿全吃单", cost["cost_tk"]
+    return cost
+
+
 def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                  now_ms=None, gate=True, scenario=None, fresh=True,
-                 freeze_news=False, time_basis_force=None):
+                 freeze_news=False, time_basis_force=None, llm_event=None):
     """端到端跑一次：分析师 -> 辩论 -> 闸门 -> 交易员 -> 风控官 -> 最终决策。
 
     返回 ``(cost, items, debate, decision, book)``。
@@ -2850,12 +3029,25 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                                     size_usd=qty_usd,
                                     # 冻结模式：显式空标题 + static，**不碰 LLM、不抓新闻**
                                     headlines=([] if freeze_news else None),
-                                    news_mode=("static" if freeze_news else "auto"))
+                                    news_mode=("static" if freeze_news else "auto"),
+                                    news_assess=llm_event)
     try:
         g = _cg(base, now_ms)
     except Exception as exc:  # noqa: BLE001
         # 闸门取不到时**不能当作没有事件**（fail-safe，与 execution_cost 一致）
         g = ("caution", "闸门不可用：%s" % type(exc).__name__, "unavailable", True)
+    # ---- 🔴 硬闸门 = 确定性日历 **与** LLM 事件判定，取更保守的一侧 ----
+    # 这一步是 2026-09-19 修的"说了没做"：在此之前 `_cg()` 只读确定性日历，
+    # LLM 判出的 block 到不了硬闸门（详见 merge_gate 的注释与实测证据）。
+    news_ev = None
+    for i in items:
+        r = i.get("report") or {}
+        if r.get("dimension") == "news" and isinstance(r.get("event"), dict):
+            news_ev = r["event"]
+            break
+    static_gate = g
+    g = merge_gate(static_gate, news_ev)
+    apply_gate_to_cost(cost, g)          # trader / 风控官读的是 cost
     event = {"severity": g[0], "reason": g[1], "source": g[2],
              "maker_allowed": g[3]}
     debate = run_debate(base, items, gate=g, cost=cost)
@@ -2866,6 +3058,17 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     decision["scenario_note"] = sc_note
     decision["risk_hypotheses"] = hyps
     decision["risk_hypotheses_dropped"] = dropped
+    # ⭐ 闸门合并留痕：写清"硬闸门最后听谁的"，以及 LLM 那一侧说了什么。
+    #    同时把**实际用到的** LLM 判定（实时调用的 / 冻结复用的）记下来 ——
+    #    复跑靠它冻结输入（否则 LLM 是活输入，硬闸门依赖它就没法复跑）。
+    decision["llm_gate_used"] = news_ev
+    decision["gate_merge"] = {
+        "static": {"severity": static_gate[0], "reason": static_gate[1],
+                   "source": static_gate[2]},
+        "llm": news_ev,
+        "effective": {"severity": g[0], "reason": g[1], "source": g[2],
+                      "maker_allowed": g[3]},
+    }
     # ⭐ 决策基准时间：连同依据一起带出去（页面/接口/日志都要能说清"现在几点、凭什么"）
     decision["time_basis"] = tb
     return cost, items, debate, decision, book
@@ -3259,6 +3462,91 @@ def decision_selftest():
     chk(not any(x.startswith("agent:") for x in r_noagent["hits"]),
         "没有 agent 假设时不产生 agent 规则（不凭空否决）")
 
+    # ---- ⑫ 🔴 LLM 事件判定必须**真的进硬闸门**（2026-09-19 修的"说了没做"）----
+    #    修之前：硬闸门走 consult_gate() -> static_gate()，**只读确定性日历**，
+    #    LLM 判出的 block 只到辩论层。实测（打桩 assess 必返 block）：
+    #        news 收到 block：True ｜ 硬闸门收到 block：False ｜ maker_allowed：True
+    #    这里用**冻结的 LLM 判定**验证闭环 —— 不调 API，因此自检仍然离线可跑。
+    BLOCK = {"severity": "block", "source": "llm", "frozen": True,
+             "confidence": 0.9, "reason": "自检冻结样本：刚披露的 8-K"}
+    NONE_EV = {"severity": "none", "source": "llm", "frozen": True,
+               "confidence": 0.9, "reason": "自检冻结样本：无事件"}
+    try:
+        c_gb, _i, _d, dec_gb, _b = run_decision("NVDA", qty_usd=5000.0,
+                                                llm_event=BLOCK)
+        gm = (dec_gb.get("gate_merge") or {})
+        chk((gm.get("effective") or {}).get("severity") == "block",
+            "LLM 冻结判 block -> 硬闸门收到 block（effective=%s，静态侧=%s）"
+            % ((gm.get("effective") or {}).get("severity"),
+               (gm.get("static") or {}).get("severity")))
+        chk(c_gb.get("maker_allowed") is False
+            and c_gb.get("gate_severity") == "block",
+            "LLM 判 block 时 cost 同步为 block 且 maker_allowed=False"
+            "（否则会出现『闸门说 block、最优方式还是挂单』）")
+        chk(set(c_gb.get("invalidated") or []) == {"双腿全挂单",
+                                                   "现货挂单+永续吃单"},
+            "挂单类方案进入 invalidated（%s）" % (c_gb.get("invalidated"),))
+        _ord = dec_gb["final"].get("order") or {}
+        chk(dec_gb["final"]["stance"] == "stand_down" and not _ord,
+            "LLM 判 block -> 最终 stand_down 且无订单（stance=%s，订单=%s）"
+            % (dec_gb["final"]["stance"], _ord.get("mode")))
+
+        # 反向：LLM 判 none 时**不得**凭空 block（不能修过头变成"总是停手"）
+        c_n, _i2, _d2, dec_n, _b2 = run_decision("NVDA", qty_usd=5000.0,
+                                                 llm_event=NONE_EV)
+        chk((dec_n.get("gate_merge") or {}).get("effective", {})
+            .get("severity") != "block",
+            "LLM 判 none 时不产生虚假 block（effective=%s）"
+            % ((dec_n.get("gate_merge") or {}).get("effective", {})
+               .get("severity"),))
+
+        # 🔴 复跑确定性：冻结同一份 LLM 判定 -> 契约投影必须逐字段一致
+        lg1 = build_log(base="NVDA", items=_i, debate=_d, cost=c_gb,
+                        decision=dec_gb, qty_usd=5000.0, miss_bp=3.0,
+                        urgent=False, now_ms=None, book=_b)
+        lg2 = build_log(base="NVDA", items=_i2, debate=_d2, cost=c_n,
+                        decision=dec_n, qty_usd=5000.0, miss_bp=3.0,
+                        urgent=False, now_ms=None, book=_b2)
+        _le = (lg1.get("parameters") or {}).get("llm_event") or {}
+        chk(_le.get("severity") == "block" and "frozen" not in _le,
+            "日志把**用到的 LLM 判定**存进了 parameters.llm_event"
+            "（severity=%s；且刻意**不含** frozen —— 那是『这次是实时拿到的还是"
+            "复跑冻结的』的过程信息，写进契约会让复跑必然不一致）"
+            % (_le.get("severity"),))
+        mu1 = repro_projection(lg1)[0]
+        mu2 = repro_projection(lg2)[0]
+        chk((mu1["parameters"].get("llm_event") or {}).get("severity") == "block"
+            and (mu2["parameters"].get("llm_event") or {}).get("severity") == "none",
+            "契约投影里带着各自的冻结判定（block / none，两份日志可区分）")
+        # 🔴 复跑确定性：**用日志里的参数**（含冻结的 LLM 判定）复跑一遍，
+        #    走生产同一条比对路径 `replay_check`。
+        #    ⚠️ 不能拿"两次独立运行"去比：那样 `parameters.now_ms` 是各自的墙钟，
+        #       本来就不该相等（这是契约的一部分，不是缺陷）。
+        _pr = lg1["parameters"]
+        c_r, i_r, d_r, dec_r, b_r = run_decision(
+            "NVDA", qty_usd=float(_pr["qty_usd"]), miss_bp=float(_pr["miss_bp"]),
+            urgent=bool(_pr["urgent"]), now_ms=_pr.get("now_ms"),
+            llm_event=_pr.get("llm_event"))
+        lg1b = build_log(base="NVDA", items=i_r, debate=d_r, cost=c_r,
+                         decision=dec_r, qty_usd=float(_pr["qty_usd"]),
+                         miss_bp=float(_pr["miss_bp"]),
+                         urgent=bool(_pr["urgent"]), now_ms=_pr.get("now_ms"),
+                         book=b_r)
+        ok_replay, rep_replay = replay_check(lg1, lg1b)
+        chk(ok_replay,
+            "用日志参数 + **冻结 LLM 判定**复跑 -> replay_check 通过"
+            "（契约字段全一致%s）"
+            % ("" if ok_replay else "；差异：%s"
+               % str(rep_replay.get("must_diff") or rep_replay)[:120]))
+
+        # 反向：把 LLM 判定从 block 换成 none -> 复跑**必须**报不一致。
+        # 这一条证明 llm_event 真的进了契约，而不是一个装饰字段。
+        ok_bad, _rep_bad = replay_check(lg1, lg2)
+        chk(not ok_bad,
+            "把 LLM 判定由 block 改成 none -> replay 报不一致（它确实是契约的一部分）")
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "LLM 闸门闭环自检异常：%r" % (exc,))
+
     print("\n交易员/风控官自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
 
@@ -3427,11 +3715,20 @@ def main(argv=None):
             return 2
         pr = old.get("parameters") or {}
         base = old.get("base")
+        # 🔴 把日志里记的 **LLM 事件判定**当冻结输入传回去：
+        #    硬闸门现在依赖它，不冻结就会真的再调一次 LLM，
+        #    而 LLM 有随机性 -> 最终立场/规模可能不一致 -> 复跑误报失败。
+        #    旧日志没有这个字段时 llm_event=None（如实走一遍实时路径）。
+        llm_ev = pr.get("llm_event")
+        if llm_ev is None and pr.get("gate", {}).get("source", "").startswith("llm"):
+            print("⚠️ 这份日志记录了 LLM 判定来源，但没有存下判定本体"
+                  "（旧版本日志）。本次复跑会**重新调用一次 LLM**，"
+                  "结果不一致属于如实暴露，不是复跑机制坏了。")
         cost, items, debate, decision, book = run_decision(
             base, qty_usd=float(pr.get("qty_usd") or 5000.0),
             miss_bp=float(pr.get("miss_bp") or 3.0),
             urgent=bool(pr.get("urgent")), now_ms=pr.get("now_ms"),
-            scenario=pr.get("scenario"))
+            scenario=pr.get("scenario"), llm_event=llm_ev)
         new = build_log(base=base, items=items, debate=debate, cost=cost,
                         decision=decision, qty_usd=float(pr.get("qty_usd") or 5000.0),
                         miss_bp=float(pr.get("miss_bp") or 3.0),

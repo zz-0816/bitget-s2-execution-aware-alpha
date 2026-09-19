@@ -1,0 +1,1314 @@
+{
+  "analysts": [
+    {
+      "confidence": 0.8,
+      "dimension": "basis",
+      "evidence": [
+        {
+          "metric": "现货半幅点差",
+          "source": "data/derived/friction_budget.csv",
+          "value": "1.14 bp"
+        },
+        {
+          "metric": "往返净收益（全挂单）",
+          "source": "data/derived/friction_budget.csv",
+          "value": "-12.41 bp"
+        },
+        {
+          "metric": "可捕获名义额",
+          "source": "data/derived/friction_budget.csv",
+          "value": "$125,197"
+        },
+        {
+          "metric": "48h 窗口资金费收入",
+          "source": "data/derived/funding_rates.csv",
+          "value": "+1.571 bp"
+        },
+        {
+          "metric": "双腿最优执行成本",
+          "source": "project2/execution_cost.py",
+          "value": "+10.26 bp（双腿全挂单）"
+        }
+      ],
+      "invalid_reason": "",
+      "notes": "净收益 + 资金费 = -10.84 bp",
+      "valid": true,
+      "verdict": "unfavorable"
+    },
+    {
+      "confidence": 0.6,
+      "dimension": "sentiment",
+      "evidence": [
+        {
+          "metric": "合约持仓量 OI",
+          "source": "data/spread/sentiment-*.csv",
+          "value": "77504"
+        },
+        {
+          "metric": "当期资金费率",
+          "source": "data/spread/sentiment-*.csv",
+          "value": "+2.580 bp"
+        },
+        {
+          "metric": "资金费率历史百分位",
+          "source": "data/spread/sentiment-*.csv",
+          "value": "93%"
+        },
+        {
+          "metric": "历史正费率占比",
+          "source": "data/spread/sentiment-*.csv",
+          "value": "23.0%"
+        },
+        {
+          "metric": "48h 窗口资金费收入",
+          "source": "data/derived/funding_rates.csv",
+          "value": "+1.571 bp"
+        }
+      ],
+      "invalid_reason": "",
+      "notes": "实测拥挤度：历史正费率占比 23.0% ｜ 当期费率处于历史 93% 分位。⚠️ 多空比不可得（公开 API 400/404），未用其它量替代",
+      "valid": true,
+      "verdict": "unfavorable"
+    },
+    {
+      "confidence": 0.85,
+      "dimension": "news",
+      "evidence": [
+        {
+          "metric": "事件严重度",
+          "source": "project2/event_gate.py",
+          "value": "none"
+        },
+        {
+          "metric": "判断置信度（受来源约束）",
+          "source": "project2/event_gate.py",
+          "value": "0.40"
+        },
+        {
+          "metric": "判断来源",
+          "source": "project2/event_gate.py",
+          "value": "llm"
+        },
+        {
+          "metric": "事件理由",
+          "source": "project2/event_gate.py",
+          "value": "新闻标题为（无），无任何可判断的事件信息"
+        },
+        {
+          "metric": "日历已复核条数",
+          "source": "project2/events_calendar.json",
+          "value": "人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观"
+        }
+      ],
+      "invalid_reason": "",
+      "notes": "（消息面已过期 1434.0 分钟（阈值 30 分钟）—— 不拿旧闻当新闻）✅ 本次由 **LLM** 判事件（来源=llm，tokens 输入 1185 / 输出 39）—— 运行期职责已真实执行。⚠️ 置信度被压到 0.40 不是 LLM 的问题：日历里**没有一条带可回溯来源**，按 CONF_CAP_NO_SOURCE 封顶｜prompt v3-2026-09-19（source=file:prompts/event_gate.v3.md, sha256=be18641c7e3bb685…）｜事件驱动：no_candidates（本轮没有候选标题，无法确证『无新条目』）",
+      "valid": true,
+      "verdict": "favorable"
+    },
+    {
+      "confidence": 0.7,
+      "dimension": "technical",
+      "evidence": [
+        {
+          "metric": "perp/bid 五档总深度",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "$263,607"
+        },
+        {
+          "metric": "perp/bid 首档占比",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "90.2%"
+        },
+        {
+          "metric": "perp/ask 五档总深度",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "$21,019"
+        },
+        {
+          "metric": "perp/ask 首档占比",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "45.3%"
+        },
+        {
+          "metric": "spot/bid 五档总深度",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "$126,366"
+        },
+        {
+          "metric": "spot/bid 首档占比",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "0.0%"
+        },
+        {
+          "metric": "spot/ask 五档总深度",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "$80,762"
+        },
+        {
+          "metric": "spot/ask 首档占比",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "0.2%"
+        },
+        {
+          "metric": "现货腿成交率",
+          "source": "data/derived/precise_fill_spot_bid.csv",
+          "value": "46.9%"
+        },
+        {
+          "metric": "现货腿逆向选择 f_dmid(k6)",
+          "source": "data/derived/precise_fill_spot_bid.csv",
+          "value": "-0.23 bp"
+        }
+      ],
+      "invalid_reason": "",
+      "notes": "成交率 46.9% ｜ 逆向选择 -0.23 bp",
+      "valid": true,
+      "verdict": "favorable"
+    },
+    {
+      "confidence": 0.5,
+      "dimension": "execution_risk",
+      "evidence": [
+        {
+          "metric": "P(只成交一腿)",
+          "source": "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）",
+          "value": "23.6%"
+        },
+        {
+          "metric": "P(两腿都成交)",
+          "source": "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）",
+          "value": "3.60%"
+        },
+        {
+          "metric": "perp 最后一笔成交距今",
+          "source": "data/spread/trades-*.csv",
+          "value": "13.6 分钟"
+        },
+        {
+          "metric": "双边停滞对照",
+          "source": "data/spread/trades-*.csv",
+          "value": "现货 12.5 分钟 ｜ 永续 13.6 分钟"
+        },
+        {
+          "metric": "可捕获名义额",
+          "source": "data/derived/friction_budget.csv",
+          "value": "$125,197"
+        },
+        {
+          "metric": "现货腿逆向选择 f_dmid(k6)",
+          "source": "data/derived/precise_fill_spot_bid.csv",
+          "value": "-0.23 bp"
+        },
+        {
+          "metric": "底层报价活性（最近 20 轮现货中间价）",
+          "source": "data/spread/orderbook-*.csv",
+          "value": "最近 20 轮现货中间价：不同值 2 个 ｜ 跨度 0.11500000 ｜ 区间 [222.3550, 222.4700] ｜ 报价在动 -> 未停牌"
+        }
+      ],
+      "invalid_reason": "",
+      "notes": "未触发任何风险假设（阈值见 evidence）；另有 3 条未过阈值（留痕不删）",
+      "valid": true,
+      "verdict": "neutral"
+    }
+  ],
+  "base": "NVDA",
+  "data_snapshot": {
+    "cost": {
+      "adv_p": -0.929,
+      "adv_s": -0.228,
+      "best_cost": 10.26052951035275,
+      "best_mode": "双腿全挂单",
+      "cost_mix": 13.668238488503494,
+      "cost_mm": 10.26052951035275,
+      "cost_tk": 11.452634413425178,
+      "gate_severity": "none",
+      "joint_prov": "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）",
+      "joint_source": "measured",
+      "maker_allowed": true,
+      "p_both": 0.035958,
+      "p_both_indep_pertrade": 0.21635192,
+      "p_none": 0.727867,
+      "p_p": 0.197494,
+      "p_part": 0.236175,
+      "p_s": 0.110597,
+      "spread_p": 0.4498020873094262,
+      "spread_s": 0.45546673954093075
+    },
+    "depth_usd": {
+      "perp/ask": {
+        "first_share": 0.4531784433184516,
+        "five_level": 21019.6119,
+        "level1": 9525.635
+      },
+      "perp/bid": {
+        "first_share": 0.9016563318259925,
+        "five_level": 263607.5955,
+        "level1": 237683.4576
+      },
+      "spot/ask": {
+        "first_share": 0.0018413901306313543,
+        "five_level": 80762.0273,
+        "level1": 148.7144
+      },
+      "spot/bid": {
+        "first_share": 0.0001631114289699297,
+        "five_level": 126366.375,
+        "level1": 20.6118
+      }
+    },
+    "mid": {
+      "perp": 222.29500000000002,
+      "spot": 222.385
+    },
+    "orderbook_snapshot_ts": 1789802876375
+  },
+  "debate": {
+    "bear": {
+      "arguments": [
+        {
+          "claim": "basis 维度（置信度 0.80）指向不利：现货半幅点差 = 1.14 bp；往返净收益（全挂单） = -12.41 bp；双腿最优执行成本 = +10.26 bp（双腿全挂单）",
+          "direction_conflicts": [],
+          "evidence": [
+            {
+              "metric": "现货半幅点差",
+              "source": "data/derived/friction_budget.csv",
+              "value": "1.14 bp"
+            },
+            {
+              "metric": "往返净收益（全挂单）",
+              "source": "data/derived/friction_budget.csv",
+              "value": "-12.41 bp"
+            },
+            {
+              "metric": "双腿最优执行成本",
+              "source": "project2/execution_cost.py",
+              "value": "+10.26 bp（双腿全挂单）"
+            }
+          ],
+          "falsifier": "若实测往返成本越过 11.34 bp 阈值（或净收益转负），此论点作废",
+          "score": 0.8,
+          "strength": "measured"
+        },
+        {
+          "claim": "basis 维度（置信度 0.80）指向不利：可捕获名义额 = $125,197",
+          "direction_conflicts": [
+            "可捕获名义额 = $125,197 的数值方向偏有利，却被当作空头的论据"
+          ],
+          "evidence": [
+            {
+              "metric": "可捕获名义额",
+              "source": "data/derived/friction_budget.csv",
+              "value": "$125,197"
+            }
+          ],
+          "falsifier": "若五档总深度低于 $5,000，此论点作废（容量不足）",
+          "score": 0.8,
+          "strength": "measured"
+        },
+        {
+          "claim": "basis 维度（置信度 0.80）指向不利：48h 窗口资金费收入 = +1.571 bp",
+          "direction_conflicts": [
+            "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据"
+          ],
+          "evidence": [
+            {
+              "metric": "48h 窗口资金费收入",
+              "source": "data/derived/funding_rates.csv",
+              "value": "+1.571 bp"
+            }
+          ],
+          "falsifier": "若短永续由收资金费转为付费（费率转负），此论点作废",
+          "score": 0.8,
+          "strength": "measured"
+        },
+        {
+          "claim": "sentiment 维度（置信度 0.60）指向不利：当期资金费率 = +2.580 bp；资金费率历史百分位 = 93%；48h 窗口资金费收入 = +1.571 bp",
+          "direction_conflicts": [
+            "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据"
+          ],
+          "evidence": [
+            {
+              "metric": "当期资金费率",
+              "source": "data/spread/sentiment-*.csv",
+              "value": "+2.580 bp"
+            },
+            {
+              "metric": "资金费率历史百分位",
+              "source": "data/spread/sentiment-*.csv",
+              "value": "93%"
+            },
+            {
+              "metric": "48h 窗口资金费收入",
+              "source": "data/derived/funding_rates.csv",
+              "value": "+1.571 bp"
+            }
+          ],
+          "falsifier": "若短永续由收资金费转为付费（费率转负），此论点作废",
+          "score": 0.6,
+          "strength": "measured"
+        }
+      ],
+      "concessions": [
+        {
+          "confidence": 0.7,
+          "dimension": "technical",
+          "metric": "perp/bid 五档总深度",
+          "strength": "measured",
+          "value": "$263,607"
+        },
+        {
+          "confidence": 0.85,
+          "dimension": "news",
+          "metric": "事件严重度",
+          "strength": "derived",
+          "value": "none"
+        }
+      ],
+      "direction_conflicts": [
+        "可捕获名义额 = $125,197 的数值方向偏有利，却被当作空头的论据",
+        "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据",
+        "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据"
+      ],
+      "dropped": [
+        {
+          "metric": "合约持仓量 OI",
+          "reason": "该度量没有已实测的证伪条件",
+          "value": "77504"
+        },
+        {
+          "metric": "历史正费率占比",
+          "reason": "该度量没有已实测的证伪条件",
+          "value": "23.0%"
+        }
+      ],
+      "weight": 1.4
+    },
+    "bull": {
+      "arguments": [
+        {
+          "claim": "news 维度（置信度 0.85）指向有利：事件严重度 = none；判断置信度（受来源约束） = 0.40；事件理由 = 新闻标题为（无），无任何可判断的事件信息；日历已复核条数 = 人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观",
+          "direction_conflicts": [],
+          "evidence": [
+            {
+              "metric": "事件严重度",
+              "source": "project2/event_gate.py",
+              "value": "none"
+            },
+            {
+              "metric": "判断置信度（受来源约束）",
+              "source": "project2/event_gate.py",
+              "value": "0.40"
+            },
+            {
+              "metric": "事件理由",
+              "source": "project2/event_gate.py",
+              "value": "新闻标题为（无），无任何可判断的事件信息"
+            },
+            {
+              "metric": "日历已复核条数",
+              "source": "project2/events_calendar.json",
+              "value": "人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观"
+            }
+          ],
+          "falsifier": "若能取得可回溯来源、且严重度降为 none，此论点作废",
+          "score": 0.51,
+          "strength": "derived"
+        },
+        {
+          "claim": "technical 维度（置信度 0.70）指向有利：perp/bid 五档总深度 = $263,607；perp/bid 首档占比 = 90.2%；perp/ask 五档总深度 = $21,019；perp/ask 首档占比 = 45.3%；spot/bid 五档总深度 = $126,366；spot/bid 首档占比 = 0.0%；spot/ask 五档总深度 = $80,762；spot/ask 首档占比 = 0.2%",
+          "direction_conflicts": [],
+          "evidence": [
+            {
+              "metric": "perp/bid 五档总深度",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "$263,607"
+            },
+            {
+              "metric": "perp/bid 首档占比",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "90.2%"
+            },
+            {
+              "metric": "perp/ask 五档总深度",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "$21,019"
+            },
+            {
+              "metric": "perp/ask 首档占比",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "45.3%"
+            },
+            {
+              "metric": "spot/bid 五档总深度",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "$126,366"
+            },
+            {
+              "metric": "spot/bid 首档占比",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "0.0%"
+            },
+            {
+              "metric": "spot/ask 五档总深度",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "$80,762"
+            },
+            {
+              "metric": "spot/ask 首档占比",
+              "source": "data/spread/orderbook-*.csv",
+              "value": "0.2%"
+            }
+          ],
+          "falsifier": "若五档总深度低于 $5,000，此论点作废（容量不足）",
+          "score": 0.7,
+          "strength": "measured"
+        },
+        {
+          "claim": "technical 维度（置信度 0.70）指向有利：现货腿成交率 = 46.9%；现货腿逆向选择 f_dmid(k6) = -0.23 bp",
+          "direction_conflicts": [],
+          "evidence": [
+            {
+              "metric": "现货腿成交率",
+              "source": "data/derived/precise_fill_spot_bid.csv",
+              "value": "46.9%"
+            },
+            {
+              "metric": "现货腿逆向选择 f_dmid(k6)",
+              "source": "data/derived/precise_fill_spot_bid.csv",
+              "value": "-0.23 bp"
+            }
+          ],
+          "falsifier": "若现货腿成交率下滑、或逆向选择 f_dmid 的负值进一步加深，此论点作废",
+          "score": 0.7,
+          "strength": "measured"
+        }
+      ],
+      "concessions": [
+        {
+          "confidence": 0.8,
+          "dimension": "basis",
+          "metric": "现货半幅点差",
+          "strength": "measured",
+          "value": "1.14 bp"
+        },
+        {
+          "confidence": 0.6,
+          "dimension": "sentiment",
+          "metric": "合约持仓量 OI",
+          "strength": "measured",
+          "value": "77504"
+        }
+      ],
+      "direction_conflicts": [],
+      "dropped": [
+        {
+          "metric": "判断来源",
+          "reason": "该度量没有已实测的证伪条件",
+          "value": "llm"
+        }
+      ],
+      "weight": 1.21
+    },
+    "cross_examination": {
+      "bear_rebuts": {
+        "bear_position": "接受该证伪条件；在它成立前不下「不参与」的结论",
+        "target_claim": "news 维度（置信度 0.85）指向有利：事件严重度 = none；判断置信度（受来源约束） = 0.40；事件理由 = 新闻标题为（无），无任何可判断的事件信息；日历已复核条数 = 人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观",
+        "target_falsifier": "若能取得可回溯来源、且严重度降为 none，此论点作废"
+      },
+      "bull_rebuts": {
+        "bull_position": "接受该证伪条件；在它被触发前不据此加仓",
+        "target_claim": "basis 维度（置信度 0.80）指向不利：现货半幅点差 = 1.14 bp；往返净收益（全挂单） = -12.41 bp；双腿最优执行成本 = +10.26 bp（双腿全挂单）",
+        "target_falsifier": "若实测往返成本越过 11.34 bp 阈值（或净收益转负），此论点作废"
+      }
+    },
+    "excluded_reports": [],
+    "verdict": {
+      "base_stance": "proceed",
+      "bear_weight": 0.95,
+      "bull_weight": 1.21,
+      "cap_reason": null,
+      "cost_snapshot": {
+        "best_cost": 10.26052951035275,
+        "best_mode": "双腿全挂单"
+      },
+      "direction_conflicts": [
+        "可捕获名义额 = $125,197 的数值方向偏有利，却被当作空头的论据",
+        "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据",
+        "48h 窗口资金费收入 = +1.571 bp 的数值方向偏有利，却被当作空头的论据"
+      ],
+      "direction_penalty": 0.15,
+      "does_not_alter": [
+        "basis_bp / 点差 / 成本等一切量化基线",
+        "execution_cost 的最优执行方案",
+        "event_gate 的严重度判定"
+      ],
+      "margin": 0.25,
+      "raw_bear_weight": 1.4,
+      "raw_bull_weight": 1.21,
+      "raw_weights_old_scale": {
+        "bear": 1.4,
+        "bull": 1.55,
+        "diff": 0.15,
+        "stance": "caution"
+      },
+      "reason": "多头得分高出 0.26，超过僵持阈值 0.25",
+      "stance": "proceed",
+      "strength_mix": {
+        "bear": {
+          "measured": 4
+        },
+        "bull": {
+          "derived": 1,
+          "measured": 2
+        }
+      },
+      "strength_weights": {
+        "derived": 0.6,
+        "inference": 0.3,
+        "measured": 1.0,
+        "verified": 0.85
+      },
+      "weighting_changed_stance": true
+    }
+  },
+  "decision": {
+    "final_order": null,
+    "final_qty_usd": 0.0,
+    "final_stance": "stand_down",
+    "monotonic": {
+      "note": "proceed(2) > caution(1) > stand_down(0)；只允许往右走",
+      "qty_non_increasing": true,
+      "stance_non_increasing": true,
+      "upgrade_blocked": []
+    },
+    "stages": [
+      {
+        "detail": "5 份报告，5 份有效",
+        "stage": "analysts"
+      },
+      {
+        "detail": "多头得分高出 0.26，超过僵持阈值 0.25",
+        "stage": "debate",
+        "stance": "proceed"
+      },
+      {
+        "detail": "闸门 severity=none",
+        "severity": "none",
+        "stage": "gate",
+        "stance": "proceed"
+      },
+      {
+        "detail": "毛边际 -10.84 bp 低于门槛 11.34 bp（差 -22.18 bp）—— **不是一票否决，交给风控官裁**（交易员只负责如实报差距）",
+        "mode": "双腿全挂单",
+        "qty_usd": 37.18,
+        "stage": "trader",
+        "stance": "proceed"
+      },
+      {
+        "detail": "thin_depth",
+        "qty_usd": 37.18,
+        "stage": "risk_officer",
+        "stance": "stand_down",
+        "verdict": "caution"
+      },
+      {
+        "detail": "可执行规模被压到 37 USD，低于名义额下限 100 USD —— 正确结论是不做，而不是拿 37 USD 去做一笔套利",
+        "executable_usd": 37.18,
+        "qty_usd": 0.0,
+        "stage": "final",
+        "stance": "stand_down"
+      }
+    ],
+    "why": "可执行规模被压到 37 USD，低于名义额下限 100 USD —— 正确结论是不做，而不是拿 37 USD 去做一笔套利"
+  },
+  "decision_hash": "0d5ed9193c1a896368431ff07ca1ff76d8cb4c4421f0c37ce62dfb20913b069f",
+  "evidence_index": [
+    {
+      "dimension": "basis",
+      "metric": "现货半幅点差",
+      "source": "data/derived/friction_budget.csv",
+      "value": "1.14 bp"
+    },
+    {
+      "dimension": "basis",
+      "metric": "往返净收益（全挂单）",
+      "source": "data/derived/friction_budget.csv",
+      "value": "-12.41 bp"
+    },
+    {
+      "dimension": "basis",
+      "metric": "可捕获名义额",
+      "source": "data/derived/friction_budget.csv",
+      "value": "$125,197"
+    },
+    {
+      "dimension": "basis",
+      "metric": "48h 窗口资金费收入",
+      "source": "data/derived/funding_rates.csv",
+      "value": "+1.571 bp"
+    },
+    {
+      "dimension": "basis",
+      "metric": "双腿最优执行成本",
+      "source": "project2/execution_cost.py",
+      "value": "+10.26 bp（双腿全挂单）"
+    },
+    {
+      "dimension": "sentiment",
+      "metric": "合约持仓量 OI",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "77504"
+    },
+    {
+      "dimension": "sentiment",
+      "metric": "当期资金费率",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "+2.580 bp"
+    },
+    {
+      "dimension": "sentiment",
+      "metric": "资金费率历史百分位",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "93%"
+    },
+    {
+      "dimension": "sentiment",
+      "metric": "历史正费率占比",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "23.0%"
+    },
+    {
+      "dimension": "sentiment",
+      "metric": "48h 窗口资金费收入",
+      "source": "data/derived/funding_rates.csv",
+      "value": "+1.571 bp"
+    },
+    {
+      "dimension": "news",
+      "metric": "事件严重度",
+      "source": "project2/event_gate.py",
+      "value": "none"
+    },
+    {
+      "dimension": "news",
+      "metric": "判断置信度（受来源约束）",
+      "source": "project2/event_gate.py",
+      "value": "0.40"
+    },
+    {
+      "dimension": "news",
+      "metric": "判断来源",
+      "source": "project2/event_gate.py",
+      "value": "llm"
+    },
+    {
+      "dimension": "news",
+      "metric": "事件理由",
+      "source": "project2/event_gate.py",
+      "value": "新闻标题为（无），无任何可判断的事件信息"
+    },
+    {
+      "dimension": "news",
+      "metric": "日历已复核条数",
+      "source": "project2/events_calendar.json",
+      "value": "人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观"
+    },
+    {
+      "dimension": "technical",
+      "metric": "perp/bid 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$263,607"
+    },
+    {
+      "dimension": "technical",
+      "metric": "perp/bid 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "90.2%"
+    },
+    {
+      "dimension": "technical",
+      "metric": "perp/ask 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$21,019"
+    },
+    {
+      "dimension": "technical",
+      "metric": "perp/ask 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "45.3%"
+    },
+    {
+      "dimension": "technical",
+      "metric": "spot/bid 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$126,366"
+    },
+    {
+      "dimension": "technical",
+      "metric": "spot/bid 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "0.0%"
+    },
+    {
+      "dimension": "technical",
+      "metric": "spot/ask 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$80,762"
+    },
+    {
+      "dimension": "technical",
+      "metric": "spot/ask 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "0.2%"
+    },
+    {
+      "dimension": "technical",
+      "metric": "现货腿成交率",
+      "source": "data/derived/precise_fill_spot_bid.csv",
+      "value": "46.9%"
+    },
+    {
+      "dimension": "technical",
+      "metric": "现货腿逆向选择 f_dmid(k6)",
+      "source": "data/derived/precise_fill_spot_bid.csv",
+      "value": "-0.23 bp"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "P(只成交一腿)",
+      "source": "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）",
+      "value": "23.6%"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "P(两腿都成交)",
+      "source": "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）",
+      "value": "3.60%"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "perp 最后一笔成交距今",
+      "source": "data/spread/trades-*.csv",
+      "value": "13.6 分钟"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "双边停滞对照",
+      "source": "data/spread/trades-*.csv",
+      "value": "现货 12.5 分钟 ｜ 永续 13.6 分钟"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "可捕获名义额",
+      "source": "data/derived/friction_budget.csv",
+      "value": "$125,197"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "现货腿逆向选择 f_dmid(k6)",
+      "source": "data/derived/precise_fill_spot_bid.csv",
+      "value": "-0.23 bp"
+    },
+    {
+      "dimension": "execution_risk",
+      "metric": "底层报价活性（最近 20 轮现货中间价）",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "最近 20 轮现货中间价：不同值 2 个 ｜ 跨度 0.11500000 ｜ 区间 [222.3550, 222.4700] ｜ 报价在动 -> 未停牌"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "事件严重度",
+      "source": "project2/event_gate.py",
+      "value": "none"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "判断置信度（受来源约束）",
+      "source": "project2/event_gate.py",
+      "value": "0.40"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "事件理由",
+      "source": "project2/event_gate.py",
+      "value": "新闻标题为（无），无任何可判断的事件信息"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "日历已复核条数",
+      "source": "project2/events_calendar.json",
+      "value": "人工日历：7 条财报（其中已复核 0 条）+ 7 条宏观"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "perp/bid 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$263,607"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "perp/bid 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "90.2%"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "perp/ask 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$21,019"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "perp/ask 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "45.3%"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "spot/bid 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$126,366"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "spot/bid 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "0.0%"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "spot/ask 五档总深度",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "$80,762"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "spot/ask 首档占比",
+      "source": "data/spread/orderbook-*.csv",
+      "value": "0.2%"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "现货腿成交率",
+      "source": "data/derived/precise_fill_spot_bid.csv",
+      "value": "46.9%"
+    },
+    {
+      "dimension": "debate/bull",
+      "metric": "现货腿逆向选择 f_dmid(k6)",
+      "source": "data/derived/precise_fill_spot_bid.csv",
+      "value": "-0.23 bp"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "现货半幅点差",
+      "source": "data/derived/friction_budget.csv",
+      "value": "1.14 bp"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "往返净收益（全挂单）",
+      "source": "data/derived/friction_budget.csv",
+      "value": "-12.41 bp"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "双腿最优执行成本",
+      "source": "project2/execution_cost.py",
+      "value": "+10.26 bp（双腿全挂单）"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "可捕获名义额",
+      "source": "data/derived/friction_budget.csv",
+      "value": "$125,197"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "48h 窗口资金费收入",
+      "source": "data/derived/funding_rates.csv",
+      "value": "+1.571 bp"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "当期资金费率",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "+2.580 bp"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "资金费率历史百分位",
+      "source": "data/spread/sentiment-*.csv",
+      "value": "93%"
+    },
+    {
+      "dimension": "debate/bear",
+      "metric": "48h 窗口资金费收入",
+      "source": "data/derived/funding_rates.csv",
+      "value": "+1.571 bp"
+    }
+  ],
+  "format": "project2.debate-log/1",
+  "generated_ms": 1789836423230,
+  "input_manifest": [
+    {
+      "bytes": 7295377,
+      "exists": true,
+      "mtime": "2026-09-19T07:28:14Z",
+      "path": "data/spread/orderbook-2026-09-19.csv",
+      "sha256": "af434742857325cb4a4da0273b0c41043bd1ef2684d5b50f86c0e04a88d0538d"
+    },
+    {
+      "bytes": 903,
+      "exists": true,
+      "mtime": "2026-09-13T16:04:35Z",
+      "path": "data/derived/friction_budget.csv",
+      "sha256": "8f0a4da8567f47f764d881f899a684abb2e81be794737fd5c2b9b2e545f4997a"
+    },
+    {
+      "bytes": 889,
+      "exists": true,
+      "mtime": "2026-09-14T10:59:37Z",
+      "path": "data/derived/funding_rates.csv",
+      "sha256": "29682ab7865284f56e05a5afd932f07372b2977eec546cb9818474d992a39989"
+    },
+    {
+      "bytes": 2053,
+      "exists": true,
+      "mtime": "2026-09-18T05:19:24Z",
+      "path": "data/derived/precise_fill_spot_bid.csv",
+      "sha256": "5830432dd331a2ac9c89020ccfbbb4776f421b92b48415610b2f50eb15f428ae"
+    },
+    {
+      "bytes": 2379,
+      "exists": true,
+      "mtime": "2026-09-13T16:04:35Z",
+      "path": "data/derived/precise_fill_perp_ask.csv",
+      "sha256": "df660587f081a72ce429f89fe5bbefe1e9d7c12bd24ff8ae39103c4a6197e79d"
+    },
+    {
+      "bytes": 3219,
+      "exists": true,
+      "mtime": "2026-09-19T15:46:46Z",
+      "path": "data/derived/joint_fill_all_in_house.csv",
+      "sha256": "c2a4f26dac04d8895fee4dcbef0dd7eb1a72099f31789f8f7d9040b41c85b2b4"
+    },
+    {
+      "bytes": 2964,
+      "exists": true,
+      "mtime": "2026-09-19T15:46:46Z",
+      "path": "data/derived/joint_fill_all_stockroute.csv",
+      "sha256": "30801a51508d8316807a7e99645db6b205d6731351df3359e30851e4afdb3929"
+    },
+    {
+      "bytes": 3055,
+      "exists": true,
+      "mtime": "2026-09-19T15:46:46Z",
+      "path": "data/derived/joint_fill_all.csv",
+      "sha256": "5d2335a7b32e760fe25bd2ef5cfcf78f7936a1a92fafeb4c6af4ed973a28b6f3"
+    },
+    {
+      "bytes": 206693,
+      "exists": true,
+      "mtime": "2026-09-19T16:47:00Z",
+      "path": "project2/agent_team.py",
+      "sha256": "d189bdaa24eef2824f33e44341dc9c090bb0ed5eda7adafef1c88d7f0dfb7a48"
+    },
+    {
+      "bytes": 40595,
+      "exists": true,
+      "mtime": "2026-09-19T06:48:34Z",
+      "path": "project2/execution_cost.py",
+      "sha256": "157b03bbaf7601699c1b22f893a071e1d436bdac590db0124bca665ed6f5b3c7"
+    },
+    {
+      "bytes": 100819,
+      "exists": true,
+      "mtime": "2026-09-19T07:52:05Z",
+      "path": "project2/event_gate.py",
+      "sha256": "ed6270291b4c162bfdf7e79233a1c5bfd085e99ee328e419afa0e9b894898f15"
+    }
+  ],
+  "parameters": {
+    "base": "NVDA",
+    "data_used": {
+      "analysts": [
+        "data/derived/friction_budget.csv",
+        "data/derived/funding_rates.csv",
+        "data/derived/precise_fill_spot_bid.csv",
+        "data/spread/orderbook-*.csv",
+        "data/spread/sentiment-*.csv",
+        "data/spread/trades-*.csv",
+        "project2/event_gate.py",
+        "project2/events_calendar.json",
+        "project2/execution_cost.py",
+        "实测联合分布 data/derived/joint_fill_all_in_house.csv（窗口 3671 个，2026-09-12~2026-09-14）"
+      ],
+      "orderbook_file": "data/spread/orderbook-2026-09-19.csv",
+      "orderbook_snapshot_ts": 1789802876375
+    },
+    "depth_take_ratio": 0.25,
+    "gate": {
+      "reason": "无事件",
+      "severity": "none",
+      "source": "static"
+    },
+    "llm_event": {
+      "cache_age_min": null,
+      "cache_reused": false,
+      "confidence": 0.85,
+      "prompt_sha256": "be18641c7e3bb6858a0053dd780107bb4660374ae3f95c03c89cf94cb6205704",
+      "prompt_source": "file:prompts/event_gate.v3.md",
+      "prompt_version": "v3-2026-09-19",
+      "reason": "新闻标题为（无），无任何可判断的事件信息",
+      "severity": "none",
+      "source": "llm"
+    },
+    "log_format": "project2.debate-log/1",
+    "miss_bp": 3.0,
+    "now_ms": 1789802876375,
+    "qty_usd": 5000.0,
+    "scenario": null,
+    "scenario_note": null,
+    "slice_usd": 2000.0,
+    "synthetic": false,
+    "thresholds": {
+      "adv_min_bp": -3.0,
+      "cost_bp": 11.34,
+      "debate_margin": 0.25,
+      "depth_min_usd": 5000.0,
+      "direction_penalty": 0.15,
+      "edge_bp": 11.34,
+      "fee_rt_mm_bp": 14.0,
+      "fee_rt_tk_bp": 22.0,
+      "min_notional_usd": 100.0
+    },
+    "urgent": false
+  },
+  "risk_officer": {
+    "agent_driven": false,
+    "agent_hypotheses": 0,
+    "agent_rules": [],
+    "cautions": [
+      "thin_depth"
+    ],
+    "checked_rules": 9,
+    "hits": [
+      "thin_depth"
+    ],
+    "qty_in_usd": 37.18,
+    "qty_out_usd": 37.18,
+    "reason": "thin_depth",
+    "rules": [
+      {
+        "action": "no_new_position",
+        "falsifier": "若能取得可回溯来源、且严重度降为 none，本条撤销",
+        "hit": false,
+        "id": "gate_block",
+        "level": "veto",
+        "measured": "闸门 severity=none",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "事件窗口内禁止新开仓（挂单类方案在 execution_cost 里已作废）"
+      },
+      {
+        "action": "no_new_position",
+        "falsifier": "若两侧得分差重回僵持阈值 0.25 以内，本条不再触发",
+        "hit": false,
+        "id": "debate_stand_down",
+        "level": "veto",
+        "measured": "辩论裁决 stance=proceed",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "裁决立场为 stand_down 时不得开仓"
+      },
+      {
+        "action": "no_new_position",
+        "falsifier": "若最优成本回落到 11.34 bp 以内，或毛边际升到 11.34 bp 以上，本条撤销",
+        "hit": false,
+        "id": "cost_exceeds_edge",
+        "level": "veto",
+        "measured": "最优执行成本 +10.33 bp ｜ 毛边际(净收益+资金费) -10.84 bp ｜ 门槛 +11.34 bp ｜ 三方案：全挂单 +10.33 ｜ 混合 +13.67 ｜ 全吃单 +11.00",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "最优执行成本越过 净收益判据门槛（11.34 bp）**且**毛边际本身低于该门槛 —— 执行层无解"
+      },
+      {
+        "action": "no_new_position",
+        "falsifier": "若 f_dmid 回升到 -3.0 bp 以上，本条撤销",
+        "hit": false,
+        "id": "adverse_selection",
+        "level": "veto",
+        "measured": "f_dmid(现货腿,k6) = -0.23 bp",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "现货腿逆向选择负向加深（f_dmid ≤ -3.0 bp = 挂单被系统性挑选）"
+      },
+      {
+        "action": "cap_size",
+        "falsifier": "若可捕获名义额回升到 1000 USD 以上，本条撤销",
+        "hit": false,
+        "id": "thin_capacity",
+        "level": "caution",
+        "measured": "可捕获名义额 = 125,197 USD",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "可捕获名义额不足（< 1000 USD）—— 容量撑不住计划规模"
+      },
+      {
+        "action": "cap_size",
+        "falsifier": "若两腿首档深度均高于单笔规模 ÷ 0.25，本条撤销",
+        "hit": true,
+        "id": "thin_depth",
+        "level": "caution",
+        "measured": "spot/ask 首档 148 USD ｜ perp/ask 首档 9,525 USD（单笔上限 25%）",
+        "qty_cap": 37.18,
+        "remedy_note": "按较小的首档深度 148 USD 的 25% 缩规模",
+        "statement": "单笔超过首档深度的 25% —— 会显著消耗档位"
+      },
+      {
+        "action": "require_taker",
+        "falsifier": "若 P(只成交一腿) 降到 50% 以内，本条撤销",
+        "hit": false,
+        "id": "leg_risk_high",
+        "level": "caution",
+        "measured": "P(只成交一腿) = 23.6%（实测成交率反推）",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "「只成交一腿」概率 > 50% —— 会留下裸露的方向敞口"
+      },
+      {
+        "action": "no_new_position",
+        "falsifier": "若能读到可捕获名义额，本条撤销",
+        "hit": false,
+        "id": "no_capacity_data",
+        "level": "caution",
+        "measured": "可捕获名义额 = 有",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "容量数据缺失时不得按无上限处理（**数据缺失 ≠ 没有风险**）"
+      },
+      {
+        "action": "no_new_position",
+        "falsifier": "若能算出双腿执行成本，本条撤销",
+        "hit": false,
+        "id": "no_cost_data",
+        "level": "caution",
+        "measured": "最优执行成本 = +10.33 bp ｜ 交易员未下单原因：毛边际 -10.84 bp 低于门槛 11.34 bp（差 -22.18 bp）",
+        "qty_cap": null,
+        "remedy_note": null,
+        "statement": "成本数据缺失时不得下单（无法定价的单不许下）"
+      }
+    ],
+    "triggered_rules": 1,
+    "verdict": "caution",
+    "vetoes": []
+  },
+  "rules_skeleton": [
+    {
+      "action": "no_new_position",
+      "falsifier": "若能取得可回溯来源、且严重度降为 none，本条撤销",
+      "id": "gate_block",
+      "level": "veto",
+      "statement": "事件窗口内禁止新开仓（挂单类方案在 execution_cost 里已作废）"
+    },
+    {
+      "action": "no_new_position",
+      "falsifier": "若两侧得分差重回僵持阈值 0.25 以内，本条不再触发",
+      "id": "debate_stand_down",
+      "level": "veto",
+      "statement": "裁决立场为 stand_down 时不得开仓"
+    },
+    {
+      "action": "no_new_position",
+      "falsifier": "若最优成本回落到 11.34 bp 以内，或毛边际升到 11.34 bp 以上，本条撤销",
+      "id": "cost_exceeds_edge",
+      "level": "veto",
+      "statement": "最优执行成本越过 净收益判据门槛（11.34 bp）**且**毛边际本身低于该门槛 —— 执行层无解"
+    },
+    {
+      "action": "no_new_position",
+      "falsifier": "若 f_dmid 回升到 -3.0 bp 以上，本条撤销",
+      "id": "adverse_selection",
+      "level": "veto",
+      "statement": "现货腿逆向选择负向加深（f_dmid ≤ -3.0 bp = 挂单被系统性挑选）"
+    },
+    {
+      "action": "cap_size",
+      "falsifier": "若可捕获名义额回升到 1000 USD 以上，本条撤销",
+      "id": "thin_capacity",
+      "level": "caution",
+      "statement": "可捕获名义额不足（< 1000 USD）—— 容量撑不住计划规模"
+    },
+    {
+      "action": "cap_size",
+      "falsifier": "若两腿首档深度均高于单笔规模 ÷ 0.25，本条撤销",
+      "id": "thin_depth",
+      "level": "caution",
+      "statement": "单笔超过首档深度的 25% —— 会显著消耗档位"
+    },
+    {
+      "action": "require_taker",
+      "falsifier": "若 P(只成交一腿) 降到 50% 以内，本条撤销",
+      "id": "leg_risk_high",
+      "level": "caution",
+      "statement": "「只成交一腿」概率 > 50% —— 会留下裸露的方向敞口"
+    },
+    {
+      "action": "no_new_position",
+      "falsifier": "若能读到可捕获名义额，本条撤销",
+      "id": "no_capacity_data",
+      "level": "caution",
+      "statement": "容量数据缺失时不得按无上限处理（**数据缺失 ≠ 没有风险**）"
+    },
+    {
+      "action": "no_new_position",
+      "falsifier": "若能算出双腿执行成本，本条撤销",
+      "id": "no_cost_data",
+      "level": "caution",
+      "statement": "成本数据缺失时不得下单（无法定价的单不许下）"
+    }
+  ],
+  "trader": {
+    "blocked_by": [
+      "毛边际 -10.84 bp 低于门槛 11.34 bp（差 -22.18 bp）—— **不是一票否决，交给风控官裁**（交易员只负责如实报差距）"
+    ],
+    "edge_gap_bp": -22.18,
+    "gross_edge_bp": -10.84,
+    "order": {
+      "all_modes_bp": {
+        "双腿全吃单": 11.0,
+        "双腿全挂单": 10.33,
+        "现货挂单+永续吃单": 13.67
+      },
+      "barred_modes": [],
+      "cost_bp": 10.33,
+      "cost_mode": "双腿全挂单",
+      "gate_severity": "none",
+      "kind": "mm",
+      "maker_allowed": true,
+      "mode": "双腿全挂单",
+      "note": "挂单价只由**实测半幅点差**给出，不做任何价格预测",
+      "price_desc": "现货买腿挂 bid ≈ 222.3850（中价 − 0.23 bp 半幅）；永续卖腿挂 ask ≈ 222.2950",
+      "qty_usd": 37.18,
+      "size_bounds": [
+        {
+          "name": "可捕获名义额（data/derived/friction_budget.csv）",
+          "usd": 125197.41
+        },
+        {
+          "name": "spot/ask 首档深度 × 0.25（data/spread/orderbook-*.csv）",
+          "usd": 37.18
+        },
+        {
+          "name": "perp/ask 首档深度 × 0.25（data/spread/orderbook-*.csv）",
+          "usd": 2381.41
+        }
+      ],
+      "size_cap": 37.18,
+      "size_cap_by": "spot/ask 首档深度 × 0.25（data/spread/orderbook-*.csv）",
+      "slice_usd": 2000.0,
+      "slices": 1
+    }
+  }
+}

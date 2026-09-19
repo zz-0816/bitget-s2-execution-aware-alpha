@@ -2,16 +2,20 @@
    只消费本仓库 run_p2.py 提供的 /api/*；无外部依赖（离线可用）。
 
    ⚠️ 记录一个踩过的坑：这个页面最初是项目一的统一页面，调用的是
-   /api/overview、/api/timeline、/api/data-status —— 那三个端点**只有项目一
-   的服务才有**。独立跑起来时页面全是"加载中…"，而所有自检都是绿的
+   /api/overview、/api/timeline、/api/data-status —— 那三个端点只有项目一
+   的服务才有。独立跑起来时页面全是"加载中…"，而所有自检都是绿的
    （因为没有一个自检去碰 HTTP）。现在：端点集合集中写在 API 里，
-   run_p2.py --selftest 会照着这份清单真的打一遍。 */
+   run_p2.py --selftest 会照着这份清单真的打一遍。
+
+   ⚠️ 第二条纪律：页面文案里不要出现 markdown 标记（粗体星号之类）。
+   文本框里写了星号只会原样显示出来 —— tools/ui_check.py 专门抓这个，
+   tools/ui_design_check.py 也会在静态文件里扫一遍。 */
 
 'use strict';
 
 const $ = (id) => document.getElementById(id);
 
-// ⭐ 页面调用的**全部**端点（与 run_p2.py 的路由一一对应）
+// ⭐ 页面调用的全部端点（与 run_p2.py 的路由一一对应）
 const API = {
   health: '/api/health',
   bases: '/api/bases',
@@ -24,6 +28,33 @@ const API = {
 };
 
 const STATE = { base: null, qty: 5000, busy: false, seenAlerts: new Set() };
+
+/* ---------------- 动效（可关、可验证） ---------------- */
+
+/* 系统开了"减少动态效果"就一律不做动画 —— CSS 侧用 --m 开关，
+   JS 侧（条形生长、数值闪烁）在这里单独判断。 */
+const REDUCE_MOTION = !!(window.matchMedia
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* 让条形从 0 长到目标宽度。
+   ⚠️ 不能直接写 style="width:X%"：元素一出生就是终态，CSS transition 不会触发。
+   必须先以 0 渲染，下一帧再改成目标值 —— 这是"看起来有没有做动效"的分界线。
+   ⚠️ rAF 做个兜底：web_smoke 的 Node 最小 DOM 里没有 requestAnimationFrame，
+   不兜底会让"页面渲染冒烟"整个挂掉（那一步正是用来防页面坏掉的）。 */
+const RAF = (typeof window !== 'undefined' && window.requestAnimationFrame)
+  ? window.requestAnimationFrame.bind(window)
+  : function (fn) { setTimeout(fn, 16); };
+
+function animateBars(root) {
+  const scope = root || document;
+  if (!scope.querySelectorAll) return;
+  scope.querySelectorAll('.cb-fill[data-w]').forEach(function (el) {
+    const w = el.getAttribute('data-w');
+    if (REDUCE_MOTION) { el.style.width = w; return; }
+    el.style.width = '0%';
+    RAF(function () { RAF(function () { el.style.width = w; }); });
+  });
+}
 
 /* ---------------- 工具 ---------------- */
 
@@ -196,9 +227,9 @@ function renderDebate(d) {
   };
   $('debate').innerHTML =
     '<div class="costbar"><span class="cb-name">多头 / 空头得分</span>' +
-      '<span class="cb-track"><span class="cb-fill" style="width:' +
+      '<span class="cb-track"><span class="cb-fill best" data-w="' +
         clamp(100 * (v.bull_weight || 0) / Math.max(0.01, (v.bull_weight || 0) + (v.bear_weight || 0)), 0, 100) +
-        '%;background:linear-gradient(90deg,#1d8f63,#35c98a)"></span></span>' +
+        '%"></span></span>' +
       '<span class="cb-val">' + fmt(v.bull_weight, 2) + ' vs ' + fmt(v.bear_weight, 2) + '</span></div>' +
     '<p><span class="tag">裁决</span> <b class="s-' + esc(v.stance) + '">' +
       esc(STANCE_CN[v.stance] || v.stance) + '</b>　' + mdInline(v.reason || '') + '</p>' +
@@ -216,6 +247,7 @@ function renderDebate(d) {
     ((v.direction_conflicts || []).length
       ? '<p class="hint neg">方向自相矛盾扣分 ' + fmt(v.direction_penalty, 2) + '/条：' +
         esc(v.direction_conflicts.join('；')).slice(0, 400) + '</p>' : '');
+  animateBars($('debate'));
 }
 
 function renderGate(d) {
@@ -252,8 +284,8 @@ function renderGate(d) {
           (d.prompt.path ? ' ｜ ' + esc(d.prompt.path) : '') + '</td></tr>' : '') +
     '</tbody></table>' +
     (usedLlm
-      ? '<p class="hint">✅ 本次**用了 LLM** 判事件（大模型在运行期的唯一职责），' +
-        '且它的判定**已经进入硬闸门** —— 不再只停在辩论层。</p>'
+      ? '<p class="hint">✅ 本次<b>用了 LLM</b> 判事件（大模型在运行期的唯一职责），' +
+        '且它的判定<b>已经进入硬闸门</b> —— 不再只停在辩论层。</p>'
       : '<p class="hint">⚠️ <b>本次未使用 LLM</b>：事件判断退化为确定性日历，' +
         '只挡得住可计算事件（期权到期/休市），<b>挡不住突发新闻与财报</b>。' +
         '这是如实标注，不是"没跑过却假装跑过"。</p>');
@@ -270,7 +302,7 @@ function renderTrader(d) {
   const bars = Object.keys(modes).map((k) =>
     '<div class="costbar' + (k === best ? ' best' : '') + '">' +
       '<span class="cb-name">' + esc(k) + (k === best ? ' ✓' : '') + '</span>' +
-      '<span class="cb-track"><span class="cb-fill" style="width:' +
+      '<span class="cb-track"><span class="cb-fill" data-w="' +
         clamp(100 * Math.abs(modes[k]) / maxAbs, 2, 100) + '%"></span></span>' +
       '<span class="cb-val ' + (modes[k] > thr ? 'neg' : 'pos') + '">' + fmt(modes[k]) + ' bp</span></div>').join('');
   const o = t.order;
@@ -297,6 +329,7 @@ function renderTrader(d) {
       : '') +
     '<p class="hint">交易员<b>不新造阈值、不做价格预测</b>：价位＝中价 ± 实测半幅点差；' +
     '规模＝min(请求, 可捕获名义额(实测), 首档深度×25%)。</p>';
+  animateBars($('trader'));
 }
 
 function renderRisk(d) {
@@ -337,12 +370,16 @@ function renderRisk(d) {
 
 function renderCost(d) {
   const c = d.cost || {};
+  // 条形只写 data-w（目标宽度），由 animateBars 在下一帧设 style.width —— 这样
+  // CSS 的 transition 才会真的跑起来（直接写死宽度 = 元素一出生就是终态，没有动画）。
   const bar = (name, val, good) => (typeof val === 'number'
-    ? '<div class="costbar"><span class="cb-name">' + name + '</span>' +
-      '<span class="cb-track"><span class="cb-fill" style="width:' +
-      clamp(Math.abs(val) * 4, 2, 100) + '%;' + (good ? 'background:linear-gradient(90deg,#1d8f63,#35c98a)' : '') +
-      '"></span></span><span class="cb-val">' + val.toFixed(1) + ' bp</span></div>' : '');
-  $('cost').innerHTML =
+    ? '<div class="costbar' + (good ? ' best' : '') + '">' +
+      '<span class="cb-name">' + name + '</span>' +
+      '<span class="cb-track"><span class="cb-fill" data-w="' +
+      clamp(Math.abs(val) * 4, 2, 100) + '%"></span></span>' +
+      '<span class="cb-val">' + val.toFixed(1) + ' bp</span></div>' : '');
+  const el = $('cost');
+  el.innerHTML =
     '<table><tbody>' +
       '<tr><th>最优方式</th><td><b>' + esc(c.best_mode || '—') + '</b></td>' +
           '<th>成本</th><td>' + fmt(c.best_cost) + ' bp</td></tr>' +
@@ -367,6 +404,7 @@ function renderCost(d) {
     '<p class="hint">' + mdInline(c.joint_prov || '') + '</p>' +
     ((c.invalidated || []).length
       ? '<p class="hint neg">被硬规则作废的方式：' + esc(c.invalidated.join('、')) + '</p>' : '');
+  animateBars(el);
 }
 
 function renderProv(d) {
@@ -408,6 +446,24 @@ async function runDecision(base, qty) {
 
 /* ---------------- 全标的概览 ---------------- */
 
+/* 记住上一次每行的渲染结果：刷新后哪一行**变了**就闪一下。
+   数据密集页面里"哪一格动了"比"整页刷新了"有用得多。 */
+const LAST_ROWS = {};
+
+function flashChangedRows(tb) {
+  if (!tb.querySelectorAll) return;
+  tb.querySelectorAll('tr[data-base]').forEach(function (tr) {
+    const b = tr.getAttribute('data-base');
+    const now = tr.innerHTML;
+    if (LAST_ROWS[b] !== undefined && LAST_ROWS[b] !== now && !REDUCE_MOTION
+        && tr.classList) {
+      tr.classList.add('flash-up');
+      setTimeout(function () { tr.classList.remove('flash-up'); }, 950);
+    }
+    LAST_ROWS[b] = now;
+  });
+}
+
 function renderOverview(items) {
   const tb = document.querySelector('#ov-table tbody');
   if (!items || !items.length) {
@@ -420,7 +476,7 @@ function renderOverview(items) {
     const warns = (it.warnings || []).map((x) => '<div class="neg">! ' + mdInline(x) + '</div>').join('');
     const cond = Object.keys(it.conditions || {}).map((k) => esc(k) + '=' + esc(String(it.conditions[k]))).join('；') || '—';
     const sev = ((it.event || {}).severity) || '—';
-    return '<tr>' +
+    return '<tr data-base="' + esc(it.base) + '">' +
       '<td class="base-name"><a href="#" data-base="' + esc(it.base) + '">' + esc(it.base) + '</a></td>' +
       '<td class="' + rm[1] + '"><b>' + rm[0] + '</b></td>' +
       '<td>' + esc(it.verdict) + '</td>' +
@@ -428,6 +484,7 @@ function renderOverview(items) {
       '<td class="sep mono-dim">' + cond + '</td>' +
       '<td class="sep ' + (sev === 'block' ? 'neg' : '') + '">' + esc(sev) + '</td></tr>';
   }).join('');
+  flashChangedRows(tb);
   tb.querySelectorAll('a[data-base]').forEach((a) => {
     a.onclick = (ev) => {
       ev.preventDefault();

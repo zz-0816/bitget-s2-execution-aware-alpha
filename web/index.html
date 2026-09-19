@@ -4,12 +4,19 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>执行决策台 · Execution-aware Alpha（项目二）</title>
+<!-- 让浏览器把滚动条/表单控件也按深色渲染（否则原生控件在深色页面上很突兀） -->
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#111113" />
+<meta name="description" content="项目二 · Execution-aware Alpha：给定盘口与目标仓位，一个会自我质疑的 agent 团队回答这一单该吃还是该挂、挂在哪个价、分几笔；不代下单，非投资建议。" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+<!-- 键盘用户先看到的第一个可聚焦元素 -->
+<a class="skip-link" href="#main">跳到主内容</a>
+
 <header class="top">
   <div class="brand">
-    <span class="dot" id="live-dot"></span>
+    <span class="dot" id="live-dot" role="img" aria-label="服务状态"></span>
     <h1>执行决策台</h1>
     <span class="sub">项目二 · Execution-aware Alpha ｜ 给定盘口与目标仓位：吃 / 挂 / 挂哪 / 分几笔</span>
   </div>
@@ -21,28 +28,28 @@
   </div>
 </header>
 
-<main>
+<main id="main">
   <div class="disclaimer" id="disclaimer">加载中…</div>
 
   <!-- ══════════ 1. 决策链主视图 ══════════ -->
-  <section class="panel">
+  <section class="panel" style="--i:0">
     <h2>执行决策链
       <span class="hint">5 路独立分析 → 多空辩论 → 事件闸门 → 交易员 → 风控官（一票否决）→ 最终决策</span>
     </h2>
     <div class="controls">
       <span class="chip" id="base-chips"></span>
-      <label>名义额 USD</label>
+      <label for="qty">名义额 USD</label>
       <input type="number" id="qty" value="5000" min="100" step="1000" />
       <button id="run">跑完整决策链</button>
       <button id="run-overview" class="ghost">刷新全标的概览</button>
-      <span class="loading" id="run-state"></span>
+      <span class="loading" id="run-state" role="status" aria-live="polite"></span>
     </div>
     <div id="verdict"><div class="loading">选一个标的，点「跑完整决策链」。这一页上的每个数字都能点回代码常量或数据文件。</div></div>
     <div class="stages" id="stages"></div>
   </section>
 
   <!-- ══════════ 2. 五路分析师 ══════════ -->
-  <section class="panel">
+  <section class="panel" style="--i:1">
     <h2>① 五路独立分析
       <span class="hint">互不读对方结论；<strong>没有引用已实测的量的结论一律作废</strong></span>
     </h2>
@@ -51,11 +58,11 @@
 
   <!-- ══════════ 3. 辩论 + 闸门 ══════════ -->
   <div class="grid2">
-    <section class="panel">
+    <section class="panel" style="--i:2">
       <h2>② 多空辩论 <span class="hint">每条论点必须给证伪条件；同一证伪条件只算一条</span></h2>
       <div id="debate"><div class="loading">尚未运行</div></div>
     </section>
-    <section class="panel">
+    <section class="panel" style="--i:3">
       <h2>③ 事件闸门 <span class="hint">LLM 在运行期的唯一职责</span></h2>
       <div id="gate"><div class="loading">尚未运行</div></div>
     </section>
@@ -63,11 +70,11 @@
 
   <!-- ══════════ 4. 交易员 + 风控官 ══════════ -->
   <div class="grid2">
-    <section class="panel">
+    <section class="panel" style="--i:4">
       <h2>④ 交易员 <span class="hint">不新造阈值、不做价格预测</span></h2>
       <div id="trader"><div class="loading">尚未运行</div></div>
     </section>
-    <section class="panel">
+    <section class="panel" style="--i:5">
       <h2>⑤ 风控官 <span class="hint">一票否决；只收紧，不放松</span></h2>
       <div id="risk"><div class="loading">尚未运行</div></div>
     </section>
@@ -75,18 +82,18 @@
 
   <!-- ══════════ 5. 成本 + 溯源 ══════════ -->
   <div class="grid2">
-    <section class="panel">
+    <section class="panel" style="--i:6">
       <h2>成本与联合成交分布 <span class="hint">实测取代独立假设</span></h2>
       <div id="cost"><div class="loading">尚未运行</div></div>
     </section>
-    <section class="panel">
+    <section class="panel" style="--i:7">
       <h2>可复跑溯源 <span class="hint">参数 + 阈值 + 输入 SHA256 + decision_hash</span></h2>
       <div id="prov"><div class="loading">尚未运行</div></div>
     </section>
   </div>
 
   <!-- ══════════ 6. 全标的概览 ══════════ -->
-  <section class="panel">
+  <section class="panel" style="--i:8">
     <h2>全标的概览 <span class="hint">风险与理由（<strong>不代下单</strong>，只给理由与条件）</span></h2>
     <div class="table-wrap">
       <table id="ov-table">
@@ -102,7 +109,7 @@
   </section>
 
   <!-- ══════════ 7. 阈值透明化 ══════════ -->
-  <section class="panel">
+  <section class="panel" style="--i:9">
     <h2>生效阈值与来源 <span class="hint">页面上每个判断都由这些常量决定；它们全部来自实测</span></h2>
     <div class="table-wrap">
       <table id="params-table">
@@ -113,14 +120,23 @@
   </section>
 
   <!-- ══════════ 8. 数据边界 ══════════ -->
-  <section class="panel">
+  <section class="panel" style="--i:10">
     <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可用 <code>--verify</code> 就地核验</span></h2>
     <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
   </section>
 </main>
 
 <footer class="bottom" id="footer">—</footer>
-<div id="toasts"></div>
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<noscript>
+  <div class="panel" style="margin:16px 22px">
+    <h2>这个页面需要 JavaScript</h2>
+    <p class="hint">页面本身是静态的，所有数据来自本机服务 <code>/api/*</code>。
+    不开 JS 也能用命令行看同样的结论：<code>python run_p2.py --demo NVDA</code></p>
+  </div>
+</noscript>
+
 <script src="/app.js"></script>
 </body>
 </html>

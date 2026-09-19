@@ -106,12 +106,18 @@ const fetchShim = async (url) => {
 const sandbox = {
   document: documentShim,
   fetch: fetchShim,
-  window: {},
+  window: {
+    // 浏览器里一定有的两个 API：页面代码用它们做"减少动效"判断与逐帧动画。
+    // shim 不提供的话，页面里任何用到它们的正常代码都会在这里假失败。
+    matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+    requestAnimationFrame: (fn) => setTimeout(fn, 0),
+  },
   console,
-  setTimeout: () => 0,
+  setTimeout: (fn) => { try { fn(); } catch (_) {} return 0; },
   setInterval: () => 0,
   clearTimeout: () => {},
   clearInterval: () => {},
+  requestAnimationFrame: (fn) => { try { fn(); } catch (_) {} return 0; },
   encodeURIComponent,
   Number, String, Math, JSON, Object, Array, Date, Set, Error, Promise,
 };

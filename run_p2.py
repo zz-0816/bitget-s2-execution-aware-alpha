@@ -770,7 +770,7 @@ def ui_layout_check():
                      "--until",
                      "document.querySelectorAll('#stages .stage').length>0",
                      "--wait", "4000"],
-                    "⑭ 前端布局验收（真浏览器：溢出/字面标记/截断/卡住的占位符）")
+                    "⑮ 前端布局验收（真浏览器：溢出/字面标记/截断/卡住的占位符）")
     finally:
         httpd.shutdown()
 
@@ -814,11 +814,16 @@ def selftest(with_net=False):
     rc |= _run([py, os.path.join("tools", "web_smoke.py")],
                "⑬ 页面渲染冒烟（Node 最小 DOM 里真跑一遍 web/app.js）")
 
+    # 设计也能"可验证"：类名一致性 / 对比度（WCAG）/ 无障碍兜底 / 字面标记。
+    # 放在浏览器验收**之前** —— 它不需要浏览器，任何机器上都能跑。
+    rc |= _run([py, os.path.join("tools", "ui_design_check.py")],
+               "⑭ 前端设计检查（类名一致 / 对比度 / reduced-motion / focus-visible）")
+
     rc |= ui_layout_check()
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],
-                   "⑮ 消息面源可用性（联网）")
+                   "⑯ 消息面源可用性（联网）")
 
     print("=" * 92)
     print("全量自检%s" % ("通过" if rc == 0 else "**失败**"))

@@ -273,6 +273,9 @@ def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
         "gate": {k: cost.get(k) for k in
                  ("gate_severity", "gate_reason", "gate_source",
                   "maker_allowed")},
+        # ⭐ 闸门合并留痕：静态日历说了什么 / LLM 说了什么 / 最后生效的是哪个。
+        #    页面上要能一眼看出"硬闸门最后听谁的"，而不是只看一个结论。
+        "gate_merge": dec.get("gate_merge"),
         "trader": {
             "order": dec["trader"].get("order"),
             "mode": dec["trader"].get("mode"),

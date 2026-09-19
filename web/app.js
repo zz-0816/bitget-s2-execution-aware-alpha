@@ -220,16 +220,30 @@ function renderDebate(d) {
 
 function renderGate(d) {
   const g = d.gate || {};
+  const gm = d.gate_merge || {};
   const sev = g.gate_severity || 'none';
-  const cls = sev === 'block' ? 'neg' : (sev === 'caution' ? '' : 'pos');
+  const usedLlm = String(g.gate_source || '').startsWith('llm');
+  const llmRow = gm.llm
+    ? (esc(gm.llm.severity || '—') +
+       ' <span class="mono-dim">' + esc(String(gm.llm.reason || '').slice(0, 60)) +
+       (gm.llm.frozen ? ' ｜ 冻结复用' : '') +
+       (gm.llm.source ? ' ｜ ' + esc(gm.llm.source) : '') + '</span>')
+    : '<span class="mono-dim">未参与（无 key / 明确用 static）</span>';
   $('gate').innerHTML =
     '<div class="verdict-bar ' + (sev === 'block' ? 'stand_down' : (sev === 'caution' ? 'caution' : 'proceed')) + '">' +
       '<div><div class="stance">' + esc(sev) + '</div>' +
-      '<div class="mono-dim">severity</div></div>' +
+      '<div class="mono-dim">severity（生效值）</div></div>' +
       '<div class="why">' + mdInline(g.gate_reason || '') + '</div></div>' +
+    // ⭐ 合并留痕：硬闸门 = 确定性日历 **与** LLM 判定，取更保守的一侧。
+    //    这一块是 2026-09-19 修的"说了没做"的落地——在此之前 LLM 判出的 block
+    //    只到辩论层，硬闸门只读日历（详见 docs/46）。
     '<table><tbody>' +
-      '<tr><th>判断来源</th><td class="' + (String(g.gate_source).startsWith('llm') ? 'pos' : '') + '">' +
-        esc(g.gate_source) + '</td></tr>' +
+      '<tr><th>确定性日历</th><td>' + esc((gm.static || {}).severity || '—') +
+        ' <span class="mono-dim">' + esc(String((gm.static || {}).reason || '').slice(0, 60)) + '</span></td></tr>' +
+      '<tr><th>LLM 判定</th><td>' + llmRow + '</td></tr>' +
+      '<tr><th><b>生效（取更严的一侧）</b></th><td><b>' +
+        esc((gm.effective || {}).severity || sev) + '</b>' +
+        ' <span class="mono-dim">来源 ' + esc(g.gate_source || '') + '</span></td></tr>' +
       '<tr><th>是否允许挂单</th><td>' + (g.maker_allowed ? '允许' : '<b class="neg">禁止（硬规则）</b>') + '</td></tr>' +
       '<tr><th>硬约束</th><td>severity=block → <b>挂单类方案直接作废</b>；agent 不能推翻</td></tr>' +
       (d.prompt && d.prompt.version
@@ -237,8 +251,9 @@ function renderGate(d) {
           (d.prompt.sha256 ? ' ｜ sha256 ' + esc(String(d.prompt.sha256).slice(0, 16)) : '') +
           (d.prompt.path ? ' ｜ ' + esc(d.prompt.path) : '') + '</td></tr>' : '') +
     '</tbody></table>' +
-    (String(g.gate_source).startsWith('llm')
-      ? '<p class="hint">✅ 本次由 <b>LLM</b> 判事件 —— 这是大模型在运行期的唯一职责。</p>'
+    (usedLlm
+      ? '<p class="hint">✅ 本次**用了 LLM** 判事件（大模型在运行期的唯一职责），' +
+        '且它的判定**已经进入硬闸门** —— 不再只停在辩论层。</p>'
       : '<p class="hint">⚠️ <b>本次未使用 LLM</b>：事件判断退化为确定性日历，' +
         '只挡得住可计算事件（期权到期/休市），<b>挡不住突发新闻与财报</b>。' +
         '这是如实标注，不是"没跑过却假装跑过"。</p>');

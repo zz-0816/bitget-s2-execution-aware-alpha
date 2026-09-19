@@ -2938,24 +2938,32 @@ def merge_gate(static_gate, llm_event):
     ev = llm_event or {}
     sev_l = ev.get("severity") or "none"
     src_l = ev.get("source") or "?"
+    # LLM 这次到底**参与**了没有？这决定了 source 怎么写 ——
+    # ⚠️ 不能只看"谁更严"：LLM 判了 none 且与日历同级时，如果 source 仍写 "static"，
+    #    页面就会出现自相矛盾的画面：闸门区块说"本次未使用 LLM"，
+    #    而它上面的新闻分析师说"✅ 本次由 LLM 判事件"（实测踩到）。
+    #    参与过就必须体现出来：`llm+static` 这类来源以 "llm" 开头，页面据此显示"用了 LLM"。
+    participated = bool(ev) and str(src_l).startswith("llm")
+    frozen_tag = "(frozen)" if ev.get("frozen") else ""
     tag_l = "LLM 判定 %s（%s）" % (sev_l, (ev.get("reason") or "")[:60])
     r_s = SEVERITY_RANK.get(sev_s, 1)
     r_l = SEVERITY_RANK.get(sev_l, 1)
 
     if r_l > r_s:
         # LLM 更严 -> 以它为准（这就是本次修的核心：block 真的能作废挂单）
-        src = src_l if src_l.startswith("llm") else "llm"
-        if ev.get("frozen"):
-            src += "(frozen)"          # 复跑时用的是冻结判定，必须说清楚
         return (sev_l, "%s｜确定性日历=%s（更宽松，不采信）" % (tag_l, sev_s),
-                src, sev_l != "block")
+                "llm" + frozen_tag, sev_l != "block")
     if r_s > r_l:
+        # 日历更严：仍如实标注 LLM 参与过，只是这次它更宽松
         return (sev_s, "%s｜%s（更宽松，不采信）" % (why_s, tag_l),
-                src_s, sev_s != "block")
-    # 同级：保留确定性日历的理由，但把 LLM 也做过判断这件事记下来
+                (("llm+static" + frozen_tag) if participated else src_s),
+                sev_s != "block")
+    # 同级：两边一致（或都没判定）
     if sev_s == "none" and sev_l == "none":
-        return (sev_s, why_s, src_s, True)
-    return (sev_s, "%s｜%s（同级，一致）" % (why_s, tag_l), src_s,
+        return (sev_s, why_s, (("llm+static" + frozen_tag) if participated
+                               else src_s), True)
+    return (sev_s, "%s｜%s（同级，一致）" % (why_s, tag_l),
+            (("llm+static" + frozen_tag) if participated else src_s),
             sev_s != "block")
 
 

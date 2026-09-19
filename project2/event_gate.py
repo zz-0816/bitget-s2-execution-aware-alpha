@@ -496,24 +496,34 @@ FAIL_CLOSED_ON_LLM_ERROR = True
 EMBEDDED_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一**任务是判断：
 给定的新闻标题里，是否存在会让我方"挂单被逆向选择"的信息事件。
 
-你要输出严格的 JSON，不要任何解释文字：
-{"is_event_window": true/false, "severity": "block"|"caution"|"none",
- "reason": "一句话理由", "confidence": 0.0-1.0}
+【只能依据标题】你只能使用「新闻标题」里明确写出的信息。
+禁止补充标题之外的背景、常识、推测或"通常情况"。标题没写 = 不知道。
 
-判断标准：
-- 财报、业绩预告、重大合同、监管处罚、并购、退市风险、**监管新规** -> severity="block"
-- 宏观数据（CPI/非农/利率决议）、行业级重大新闻 -> severity="caution"
-- 与标的无关的普通新闻、营销内容、例行内部人交易 -> severity="none"
+【输出格式】只输出一个 JSON 对象，字段与取值严格如下，不得增删字段：
+{"is_event_window": true|false, "severity": "block"|"caution"|"none",
+ "reason": "一句话，必须引用标题里的具体内容", "confidence": 0.0-1.0}
 
-三条硬要求：
-1. **只看给定标题里的事实**，不许补充标题之外的背景或推测；
-   若标题不足以判断，给 "caution" 并在 reason 里说明"信息不足"。
-2. 若给了「我方策略口径与历史案例」，**只用于理解我方在做什么**，
-   不得据此编造不存在的事件。
-3. 保守原则：不确定时给 "caution"，不要给 "none"。
+【severity 判据】按事件**类别**分，不看它对某个标的"相不相关"：
+- block：财报/业绩预告、重大合同、监管处罚、并购、退市风险、**监管新规**
+- caution：宏观数据（CPI/非农/利率决议/FOMC）、行业级重大新闻、
+  **指数成分或权重调整**、**分析师评级或目标价变动**
+- none：例行内部人交易（Form 4）、纯营销/科普内容、与市场无关的社会新闻
+
+【三条硬要求】
+1. 标题不足以判断时：severity 给 "caution"，并在 reason 里写明"信息不足"。
+2. 若提供了「我方策略口径与历史案例」：**只用于理解我方在做什么**，
+   不得据此编造标题之外的事实，不得把它当作你看到的事件。
+3. reason 必须能被核对 —— 要引用标题里的词，不要写"可能存在风险"这种空话。
+   （代码侧会检查 reason 能否回溯到标题；找不到标题里的片段即判不合格并重试。）
+
+【示例】（仅示范格式与判据边界，不要照抄）
+- 标题「NVDA 申报：8-K（重大事项：发布季度业绩）」-> block，reason 引用"8-K"与"季度业绩"
+- 标题「NVDA 申报：4（内部人交易：高管卖出 1,200 股）」-> none，reason 说明"例行内部人交易"
+- 标题「Nasdaq 调整纳斯达克 100 指数权重」-> caution，reason 引用"指数权重"
+- 标题「如何用 AI 工具提升工作效率的 10 个技巧」-> none，reason 说明"与市场无关"
 """
 
-EMBEDDED_PROMPT_VERSION = "v2-2026-09-18"    # 🔒 与 prompts/event_gate.v2.md 的 version 一致
+EMBEDDED_PROMPT_VERSION = "v3-2026-09-19"    # 🔒 与 prompts/event_gate.v2.md 的 version 一致
 
 PROMPTS_DIR = os.path.join(BASE, "prompts")
 PROMPT_GLOB = "event_gate.v*.md"
@@ -677,6 +687,115 @@ PROMPT = _refresh_prompt()
 PROMPT_VERSION = PROMPT.version      # 从加载结果推导，**不再硬编码**
 
 
+def _validate_llm_output(d, headlines):
+    """LLM 输出的**强校验** —— 返回 (是否合格, 不合格原因)。
+
+    prompt 写了规则不等于模型会遵守。这一段是"不产生幻觉 / 严格遵守 prompt"
+    在代码侧的最后一道闸：**每次返回都要过一遍**，不过就带错误信息重试，
+    仍不过则由调用方按 `FAIL_CLOSED_ON_LLM_ERROR` 保守处理。
+
+    校验项（逐条都对应一个真实失败模式）：
+      ① 顶层是对象，且**字段恰好**是那 4 个 —— 模型很爱顺手加 `explain`/`notes`；
+      ② `severity` ∈ {block, caution, none}；
+      ③ `is_event_window` 是布尔（不是字符串 "true"）；
+      ④ `confidence` 是 0~1 的数；
+      ⑤ `reason` 非空、够长（拦"可能存在风险"这种空话）；
+      ⑥ 🔴 `reason` **必须能回溯到给定标题** —— 找不到标题里的任何片段，
+         就说明它在编标题之外的东西（**这是防幻觉最关键的一条**）。
+    """
+    if not isinstance(d, dict):
+        return False, "顶层不是 JSON 对象（是 %s）" % type(d).__name__
+    allowed = {"is_event_window", "severity", "reason", "confidence"}
+    extra = set(d) - allowed
+    missing = allowed - set(d)
+    if extra:
+        return False, "多出字段 %s（只允许 %s）" % (sorted(extra), sorted(allowed))
+    if missing:
+        return False, "缺少字段 %s" % sorted(missing)
+    if not isinstance(d["is_event_window"], bool):
+        return False, ("is_event_window 必须是布尔，收到 %r"
+                       % (d["is_event_window"],))
+    if d["severity"] not in SEVERITY_ACTION:
+        return False, ("severity 必须是 %s 之一，收到 %r"
+                       % (sorted(SEVERITY_ACTION), d["severity"]))
+    conf = d["confidence"]
+    if isinstance(conf, bool) or not isinstance(conf, (int, float)):
+        return False, "confidence 必须是数字，收到 %r" % (conf,)
+    if not 0.0 <= float(conf) <= 1.0:
+        return False, "confidence 必须在 [0,1]，收到 %r" % (conf,)
+    reason = d["reason"]
+    if not isinstance(reason, str) or len(reason.strip()) < 4:
+        return False, "reason 过短或非字符串（%r）" % (reason,)
+    # ⑥ 可回溯：reason 里至少要有一段（≥2 字）出现在某条标题里
+    g_ok, g_hit = _grounded(reason, headlines)
+    if headlines and not g_ok:
+        return False, ("reason 不可回溯到标题（理由里找不到标题中的任何片段）"
+                       "---- 疑似模型自行补充了标题之外的事实")
+    return True, ""
+
+
+def _grounded(reason, headlines):
+    """`reason` 是否**可回溯到标题** —— 返回 (是否可回溯, 命中的片段)。
+
+    这是防幻觉的**机器判据**：模型若编造了标题里没有的事件，它的理由通常
+    找不到与标题的公共片段。挡不住所有编造，但能挡住"空话式理由"与明显跑题。
+
+    ⚠️ 为什么用**完整词块**而不是"任意 2 字片段"（实测踩到）：
+      旧版取标题里任意 2 字连续片段做子串匹配。标题含「重大事项」，
+      于是 2 字片段「重大」把编造的理由「存在**重大**不确定性」判成了**可回溯** ——
+      防幻觉的闸门等于开着，而自检如果没写反向用例还会显示 OK。
+      **2 字太短，不具区分度**：中文里「重大」「可能」「公司」到处都是。
+      现在按词块匹配（"重大事项"是整体），命不中就是命不中。
+    """
+    if not reason or not headlines:
+        return False, "无标题可对照"
+    r = str(reason)
+    blobs = []
+    for h in headlines:
+        # 词块 = ① 字母数字段（**允许内部 - / 连着**，如 SEC 表单号 8-K、10-Q、S-1）
+        #        ② 汉字连续段
+        # 为什么把 8-K 当成一个词块：我们的标题大量出现 SEC 表单号，而旧写法按
+        # `[A-Za-z0-9]{2,}` 会把 "8-K" 拆成 "8" 和 "K"（都只有 1 字符，于是被长度
+        # 过滤掉）—— 模型只引用「8-K」时反而判成不可回溯、白白多打一次重试。
+        # 过滤条件用**去掉连接符后的字母数字个数 >=2**：单个 "8" 或 "K" 仍被丢掉，
+        # 否则任何含数字的理由都能"撞上"，判据就松了。
+        for t in re.findall(r"[A-Za-z0-9]+(?:[-/][A-Za-z0-9]+)*|[\u4e00-\u9fff]{2,}",
+                            str(h)):
+            if len(re.sub(r"[^A-Za-z0-9\u4e00-\u9fff]", "", t)) >= 2:
+                blobs.append(t)
+    for t in blobs:
+        if t in r:
+            return True, t
+    # 允许"只引用了长词块的一部分"：长度 >=3 的词块再按 3 字窗口看一遍。
+    # （刻意不用 2 字窗口，理由见上面的实测记录）
+    for t in blobs:
+        if len(t) < 3:
+            continue
+        for i in range(len(t) - 2):
+            if t[i:i + 3] in r:
+                return True, t[i:i + 3]
+    return False, "理由里找不到标题中的任何片段"
+
+
+def _with_repair_hint(payload, why):
+    """把上轮**不合格的具体原因**附到 user 消息尾部，再试一次。
+
+    为什么不是简单重试：同样的输入 + 同样的 prompt，重试大概率还是同一个错。
+    把"你上次错在哪"明说，模型才有机会改 —— 这是"稳定不出错"里最划算的一步。
+    只改 user 消息、**不动 system**：prompt 正文（及其 SHA256）保持不变，
+    否则日志里那一版 prompt 就对不上了。
+    """
+    msgs = [dict(m) for m in payload["messages"]]
+    for m in reversed(msgs):
+        if m.get("role") == "user":
+            m["content"] = (m["content"] + "\n\n【上一次的回答不合格，请改正】\n"
+                            + str(why) + "\n请严格按 system 里的字段与取值重新输出。")
+            break
+    out = dict(payload)
+    out["messages"] = msgs
+    return out
+
+
 def llm_gate(base, now_ms, headlines, model, api_key, base_url,
              timeout=45, max_retry=2, thinking=False, rag_context=None):
     """调 OpenAI 兼容端点做事件分类（DeepSeek 官方端点即兼容）。
@@ -690,6 +809,14 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
       * 🔴 **失败语义交给调用方**：本函数只如实返回 `source`（含错误原因），
         **是否 fail-closed（暂停挂单）由 `assess()` / `analyst_news` 决定** ——
         用户选择是**保守**（止损优先），见 `FAIL_CLOSED_ON_LLM_ERROR`。
+
+    2026-09-19 增强（用户要求：**稳定不出错、不产生幻觉、严格遵守 prompt**）：
+      * **输出强校验**：每次返回都过 `_validate_llm_output`（含 reason 可回溯到标题）；
+      * **带错误信息重试**：不合格时把原因附到 user 消息再试一次（见 `_with_repair_hint`）。
+        ⚠️ 初版这里是"解析不出来就 `d.get(..., 默认值)`"—— **静默兜底**：
+        字段缺失/取值越界/理由纯属编造都会被悄悄接受（`severity` 越界变成
+        `caution`、`reason` 空字符串照收）。**静默兜底比报错更危险**，
+        因为它把"模型没守规矩"伪装成"一切正常"。
 
     失败时回退到 static，但会把失败原因写进 `source`，**绝不静默**。
     """
@@ -725,19 +852,45 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
     body_no_thinking = json.dumps(
         {k: v for k, v in payload.items() if k != "thinking"}).encode("utf-8")
 
-    box = {"attempts": 0, "errors": [], "dropped_thinking": False}
+    box = {"attempts": 0, "errors": [], "dropped_thinking": False,
+           "bad": []}          # bad = 校验不合格的原因（与"网络错误"分开记）
 
     def work():
         for i in range(max(1, int(max_retry) + 1)):
             box["attempts"] = i + 1
             use_body = (body_no_thinking if box["dropped_thinking"] else body)
+            # ⭐ 上一轮校验不合格 -> 换成**带错误说明**的请求体（见 _with_repair_hint）。
+            #    只改 user 消息、不动 system：prompt 正文与其 SHA256 保持不变，
+            #    否则日志里记的那一版 prompt 就和实际发出去的对不上了。
+            if box["bad"]:
+                hinted = _with_repair_hint(payload, box["bad"][-1])
+                if not thinking:
+                    hinted["thinking"] = {"type": "disabled"}
+                use_body = json.dumps(
+                    {k: v for k, v in hinted.items()
+                     if not (box["dropped_thinking"] and k == "thinking")}
+                ).encode("utf-8")
             try:
                 req = urllib.request.Request(
                     base_url.rstrip("/") + "/chat/completions", data=use_body,
                     headers={"Content-Type": "application/json",
                              "Authorization": "Bearer " + api_key})
                 with urllib.request.urlopen(req, timeout=timeout) as r:
-                    box["r"] = json.loads(r.read().decode("utf-8"))
+                    raw = json.loads(r.read().decode("utf-8"))
+                # 🔴 校验放在**循环里**，不合格才有机会带着错误说明重试。
+                #    放在循环外就只能"不合格 -> 直接降级"，白丢一次纠错机会。
+                try:
+                    cand = json.loads(raw["choices"][0]["message"]["content"])
+                except (KeyError, IndexError, ValueError, TypeError,
+                        json.JSONDecodeError) as exc:
+                    box["bad"].append("响应不是合法 JSON 对象：%r" % (exc,))
+                    continue
+                good, why = _validate_llm_output(cand, headlines)
+                if not good:
+                    box["bad"].append(why)
+                    continue                       # 带错误信息重试
+                box["r"] = raw
+                box["d"] = cand                    # 已校验合格的判断结果
                 return
             except urllib.error.HTTPError as exc:
                 detail = ""
@@ -768,40 +921,38 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
         fallback["llm_attempts"] = box["attempts"]
         fallback["llm_errors"] = box["errors"][-3:]
         fallback["llm_dropped_thinking"] = box["dropped_thinking"]
+        # 校验不合格也留痕：调用方要能分辨"模型没守规矩"与"网络坏了"——
+        # 这两种失败的处置可能不同，混在一起就查不出来了。
+        fallback["llm_bad_output"] = box["bad"][-3:]
         # 失败也留痕：重试的仍然是**这一版** prompt，审计时要说清
         fallback["prompt_version"] = _p.version
         fallback["prompt_sha256"] = _p.sha256
         fallback["prompt_source"] = _p.source
         return fallback
-    try:
-        content = box["r"]["choices"][0]["message"]["content"]
-        usage = (box["r"].get("usage") or {})
-        d = json.loads(content)
-        sev = d.get("severity", "caution")
-        return {"in_window": bool(d.get("is_event_window")),
-                "severity": sev if sev in SEVERITY_ACTION else "caution",
-                "reason": str(d.get("reason", ""))[:200],
-                "confidence": float(d.get("confidence", 0.0)),
-                "source": "llm",
-                "prompt_version": _p.version,
-                # ⭐ 可核验：这次判断具体用了哪一版 prompt（正文的 SHA256 前 16 位）
-                "prompt_sha256": _p.sha256,
-                "prompt_source": _p.source,
-                "headlines": headlines,
-                "llm_ok": True,
-                "llm_attempts": box["attempts"],
-                # 记 token 用量：成本可控是"每轮都调"能否接受的前提
-                "llm_usage": {"prompt_tokens": usage.get("prompt_tokens"),
-                              "completion_tokens": usage.get("completion_tokens"),
-                              "model": box["r"].get("model", model)}}
-    except (KeyError, ValueError, TypeError, json.JSONDecodeError) as exc:
-        fallback = static_gate(base, now_ms)
-        fallback["source"] = "static(LLM 响应解析失败: %r)" % (exc,)
-        fallback["llm_ok"] = False
-        fallback["prompt_version"] = _p.version
-        fallback["prompt_sha256"] = _p.sha256
-        fallback["prompt_source"] = _p.source
-        return fallback
+    # 🔴 `box["d"]` 已经在循环里**校验合格**（字段恰好 4 个、取值合法、
+    #    reason 可回溯到标题）。这里**不再用 `d.get(默认值)` 兜底**：
+    #    静默兜底会把"模型没守规矩"伪装成"一切正常"。
+    d = box["d"]
+    usage = (box["r"].get("usage") or {})
+    return {"in_window": bool(d["is_event_window"]),
+            "severity": d["severity"],
+            "reason": str(d["reason"])[:200],
+            "confidence": float(d["confidence"]),
+            "source": "llm",
+            "prompt_version": _p.version,
+            # ⭐ 可核验：这次判断具体用了哪一版 prompt（正文的 SHA256 前 16 位）
+            "prompt_sha256": _p.sha256,
+            "prompt_source": _p.source,
+            "headlines": headlines,
+            "llm_ok": True,
+            "llm_attempts": box["attempts"],
+            # 校验救回来的次数 >0 说明模型这一轮没一次到位 —— 值得观测
+            "llm_repaired": len(box["bad"]),
+            "llm_bad_output": box["bad"],
+            # 记 token 用量：成本可控是"每轮都调"能否接受的前提
+            "llm_usage": {"prompt_tokens": usage.get("prompt_tokens"),
+                          "completion_tokens": usage.get("completion_tokens"),
+                          "model": box["r"].get("model", model)}}
 
 
 def calendar_quality():
@@ -1518,13 +1669,35 @@ def _prompt_event_driven_selftest():
             % (a1["event"]["severity"], a2["event"]["severity"]))
         chk((a2["event"]["cache_age_min"] or 0) > 4.9,
             "判定龄如实带出：%.1f 分钟" % (a2["event"]["cache_age_min"] or 0.0))
-        # 无 key 时的行为**不许变**：仍然退化到 static，并明确标注"本次未使用 LLM"
-        globals()["llm_gate"] = _saved_gate
-        a3 = assess("NVDA", now_ms=_now, mode="llm", api_key="", headlines=_heads)
+        # 🔴 无 key 时的行为不许变：退化为 static，并明确标注"本次未使用 LLM"。
+        #
+        # ⚠️ 这条断言踩过的坑：`api_key=""` **不等于"没有 key"**。`assess()` 的取值顺序是
+        #      api_key or config.llm_kwargs()["api_key"] or $OPENAI_API_KEY or $LLM_API_KEY
+        #    所以用户在 `.env` 里填了 key 之后，这一轮就变成"拿 .env 的 key 真调 LLM"：
+        #    有缓存时复用（source=llm(cache: …)）、缓存删了就**真的发 HTTP 请求**。
+        #    而这条自检头上写着「零网络」—— 它其实一直在联网、花钱，且结果随 .env 漂移。
+        #    修法不是放宽断言，而是把"没有 key"做成**确定性条件**：把三条回退路径全部堵死。
+        #
+        #    注意 key 检查在 `gate_decision()` **之前**，所以这个分支与缓存状态无关 ——
+        #    不需要（也不该）再去造一个"删掉缓存"的用例来凑。
+        import common.config as _cfgmod
+        _saved_kw = _cfgmod.llm_kwargs
+        _saved_envs = {k: os.environ.pop(k, None)
+                       for k in ("OPENAI_API_KEY", "LLM_API_KEY")}
+        _cfgmod.llm_kwargs = lambda *a, **kw: {"model": "m", "base_url": "u",
+                                               "api_key": None}
+        try:
+            globals()["llm_gate"] = _saved_gate
+            a3 = assess("NVDA", now_ms=_now, mode="llm", api_key="", headlines=_heads)
+        finally:
+            _cfgmod.llm_kwargs = _saved_kw
+            for _k, _v in _saved_envs.items():
+                if _v is not None:
+                    os.environ[_k] = _v
         chk((not a3["llm"]["used"])
             and a3["event"]["source"].startswith("static(LLM 未执行")
             and a3["event"]["severity"] == "block" and a3["event"]["fail_closed"],
-            "无 key：退化为 static 并**明确标注本次未使用 LLM**"
+            "无 key（三条回退路径全堵）：退化为 static 并**明确标注本次未使用 LLM**"
             "（source=%s，fail_closed=%s）"
             % (a3["event"]["source"][:44], a3["event"]["fail_closed"]))
     finally:
@@ -1568,6 +1741,54 @@ def _prompt_event_driven_selftest():
 
     print("\nprompt 版本化 + 事件驱动自检%s" % ("通过" if ok else "**失败**"))
     return ok
+
+
+def _llm_guard_selftest():
+    """LLM 输出的**强校验**自检：正向 1 例 + 反向 8 例。
+
+    为什么必须有反向用例：prompt 写了规则 ≠ 模型会遵守。只测"合规样本通过"
+    等于没测 —— 每条校验都必须拿一个**违规样本**证明它真的会拒绝。
+    这里逐条对应 `_validate_llm_output` 的 ①~⑥，并额外验证
+    "带错误信息重试"确实把原因附进了 user 消息（且**没动 system**）。
+    """
+    ok = True
+
+    def chk(cond, msg):
+        nonlocal ok
+        ok = ok and bool(cond)
+        print("  [%s] %s" % ("OK " if cond else "!! ", msg))
+
+    H = ["NVDA 申报：8-K（重大事项：发布季度业绩）"]
+    good = {"is_event_window": True, "severity": "block",
+            "reason": "标题写明 8-K 与发布季度业绩", "confidence": 0.9}
+    v, why = _validate_llm_output(good, H)
+    chk(v, "合规输出通过（%s）" % (why or "ok"))
+    chk(not _validate_llm_output({**good, "explain": "补充"}, H)[0],
+        "**多出字段**被拒（模型常自作主张加 explain/notes）")
+    chk(not _validate_llm_output({k: v2 for k, v2 in good.items()
+                                  if k != "reason"}, H)[0], "**缺字段**被拒")
+    chk(not _validate_llm_output({**good, "severity": "high"}, H)[0],
+        "severity 非法取值被拒（只允许 block/caution/none）")
+    chk(not _validate_llm_output({**good, "is_event_window": "true"}, H)[0],
+        "is_event_window 写成字符串被拒")
+    chk(not _validate_llm_output({**good, "confidence": 1.7}, H)[0],
+        "confidence 超出 [0,1] 被拒")
+    hallu = {**good, "reason": "市场传闻该公司将被收购，存在重大不确定性"}
+    v3, why3 = _validate_llm_output(hallu, H)
+    chk((not v3) and "不可回溯" in why3,
+        "**幻觉式理由被拒**（%s）" % why3[:40])
+    chk(not _validate_llm_output({**good, "reason": "可能存在风险"}, H)[0],
+        "空话式理由被拒（reason 过短）")
+    chk(_validate_llm_output(good, [])[0], "无标题时不误杀（跳过可回溯校验）")
+    pl = {"messages": [{"role": "system", "content": "S"},
+                       {"role": "user", "content": "U"}]}
+    hp = _with_repair_hint(pl, "reason 不可回溯")
+    chk("不合格" in hp["messages"][-1]["content"]
+        and hp["messages"][-1]["content"].startswith("U"),
+        "带错误信息重试：原因附到 user 消息，且**不动 system**")
+    chk(pl["messages"][-1]["content"] == "U", "原请求体不被就地修改")
+    print("\nLLM 输出校验自检%s" % ("通过" if ok else "**失败**"))
+    return 0 if ok else 1
 
 
 def selftest():
@@ -1619,6 +1840,11 @@ def selftest():
     print("prompt 版本化 + 事件驱动降本自检（T4-A / T4-B）")
     ok = _prompt_event_driven_selftest() and ok
 
+    # LLM 输出校验器的自检也并进来 —— 闸门最关键的能力之一是
+    # "模型乱说话时接不接得住"，这条不该只在单独 flag 里跑。
+    print()
+    ok = (_llm_guard_selftest() == 0) and ok
+
     print("\n自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
 
@@ -1626,6 +1852,8 @@ def selftest():
 def main(argv=None):
     ap = argparse.ArgumentParser(description="事件闸门（项目二）")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--llm-guard-selftest", action="store_true",
+                    help="只跑 LLM 输出强校验自检（幻觉/越界/多字段是否真被拒）")
     ap.add_argument("--assess", action="store_true",
                     help="风险与理由引擎（回答：能不能做 / 为什么 / 什么条件）")
     ap.add_argument("--risk-selftest", action="store_true",
@@ -1653,6 +1881,11 @@ def main(argv=None):
 
     if args.selftest:
         return selftest()
+    if args.llm_guard_selftest:
+        print("=" * 88)
+        print("LLM 输出强校验自检（幻觉 / 越界 / 多字段 / 带错重试）")
+        print("=" * 88)
+        return _llm_guard_selftest()
     if args.risk_selftest:
         print("=" * 88)
         print("风险与理由引擎自检")

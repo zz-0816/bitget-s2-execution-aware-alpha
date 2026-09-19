@@ -330,3 +330,34 @@ python project2\agent_team.py --replay data\reports\debate-NVDA-<时间戳>.json
 # ---- 回溯某次判断用了哪一版 prompt ----
 python -c "import hashlib,glob;[print(hashlib.sha256(open(p,encoding='utf-8').read().split(chr(10)+'---'+chr(10),1)[1].strip().encode()).hexdigest()[:16], p) for p in sorted(glob.glob('prompts/event_gate.v*.md'))]"
 ```
+
+---
+
+## 6. prompt v3 + 输出强校验（2026-09-19：稳定不出错 / 不产生幻觉 / 严格遵守 prompt）
+
+prompt 与代码侧校验是**一一对应**的，不是两套说法：
+
+| prompt v3 里的话 | 代码侧对应的校验（`event_gate._validate_llm_output`） |
+|---|---|
+| 「不得增删字段」 | 顶层字段**恰好**是 `is_event_window/severity/reason/confidence` |
+| severity 三档枚举 | 取值必须 ∈ {block, caution, none} |
+| `is_event_window` 布尔 | 必须是 `bool`（不是字符串 `"true"`） |
+| `confidence` 0.0-1.0 | 必须是数字且落在 [0,1] |
+| 「reason 必须能被核对」 | reason 非空、够长，且**能回溯到给定标题** |
+
+不合格的处理是**带错误信息重试**：把上轮不合格的**具体原因**附到 user 消息尾部再试
+（只改 user、不动 system，所以 prompt 正文与其 SHA256 不变，日志仍可归因）。
+重试仍不合格 -> 按 `FAIL_CLOSED_ON_LLM_ERROR` 保守处理（挂单暂停），**不静默放行**。
+
+复跑：
+
+```powershell
+python project2\event_gate.py --llm-guard-selftest   # 正向 1 例 + 反向 10 例
+python project2\event_gate.py --selftest             # 含上面这一项
+```
+
+> 反向用例是重点：只测「合规样本通过」等于没测。这里每条校验都拿一个
+> **违规样本**证明它真的会拒绝，其中就包括「理由与标题共享『重大』二字、
+> 但整体是编造」这种**曾经真的漏过去**的情形。
+
+prompt 正文 SHA256（前 16 位）：`be18641c7e3bb685`

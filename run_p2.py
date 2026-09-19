@@ -699,8 +699,6 @@ def http_smoke(verbose=True):
         for path in called:
             if path in ("/api/decision", "/api/assess"):
                 path += "?base=NVDA"
-            if path == "/api/overview":
-                pass
             st, d = get(path)
             chk(st == 200 and d.get("ok") is not False,
                 "前端调用的端点真实存在：%s" % path)

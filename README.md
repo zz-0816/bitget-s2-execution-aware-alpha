@@ -1,4 +1,4 @@
-# 项目二 · Execution-aware Alpha
+﻿# 项目二 · Execution-aware Alpha
 
 > **给定当前盘口和想要的仓位：这笔单该吃单还是挂单？挂在哪个价？分几笔？**
 > **—— 以及这笔单该不该做**（agent 团队给理由与条件，风控官一票否决）。
@@ -16,7 +16,7 @@
 三种跑法，**都不需要网络、不需要 API key、不需要 pip install**：
 
 ```powershell
-python run_p2.py --selftest      # ① 全量自检（13 步，含 HTTP 冒烟 + 页面渲染冒烟）
+python run_p2.py --selftest      # ① 全量自检（14 步，含 HTTP 冒烟 + 页面渲染冒烟 + 前端布局验收）
 python run_p2.py --demo NVDA     # ② 命令行跑完整决策链（不用浏览器）
 python run_p2.py                 # ③ 起网页 http://127.0.0.1:8788
 ```
@@ -145,7 +145,7 @@ python tools/snapshot_manifest.py --verify     # 就地核验，冻结项不一�
 
 ---
 
-## 4. 一键自检（13 步，离线）
+## 4. 一键自检（14 步，离线）
 
 ```powershell
 python run_p2.py --selftest        # 加 --net 会额外跑联网的消息面源检查
@@ -166,7 +166,8 @@ python run_p2.py --selftest        # 加 --net 会额外跑联网的消息面源
 | ⑪ | 保活守护（地址解析 / 退避 / 状态落盘 / 隧道默认值） | 链接悄悄死掉、地址抓错 |
 | ⑫ | **HTTP 冒烟** | 页面调用的端点**根本不存在** |
 | ⑬ | **页面渲染冒烟**（Node 最小 DOM 里真跑一遍 `web/app.js`） | 页面**整页空白**而自检全绿 |
-| ⑭ | 消息面源可用性（`--net`） | 事件源悄悄失效 |
+| ⑭ | **前端布局验收**（真浏览器：溢出 / 字面标记 / 截断 / 卡住的占位符） | 只有真渲染 + 量尺寸才发现的排版故障 |
+| ⑮ | 消息面源可用性（`--net`） | 事件源悄悄失效 |
 
 > ⑫⑬ 是**被真实故障逼出来的**：本仓库最初把项目一的 `web/` 一起复制了过来，
 > 而它调用的 `/api/overview`、`/api/timeline` 只有项目一的服务才有 ——

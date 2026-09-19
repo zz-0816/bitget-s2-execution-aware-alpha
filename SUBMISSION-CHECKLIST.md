@@ -56,19 +56,34 @@
 
 ### 🔴 3. 可访问的提交材料（仓库公开 + Demo 公网可访问）
 
-- [ ] **代码仓库已公开**（不是 private）
+- [x] **代码仓库已公开** —— <https://github.com/zz-0816/bitget-s2-execution-aware-alpha>（**PUBLIC**，默认分支 `main`，10 个提交已推送）
 - [ ] **Demo 公网可访问**（不是 `127.0.0.1`）
 - [ ] 所有链接集中填在表单「**提交材料链接**」**一个框**里
 
 **仓库公开 —— 怎么验证**：
 
 ```powershell
-# 本仓库状态（应能看到 1 个提交；远程应在填表前配上并推送）
+# 本机状态（remote 已配好，分支 main）
 git log --oneline -3
-git remote -v
+git remote -v                      # 应输出 origin  https://github.com/zz-0816/bitget-s2-execution-aware-alpha.git
+
+# 远端状态（不需要登录即可读）
+gh repo view zz-0816/bitget-s2-execution-aware-alpha --json visibility,defaultBranchRef
+# 另外：确认 .env 没有被推上去（应返回 404 Not Found）
+gh api repos/zz-0816/bitget-s2-execution-aware-alpha/contents/.env
 ```
 
 再用**无痕窗口**打开仓库链接，确认未登录能看见代码与 `README.md`。
+
+> ✅ 2026-09-19 已实测：仓库 PUBLIC、默认分支 `main`、10 个提交署名统一、
+> `.env` 远端 404（密钥未泄漏）；并从公开 raw 地址下载数据文件，
+> **字节与 `data/SNAPSHOT.md` 里的 SHA256 一致**（跨平台哈希修复生效）。
+
+> ⚠️ 推送时的两个坑（记下来省时间）：
+> ① 若 `git push` 报 `schannel: AcquireCredentialsHandle failed`，加
+>    `-c http.sslBackend=openssl` 换 TLS 后端即可；
+> ② 本仓库 `data/` 已标 `-text`，git 不做换行转换 —— **不要把这条规则改掉**，
+>    否则 clone 后的数据字节会变，快照 SHA256 会全部对不上。
 
 **Demo 公网可访问 —— 当前状态与做法（如实标注）**：
 
@@ -274,7 +289,7 @@ git log --oneline -5
 1. **跑一遍自检**：`python run_p2.py --selftest` → 12 步全部通过 / 0 失败
 2. **核验快照**：`python tools\snapshot_manifest.py --verify` → 26 项 / 39.6 MB（冻结快照 16 项，逐字节核验）
 3. **起 Demo 并挂隧道**：`winget install --id Cloudflare.cloudflared` → `python run_p2.py --tunnel` → 用手机流量验证公网地址
-4. **推仓库并设为公开**：`git remote -v` + 无痕窗口验证
+4. **仓库已公开** ✅ <https://github.com/zz-0816/bitget-s2-execution-aware-alpha>（推新提交：`git push`）
 5. **发 X 帖**：先**转发官方帖**，正文含 `#BitgetHackathon` + `@Bitget_AI` + 实质内容 → 拿链接
 6. **填表**：`docs/40` 逐段粘贴（6 段 + 大模型作用 + 主题措辞 + 局限 10 条 + 术语红线）
 7. **链接进一个框**：仓库 / Demo / X 帖 / 材料清单（`docs/40` 第 5 段）

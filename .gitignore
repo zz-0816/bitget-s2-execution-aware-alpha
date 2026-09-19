@@ -1,0 +1,12 @@
+# 密钥：绝不入库
+.env
+*.env
+!.env.example
+
+# 运行时产物
+__pycache__/
+*.pyc
+data/positions/open.json
+data/positions/alerts.json
+data/reports/_*.txt
+_tmp_*

@@ -1,0 +1,47 @@
+{
+  "_README": "项目二事件日历。static 模式的覆盖度完全取决于本文件质量 —— 日历空 = 闸门空。",
+  "_ts_format": "ISO8601，带时区。财报用美东时间（-04:00 夏令时 / -05:00 冬令时）。",
+  "_status": "初版由公开财报日历整理；**递交前必须复核**（日期会改，且这是硬门禁依据）。",
+  "_update_rule": "财报按季更新、宏观按周更新。过期日历比没有日历更危险（会给出虚假的'无事件'）。",
+  "_source_field_rule": "⭐ 每条事件可带 `source`（URL 或可回溯的出处）。风险与理由引擎据此决定置信度上限：带 source 的条目可给高置信度，不带的会被压到 0.40 并在输出里显示'无可回溯来源'。**当前所有条目都没有 source，因此置信度就是 0.40 —— 这是如实状态，不要为了好看而编一个来源。**",
+  "_how_to_verify": "核实一条后：把 `confirmed` 改成 true，并加上 `source`（例如交易所公告页或公司 IR 页的 URL）。",
+  "earnings": {
+    "NVDA": [
+      {"ts": "2026-11-18T16:20:00-05:00", "label": "Q3 FY2027 财报（盘后）", "confirmed": false}
+    ],
+    "AAPL": [
+      {"ts": "2026-10-29T16:30:00-04:00", "label": "Q4 FY2026 财报（盘后）", "confirmed": false}
+    ],
+    "META": [
+      {"ts": "2026-10-28T16:05:00-04:00", "label": "Q3 财报（盘后）", "confirmed": false}
+    ],
+    "GOOGL": [
+      {"ts": "2026-10-27T16:05:00-04:00", "label": "Q3 财报（盘后）", "confirmed": false}
+    ],
+    "TSLA": [
+      {"ts": "2026-10-21T16:05:00-04:00", "label": "Q3 财报（盘后）", "confirmed": false}
+    ],
+    "MRVL": [
+      {"ts": "2026-12-03T16:05:00-05:00", "label": "Q3 FY2027 财报（盘后）", "confirmed": false}
+    ],
+    "HOOD": [
+      {"ts": "2026-10-28T16:05:00-04:00", "label": "Q3 财报（盘后）", "confirmed": false}
+    ],
+    "SPY": [],
+    "QQQ": [],
+    "SOXL": []
+  },
+  "macro": [
+    {"ts": "2026-09-16T14:00:00-04:00", "label": "FOMC 利率决议", "severity": "block"},
+    {"ts": "2026-09-16T14:30:00-04:00", "label": "FOMC 新闻发布会", "severity": "block"},
+    {"ts": "2026-10-02T08:30:00-04:00", "label": "非农就业（NFP）", "severity": "block"},
+    {"ts": "2026-10-13T08:30:00-04:00", "label": "CPI 通胀数据", "severity": "block"},
+    {"ts": "2026-11-04T14:00:00-05:00", "label": "FOMC 利率决议", "severity": "block"},
+    {"ts": "2026-11-06T08:30:00-05:00", "label": "非农就业（NFP）", "severity": "block"},
+    {"ts": "2026-11-12T08:30:00-05:00", "label": "CPI 通胀数据", "severity": "block"}
+  ],
+  "holidays_us": [
+    {"ts": "2026-11-26", "label": "Thanksgiving（美股休市）"},
+    {"ts": "2026-12-25", "label": "Christmas（美股休市）"}
+  ]
+}

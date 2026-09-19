@@ -82,10 +82,37 @@ async function loadHealth() {
   return h;
 }
 
+/* 决策基准时间：把"这次是按几点判的、凭什么"**显式写在页面上**。
+ *
+ * 为什么非要写出来：离线演示读的是冻结快照。若拿墙钟去比，时间衰减规则
+ * （行情停滞 >=30 分钟）会把"数据停在 07:16"误判成"市场停了 6 小时"，
+ * 结论恒为"不参与"，而且同一份快照在不同时刻跑出不同结论（不可复现）。
+ * 现在基准时间由数据本身推导，并把依据一并展示 —— 读者能自己核对。
+ */
+function renderBasis(tb) {
+  if (!tb) return;
+  const el = $('basis-ts');
+  if (!el) return;
+  const asof = tb.data_asof_ms ? fmtTime(tb.data_asof_ms) : '—';
+  const kind = tb.basis === 'asof' ? '快照时刻' : '墙钟';
+  el.textContent = asof + '（' + kind + '）';
+  el.className = tb.basis === 'asof' ? 'basis-asof' : '';
+  el.title = (tb.why || '') +
+    (tb.data_age_min != null
+      ? '\n数据比墙钟旧 ' + fmt(tb.data_age_min, 1) + ' 分钟' : '');
+}
+
+function fmtTime(ms) {
+  try {
+    return new Date(ms).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  } catch (e) { return String(ms); }
+}
+
 /* ---------------- 决策链主视图 ---------------- */
 
 function renderVerdict(d) {
   const f = d.final, mo = d.monotonic || {};
+  renderBasis(d.time_basis);
   const okMo = mo.stance_non_increasing !== false && mo.qty_non_increasing !== false;
   const order = f.order;
   const box = $('verdict');
@@ -176,7 +203,7 @@ function renderDebate(d) {
     '<p><span class="tag">裁决</span> <b class="s-' + esc(v.stance) + '">' +
       esc(STANCE_CN[v.stance] || v.stance) + '</b>　' + mdInline(v.reason || '') + '</p>' +
     (v.weighting_changed_stance
-      ? '<p class="hint">⭐ 证据强度加权**改变了结论**：未加权时 raw ' +
+      ? '<p class="hint">⭐ 证据强度加权<strong>改变了结论</strong>：未加权时 raw ' +
         fmt(v.raw_bull_weight, 2) + ' vs ' + fmt(v.raw_bear_weight, 2) +
         '，加权后 ' + fmt(v.bull_weight, 2) + ' vs ' + fmt(v.bear_weight, 2) +
         '（measured 1.0 / verified 0.85 / derived 0.6 / inference 0.3）</p>' : '') +

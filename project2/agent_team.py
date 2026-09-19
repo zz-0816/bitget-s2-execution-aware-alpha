@@ -330,7 +330,11 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
                             "data/derived/news_latest.json"))
             for line in _eg.calendar_quality():
                 if "已复核" in line:
-                    e.append(ev("日历已复核条数", line.strip()[:60],
+                    # ⚠️ 证据的 value 是**数据**，不是排版文本：`calendar_quality()`
+                    #    那行里带 `**…**`（终端里当强调用），直接塞进 value 会在
+                    #    页面上原样显示成字面星号（实测）。这里把标记去掉再当值。
+                    e.append(ev("日历已复核条数",
+                                line.strip().replace("**", "")[:60],
                                 "project2/events_calendar.json"))
             used_llm = str(src).startswith("llm")
             n_tok = ((a.get("llm") or {}).get("llm_usage") or {})
@@ -453,6 +457,10 @@ MAX_HYPOTHESES = 3          # 最多带进辩论/风控的假设条数（防止�
 FROZEN_LOOKBACK = 20        # 停牌判定：最近 N 轮快照（20 轮 ≈ 10 分钟）
 FROZEN_MAX_DISTINCT = 1     # 不同中间价个数 <= 它 = 报价不动（与 audit_samples.py 同口径）
 
+# 决策基准时间：数据最新时刻比墙钟旧超过这么多分钟，就判定为"读冻结快照"，
+# 决策改按**数据自带时刻**判定（并在输出里显式标注）。见 `time_basis()`。
+ASOF_AUTO_AGE_MIN = 10.0
+
 
 def halted_from(spot_mids, trades_in_window, lookback):
     """停牌判定（**纯函数**，便于正反两面自检）。
@@ -506,6 +514,119 @@ def _trades_between(base, lo_ms, hi_ms):
         except OSError:
             continue
     return n
+
+
+def _tail_last_ts_ms(path):
+    """只读文件**末尾**，取最后一行里最大的 `ts_ms`（不整读 9 MB 的文件）。
+
+    CSV 每行都有 `ts_ms` 且在文件里基本按时间递增，所以尾巴足够。
+    读不到返回 None（**不猜**）。
+    """
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - 65536))
+            chunk = fh.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+    lines = [ln for ln in chunk.splitlines() if ln.strip()]
+    # 第一行可能是被截断的半行，且可能有表头 -> 逐行 try，取得到就继续
+    best = None
+    for ln in lines[1:]:
+        parts = ln.rsplit(",", 1)
+        f = ln.split(",")
+        if len(f) < 2:
+            continue
+        try:
+            t = int(f[1])          # 约定：第 2 列 = ts_ms
+        except (ValueError, IndexError):
+            continue
+        if best is None or t > best:
+            best = t
+    return best
+
+
+def data_asof_ms(kinds=("trades", "orderbook", "sentiment")):
+    """数据快照的**最后一刻**（各数据源最后一行 `ts_ms` 的最大值，毫秒）。
+
+    ⚠️ 为什么需要它（一次实测踩坑）：
+      离线演示读的是**冻结快照**，而 `analyst_execution_risk()` 默认拿**墙钟 now**
+      去算"最后一笔成交距今多久"。于是每过一小时，"行情停滞"就越容易触发 ——
+      实测快照最后成交停在 2026-09-19 07:16 UTC，13:53 跑的时候
+      `stale_quotes = 399.3 分钟`（阈值 30）**触发一票否决**，演示结论恒为"不参与"；
+      而按快照自带的 07:16 判定，停滞只有 **1.7 分钟**，不触发。
+      也就是说：**同一份快照在不同时刻会跑出不同结论**（不可复现），
+      而且演示会随时间越来越悲观。这不是市场的问题，是"用错了现在几点"。
+
+    返回 (asof_ms, 来源说明)。一个都读不到就返回 (None, 原因) —— **不猜**。
+    """
+    best, src = None, []
+    for k in kinds:
+        cands = sorted(glob.glob(os.path.join(SPREAD, "%s-*.csv" % k)))
+        if not cands:
+            continue
+        t = _tail_last_ts_ms(cands[-1])
+        if t is None:
+            continue
+        src.append("%s:%s" % (k, dt.datetime.fromtimestamp(
+            t / 1000, dt.UTC).strftime("%m-%d %H:%M")))
+        if best is None or t > best:
+            best = t
+    if best is None:
+        return None, "读不到任何数据源的 ts_ms"
+    return best, " ｜ ".join(src)
+
+
+def time_basis(now_ms=None, force=None):
+    """决定"这次决策的『现在』是几点"，并**如实说明依据**。
+
+    返回 dict：
+      · ``now_ms``       本次使用的基准时刻
+      · ``basis``        ``asof``（按数据自带时刻）或 ``wallclock``（按墙钟）
+      · ``data_asof_ms`` 数据快照最后一刻（读不到为 None）
+      · ``data_age_min`` 数据比墙钟旧多少分钟
+      · ``why``          一句话依据（会进日志与页面，**不许含糊**）
+
+    规则：
+      · 显式传了 ``now_ms`` -> 直接用，basis=explicit（测试与复跑要能钉死时刻）；
+      · ``force="asof"`` / ``"wallclock"`` -> 强制（给页面/CLI 留一个开关）；
+      · 否则 **auto**：数据比墙钟旧超过 `ASOF_AUTO_AGE_MIN` 分钟 = 在读冻结快照
+        -> 按数据自带时刻判定；数据是新鲜的 = 实时模式 -> 用墙钟。
+    """
+    wall = int(dt.datetime.now(dt.UTC).timestamp() * 1000)
+    asof, src = data_asof_ms()
+    age_min = ((wall - asof) / 60000.0) if asof else None
+
+    if now_ms is not None:
+        return {"now_ms": int(now_ms), "basis": "explicit",
+                "data_asof_ms": asof, "data_age_min": age_min,
+                "why": "调用方显式指定了决策时刻（测试/复跑要能钉死）"}
+    if force == "asof":
+        return {"now_ms": asof if asof else wall, "basis": "asof",
+                "data_asof_ms": asof, "data_age_min": age_min,
+                "why": "调用方强制按数据自带时刻判定（%s）" % src}
+    if force == "wallclock":
+        return {"now_ms": wall, "basis": "wallclock",
+                "data_asof_ms": asof, "data_age_min": age_min,
+                "why": "调用方强制按墙钟判定"}
+    if asof is None:
+        return {"now_ms": wall, "basis": "wallclock", "data_asof_ms": None,
+                "data_age_min": None,
+                "why": "读不到数据时刻，退回墙钟（%s）" % src}
+    if age_min is not None and age_min > ASOF_AUTO_AGE_MIN:
+        return {"now_ms": asof, "basis": "asof", "data_asof_ms": asof,
+                "data_age_min": age_min,
+                "why": ("数据比墙钟旧 %.1f 分钟（> %.0f）-> 判定为『读冻结快照』，"
+                        "按数据自带时刻 %s 判定；否则时间衰减规则会把冻结数据"
+                        "误判成『行情停滞』"
+                        % (age_min, ASOF_AUTO_AGE_MIN,
+                           dt.datetime.fromtimestamp(asof / 1000, dt.UTC)
+                           .strftime("%Y-%m-%d %H:%M:%S UTC")))}
+    return {"now_ms": wall, "basis": "wallclock", "data_asof_ms": asof,
+            "data_age_min": age_min,
+            "why": "数据是新鲜的（旧 %.1f 分钟 <= %.0f）-> 按墙钟判定"
+                   % (age_min, ASOF_AUTO_AGE_MIN)}
 
 
 def frozen_quote(base, lookback=FROZEN_LOOKBACK):
@@ -2158,6 +2279,26 @@ def _canon(obj):
     return str(obj)
 
 
+def log_for_decision(base, *, items, debate, cost, decision, qty_usd, miss_bp,
+                     urgent, book=None):
+    """按 **CLI / 接口共用的口径**落一份可复跑日志。
+
+    ⚠️ 存在的唯一理由：`now_ms` 必须取**决策真正用的那个时刻**
+    （`decision["time_basis"]["now_ms"]`，读冻结快照时它是 as-of），
+    **不能留空**让 `build_log` 退回墙钟 `generated_ms`。
+
+    实测踩到过：CLI 的 `--log` 没传 now_ms -> 日志记墙钟、决策用快照时刻 ->
+    `--replay` 直接把决策判成"不可复现"（凭空多出 `agent:stale_quotes`
+    一票否决，因为复跑时"最后一笔成交距今"从 12 分钟变成了 6 小时）。
+    把这段收进一个函数，CLI 与自检走同一条路，就不会再各写一份、各自漂移。
+    """
+    return build_log(base=base, items=items, debate=debate, cost=cost,
+                     decision=decision, qty_usd=qty_usd, miss_bp=miss_bp,
+                     urgent=urgent,
+                     now_ms=(decision.get("time_basis") or {}).get("now_ms"),
+                     book=book)
+
+
 def build_log(*, base, items, debate, cost, decision, qty_usd, miss_bp, urgent,
               now_ms=None, book=None, generated_ms=None, paths=None):
     """组装一份**可复跑**的辩论日志（含参数、输入哈希、全链路、决策哈希）。"""
@@ -2665,7 +2806,7 @@ def selftest():
 
 def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                  now_ms=None, gate=True, scenario=None, fresh=True,
-                 freeze_news=False):
+                 freeze_news=False, time_basis_force=None):
     """端到端跑一次：分析师 -> 辩论 -> 闸门 -> 交易员 -> 风控官 -> 最终决策。
 
     返回 ``(cost, items, debate, decision, book)``。
@@ -2676,7 +2817,14 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
 
     ``scenario`` 非空时，**成本与盘口用合成的、并在日志里标注 `synthetic`**；
     分析师与辩论仍走真实数据（它们本来就不依赖盘口）。
+
+    ``now_ms`` / ``time_basis_force``：决策基准时间。不传时由 `time_basis()`
+    **自动判定**并在结果里如实标注 —— 读冻结快照时按数据自带时刻，实时时按墙钟。
+    见 `time_basis()` 的注释（这是"离线演示会随时间衰减且不可复现"的修正）。
     """
+    # 🔴 先定"现在几点"，并把**依据**一路带下去（日志与页面都要能说明白）
+    tb = time_basis(now_ms, force=time_basis_force)
+    now_ms = tb["now_ms"]
     try:
         from execution_cost import (analyse_two_leg as _atl, consult_gate as _cg,
                                     DEFAULT_MISS_BP as _dmb)
@@ -2718,6 +2866,8 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     decision["scenario_note"] = sc_note
     decision["risk_hypotheses"] = hyps
     decision["risk_hypotheses_dropped"] = dropped
+    # ⭐ 决策基准时间：连同依据一起带出去（页面/接口/日志都要能说清"现在几点、凭什么"）
+    decision["time_basis"] = tb
     return cost, items, debate, decision, book
 
 
@@ -3151,6 +3301,28 @@ def repro_selftest(write=True, outdir=None):
         "输入清单里的文件都带 SHA256（%d 个）"
         % len([m for m in log1["input_manifest"] if m.get("exists")]))
 
+    # 🔴 日志里的决策时刻必须**等于决策真正用的那个时刻**。
+    #    实测踩到：CLI 的 `--log` 没传 now_ms，`build_log` 就退回墙钟
+    #    `generated_ms`；而 `now_ms` 是契约参数（闸门与"行情停滞"都依赖它）——
+    #    读冻结快照时决策用 as-of（07:27）、日志却记墙钟（14:24），
+    #    复跑时"最后一笔成交距今"从 12 分钟变成 6 小时，凭空多出
+    #    `agent:stale_quotes` 一票否决 -> 复跑假失败。
+    #    这里把断言钉在**共用口径** log_for_decision 上：谁改了它，这条就红。
+    _tb = decision.get("time_basis") or {}
+    chk(_tb.get("now_ms") is not None,
+        "决策自带基准时刻（basis=%s，%s）"
+        % (_tb.get("basis"),
+           dt.datetime.fromtimestamp((_tb.get("now_ms") or 0) / 1000, dt.UTC)
+           .strftime("%Y-%m-%d %H:%M:%S UTC")))
+    _lg = log_for_decision(base, items=items, debate=debate, cost=cost,
+                           decision=decision, qty_usd=kw["qty_usd"],
+                           miss_bp=kw["miss_bp"], urgent=kw["urgent"], book=book)
+    _lg_now = (_lg.get("parameters") or {}).get("now_ms")
+    chk(_lg_now == _tb.get("now_ms"),
+        "日志记录的 now_ms == 决策用的时刻（否则复跑必假失败）：%s"
+        % (dt.datetime.fromtimestamp((_lg_now or 0) / 1000, dt.UTC)
+           .strftime("%Y-%m-%d %H:%M:%S UTC") if _lg_now else "缺"))
+
     # 复跑：**同一批输入**重跑一次组装 -> 必须通过；且报告里不许有"契约不一致"
     # 注意 now_ms 是**决策时刻**（闸门判定依赖它），属于契约参数，要比就得相同；
     # 变的是 generated_ms（生成时间），它只影响哈希，不影响判定。
@@ -3329,10 +3501,12 @@ def main(argv=None):
                 scenario=args.scenario)
             log = None
             if args.log:
-                log = build_log(base=b, items=items, debate=debate, cost=cost,
-                                decision=decision, qty_usd=args.qty,
-                                miss_bp=(3.0 if args.miss_bp is None else args.miss_bp),
-                                urgent=args.urgent, book=book)
+                # 🔴 走共用口径：now_ms = 决策真正用的时刻（见 log_for_decision）
+                log = log_for_decision(
+                    b, items=items, debate=debate, cost=cost, decision=decision,
+                    qty_usd=args.qty,
+                    miss_bp=(3.0 if args.miss_bp is None else args.miss_bp),
+                    urgent=args.urgent, book=book)
             out[b] = {"debate": debate, "decision": decision,
                       "log": log, "evidence_index":
                           (log or {}).get("evidence_index")}

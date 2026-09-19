@@ -43,6 +43,9 @@ h2 .hint { font-size: 12px; font-weight: 400; color: var(--dim2); }
 .dot.err { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .session-box { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
 .session-box .k { color: var(--dim2); }
+/* 决策基准时间：按"快照时刻"判定时高亮 —— 这是"结论为什么可信"的关键信息，
+   不该和普通元信息混在一起。离线演示若按墙钟算，结论会随时间漂移。 */
+.session-box .basis-asof { color: #8fd6a8; }
 
 main { max-width: 1280px; margin: 0 auto; padding: 18px 22px 0; }
 .panel {

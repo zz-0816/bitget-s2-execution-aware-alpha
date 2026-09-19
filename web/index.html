@@ -15,6 +15,7 @@
   </div>
   <div class="session-box">
     <span><span class="k">数据快照</span> <span id="snap-ts">读取中…</span></span>
+    <span><span class="k">决策基准</span> <span id="basis-ts" title="离线演示读的是冻结快照：按数据自带时刻判定，否则时间衰减规则会把冻结数据误判成『行情停滞』">读取中…</span></span>
     <span><span class="k">LLM</span> <span id="llm-state">—</span></span>
     <span><span class="k">标的</span> <span id="n-bases">—</span></span>
   </div>
@@ -43,7 +44,7 @@
   <!-- ══════════ 2. 五路分析师 ══════════ -->
   <section class="panel">
     <h2>① 五路独立分析
-      <span class="hint">互不读对方结论；**没有引用已实测的量的结论一律作废**</span>
+      <span class="hint">互不读对方结论；<strong>没有引用已实测的量的结论一律作废</strong></span>
     </h2>
     <div class="analysts" id="analysts"><div class="loading">尚未运行</div></div>
   </section>
@@ -86,7 +87,7 @@
 
   <!-- ══════════ 6. 全标的概览 ══════════ -->
   <section class="panel">
-    <h2>全标的概览 <span class="hint">风险与理由（**不代下单**，只给理由与条件）</span></h2>
+    <h2>全标的概览 <span class="hint">风险与理由（<strong>不代下单</strong>，只给理由与条件）</span></h2>
     <div class="table-wrap">
       <table id="ov-table">
         <thead><tr>
@@ -113,7 +114,7 @@
 
   <!-- ══════════ 8. 数据边界 ══════════ -->
   <section class="panel">
-    <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可 `--verify` 就地核验</span></h2>
+    <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可用 <code>--verify</code> 就地核验</span></h2>
     <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
   </section>
 </main>

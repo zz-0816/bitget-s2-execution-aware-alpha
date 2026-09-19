@@ -1,6 +1,26 @@
-# ⚠️ 冻结副本：本文件从项目一工作区（bitgetS2_factory_trading）复制而来，
-#    复制日期 2026-09-19。项目二**只读使用**，请勿在此处反向修改项目一的逻辑；
-#    若要同步上游修复，请回项目一改，然后重跑 tools/isolate_p2.py。
+# ⚠️ 冻结副本的**漂移记录**（原文：本文件从项目一工作区 bitgetS2_factory_trading
+#    复制而来，复制日期 2026-09-19，项目二只读使用，请回项目一改后重跑
+#    tools/isolate_p2.py）。
+#
+#    本项目二仓库**对上游原文做了 3 处本地修改**，逐条列在这里便于审计：
+#
+#      ① 新增 EVENT_CACHE_TTL_MIN（2026-09-19）
+#         事件驱动真正接进决策链后，需要"无新条目时复用上次 LLM 判定的最长时间"。
+#         同时修正 NEWS_EVENT_DRIVEN 的描述 —— 上游注释写的是
+#         "只在出现新条目时才调 LLM（省成本的主要手段）"，但**当时没有任何代码
+#         读这个配置**（每轮都调）。现在它是真的生效了，注释也必须对得上。
+#
+#      ② 控制台编码兜底（2026-09-19）
+#         上游本文件在入口处**没有**调用 common/console.install()，于是在
+#         中文 Windows（控制台代码页 GBK）下 `python common/config.py --check`
+#         会直接崩：
+#             UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0'
+#         这是**评委一定会踩到**的路径（README 让人跑 --check 看配置）。
+#         现在入口先装兜底，与项目里其它脚本保持一致。
+#
+#      ③ 与①配套的 SPEC 文案更新。
+#
+#    除以上三处，读写 .env / 优先级 / 掩码逻辑与上游**逐字节一致**。
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -28,6 +48,7 @@
     # ---- 事件源（新闻/申报）----
     NEWS_POLL_SECONDS=60               # 轮询间隔
     NEWS_EVENT_DRIVEN=on               # on=只在出现"新条目"时才调 LLM（省成本）
+    EVENT_CACHE_TTL_MIN=30             # 无新条目时，可复用上一次 LLM 判定的最长时间（分钟）
 
     # ---- 采样与监控 ----
     POSITION_WATCH_SECONDS=60          # 持仓期风控巡检间隔
@@ -41,6 +62,19 @@
 import argparse
 import os
 import sys
+
+# 控制台兜底：不加这一句，中文 Windows（GBK 控制台）下 `--check` 会因为
+# 一个 ⚠ 字符直接抛 UnicodeEncodeError 崩掉（本项目真实踩到过）。
+try:
+    from common.console import install as _install_console
+    _install_console()
+except Exception:  # noqa: BLE001  —— 单独运行本文件时也不该因此失败
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from common.console import install as _install_console
+        _install_console()
+    except Exception:  # noqa: BLE001
+        pass
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV_FILE = os.path.join(BASE, ".env")
@@ -58,7 +92,12 @@ SPEC = (
     ("LLM_MAX_RETRY", "2", "失败重试次数（含首次共 N+1 次尝试）"),
     ("NEWS_POLL_SECONDS", "60", "消息面轮询间隔（秒）"),
     ("NEWS_EVENT_DRIVEN", "on",
-     "on=只在出现新条目时才调 LLM（**省成本的主要手段**）；off=每轮都调"),
+     "on=**决策链**只在出现新条目时才调 LLM（省成本的主要手段；"
+     "无新条目时复用上一次判定，带 TTL）；off=每轮都调"),
+    ("EVENT_CACHE_TTL_MIN", "30",
+     "无新条目时，上一次 LLM 事件判定可复用的最长时间（分钟）。"
+     "⚠️ 它同时是**事件判断的最坏判定龄**：缓存越久越省钱、越可能漏掉刚发生的事件；"
+     "出现新的重大 EDGAR 申报（8-K/10-Q/10-K/S-1/SC 13D）时**立即**调 LLM，不经缓存"),
     ("POSITION_WATCH_SECONDS", "60", "持仓期风控巡检间隔（秒）"),
     ("POSITION_WATCH_ENABLED", "on", "是否启用持仓期巡检"),
 )
@@ -202,8 +241,14 @@ def write_example(path=None):
         "",
         "# ---- 事件源 ----",
         "NEWS_POLL_SECONDS=60",
-        "# on=只在出现新条目时才调 LLM（省成本的主要手段）",
+        "# 事件驱动降本（**决策链真的读它**，见 project2/event_gate.py::gate_decision）：",
+        "#   on  = 只在出现新条目时才调 LLM；全是已见过的条目时复用上一次判定（带 TTL）",
+        "#   off = 每轮都调 LLM（与引入事件驱动之前的行为完全一致）",
         "NEWS_EVENT_DRIVEN=on",
+        "# 无新条目时，上一次 LLM 事件判定可复用的最长时间（分钟）。",
+        "# ⚠️ 它同时是**事件判断的最坏判定龄**：TTL 越大越省钱、越可能漏掉刚发生的事件。",
+        "#    出现新的重大 EDGAR 申报（8-K/10-Q/10-K/S-1/SC 13D）时**立即**调 LLM，不经缓存。",
+        "EVENT_CACHE_TTL_MIN=30",
         "",
         "# ---- 持仓期风控巡检 ----",
         "POSITION_WATCH_ENABLED=on",

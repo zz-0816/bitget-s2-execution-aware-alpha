@@ -1,6 +1,23 @@
-# ⚠️ 冻结副本：本文件从项目一工作区（bitgetS2_factory_trading）复制而来，
-#    复制日期 2026-09-19。项目二**只读使用**，请勿在此处反向修改项目一的逻辑；
-#    若要同步上游修复，请回项目一改，然后重跑 tools/isolate_p2.py。
+# ⚠️ 冻结副本的**漂移记录**（原文：本文件从项目一工作区 bitgetS2_factory_trading
+#    复制而来，复制日期 2026-09-19，项目二只读使用，请回项目一改后重跑
+#    tools/isolate_p2.py）。
+#
+#    本项目二仓库**对上游原文做了 2 处本地修改**，理由与内容如下，便于审计：
+#
+#      ① DOC_GLOBS 修正（2026-09-19）
+#         上游写的是 `project2/README.md` —— 那是**项目一目录结构**下的路径；
+#         本项目二的目录结构里没有它（叙事与规格在根 `README.md` 与
+#         `docs/3x`）。不改的话，索引会**静默少掉一整类文档**（不报错，
+#         只是永远检索不到）。这里改成按本仓库的真实结构来取。
+#         同时纳入新增文档 docs/40-43 与 prompts/*.md
+#         （prompt 也需要可检索：问"我们的事件判据是什么"时应能命中）。
+#
+#      ② 校准集留出自检（2026-09-19）
+#         新增一项自检：`data/calibration/` 下的**人工复核校准集不得进入索引**。
+#         否则判定时模型能在上下文里看到"我方对同一标题的历史判定"，
+#         测出来的一致性等于抄答案。
+#
+#    除以上两处，检索/评分/预算逻辑与上游**逐字节一致**。
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -63,8 +80,17 @@ DEFAULT_K = 3
 MIN_SAMPLES = 10        # 经验条目低于它就标 [小样本]
 
 # 文档类：只索引这些，避免把整个仓库吞进来
-DOC_GLOBS = ("docs/1[3-4]-*.md", "docs/2[59]-*.md", "docs/3[0-4]-*.md",
-             "project2/README.md", "docs/DATA_DICT.md", "docs/09-*.md")
+# ⚠️ 2026-09-19 本地修正：上游写的 `project2/README.md` 是**项目一目录结构**下的
+#    路径，本仓库里不存在 —— 不改的话会静默少索引一整类文档（不报错）。
+DOC_GLOBS = ("docs/1[3-4]-*.md", "docs/2[59]-*.md", "docs/3[0-9]-*.md",
+             "docs/4[0-9]-*.md", "README.md", "docs/DATA_DICT.md",
+             "prompts/*.md", "docs/09-*.md")
+
+# 🔴 校准集**必须留出**：这些路径下的内容一个字都不许进索引。
+#    理由：校准集是"人工复核过的期望判定"，一旦进入 RAG 上下文，
+#    被测模型就能抄到答案 —— 那样测出来的"一致性"是假的。
+#    （tools/event_calibration.py --selftest 会把这条当硬断言来查。）
+HOLDOUT_GLOBS = ("data/calibration/*",)
 
 STOP = set("""的 了 是 在 和 与 及 或 对 从 到 把 被 让 给 为 以 于 中 上 下 这 那
 以及 一个 我们 你们 他们 可以 需要 因为 所以 但是 如果 就是 没有 不是 a an the
@@ -265,8 +291,30 @@ def selftest():
     chk(idx["n_items"] > 20, "索引非空（%d 块）" % idx["n_items"])
     hits = search("现货腿零成交 挂单", k=3, idx=idx)
     chk(bool(hits), "能检索到相关块（%d 条）" % len(hits))
-    chk(all(it["path"].startswith(("docs/", "project2/", "data/")) for _s, it in hits),
+    chk(all(it["path"].startswith(("docs/", "project2/", "data/", "prompts/",
+                                   "README"))
+            for _s, it in hits),
         "命中块都带可回溯路径")
+    # ---- 🔴 留出检查：人工复核的校准集不得进入索引 ----
+    #    进了就等于让被测模型抄答案，"一致性"是假的。
+    import glob as _glob
+    holdout_files = []
+    for g in HOLDOUT_GLOBS:
+        holdout_files += _glob.glob(os.path.join(BASE, g))
+    leaked = [it["path"] for it in idx["items"]
+              if any(it["path"].startswith(h.replace("\\", "/").rstrip("*"))
+                     for h in HOLDOUT_GLOBS)
+              or it["path"].startswith("data/calibration")]
+    chk(not leaked, "校准集**没有**进入索引（留出规则生效；磁盘上有 %d 个校准文件）"
+        % len(holdout_files))
+    # ---- 决策案例：路径必须真实存在（悬空出处的索引 = 不可核验的索引）----
+    cases = [it for it in idx["items"] if it["kind"] == "case"]
+    dangling = [it["path"] for it in cases
+                if not os.path.exists(os.path.join(BASE, it["path"]))]
+    chk(not dangling,
+        "决策案例的出处**都真实存在**（%d 条案例%s）"
+        % (len(cases), "" if not dangling else
+           "；悬空：%s" % "、".join(dangling[:3])))
     ctx = build_context("NVDA")
     chk(ctx is None or len(ctx) <= MAX_CHARS + 200,
         "上下文受字符预算约束（%d 字符 <= %d+200）" % (len(ctx or ""), MAX_CHARS))

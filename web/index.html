@@ -3,168 +3,123 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Basis Terminal · rToken 现货 vs 美股永续</title>
+<title>执行决策台 · Execution-aware Alpha（项目二）</title>
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
 <header class="top">
   <div class="brand">
     <span class="dot" id="live-dot"></span>
-    <h1>Basis Terminal</h1>
-    <span class="sub">rToken 现货 &nbsp;vs&nbsp; 美股永续 · 跨场所价差监控</span>
+    <h1>执行决策台</h1>
+    <span class="sub">项目二 · Execution-aware Alpha ｜ 给定盘口与目标仓位：吃 / 挂 / 挂哪 / 分几笔</span>
   </div>
-  <div class="session-box" id="session-box">
-    <span class="sess-label" id="session-label">读取中…</span>
-    <span class="sess-label" id="route-label" title="平台路由：决定挂单能否省点差（与美股时段相差约 4 小时）">—</span>
-    <span class="sess-time" id="session-time"></span>
+  <div class="session-box">
+    <span><span class="k">数据快照</span> <span id="snap-ts">读取中…</span></span>
+    <span><span class="k">LLM</span> <span id="llm-state">—</span></span>
+    <span><span class="k">标的</span> <span id="n-bases">—</span></span>
   </div>
 </header>
 
 <main>
-  <!-- 1. 主题陈述：休市窗口 = 策略交易窗口 -->
-  <section class="panel thesis">
-    <div class="thesis-main">
-      <div class="thesis-kicker">策略窗口</div>
-      <div class="thesis-title" id="window-title">—</div>
-      <p class="thesis-body" id="window-body">—</p>
-    </div>
-    <div class="thesis-side">
-      <div class="metric"><span class="m-v" id="m-pairs">—</span><span class="m-k">监控配对</span></div>
-      <div class="metric"><span class="m-v" id="m-basis">—</span><span class="m-k">基差中位 (bp)</span></div>
-      <div class="metric"><span class="m-v" id="m-spot">—</span><span class="m-k">现货点差中位 (bp)</span></div>
-      <div class="metric"><span class="m-v" id="m-perp">—</span><span class="m-k">永续点差中位 (bp)</span></div>
-    </div>
-  </section>
+  <div class="disclaimer" id="disclaimer">加载中…</div>
 
-  <!-- 2. 核心证据：同一标的、两个场所、点差差 100 倍 -->
+  <!-- ══════════ 1. 决策链主视图 ══════════ -->
   <section class="panel">
-    <h2>同一标的，两个场所 <span class="hint">点差 = 交易成本；基差 = 交易机会</span></h2>
-    <div class="table-wrap">
-      <table id="pairs-table">
-        <thead>
-          <tr>
-            <th>标的</th>
-            <th>现货 mid</th>
-            <th class="sep">现货点差 (bp)</th>
-            <th>永续 mid</th>
-            <th class="sep">永续点差 (bp)</th>
-            <th class="sep">基差 (bp)</th>
-            <th>方向</th>
-            <th class="sep" title="≤5bp 滑点内可吃下的名义额（5 档累计，四方向取最薄）。角标「现/永」= 当前瓶颈在哪条腿">≤5bp 可吃 (USD)</th>
-          </tr>
-        </thead>
-        <tbody><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
-      </table>
+    <h2>执行决策链
+      <span class="hint">5 路独立分析 → 多空辩论 → 事件闸门 → 交易员 → 风控官（一票否决）→ 最终决策</span>
+    </h2>
+    <div class="controls">
+      <span class="chip" id="base-chips"></span>
+      <label>名义额 USD</label>
+      <input type="number" id="qty" value="5000" min="100" step="1000" />
+      <button id="run">跑完整决策链</button>
+      <button id="run-overview" class="ghost">刷新全标的概览</button>
+      <span class="loading" id="run-state"></span>
     </div>
-    <p class="foot">
-      基差 = (现货 mid / 永续 mid − 1) × 10000。 <strong>基差为负 = 永续更贵 → 交易方向为「多现货 / 空永续」。</strong>
-      永续支持做空与杠杆，因此不受「rToken 无法做空」的限制。
-      <br />
-      <strong>容量才是真正的瓶颈。</strong>两个量必须分开看，它们会给出<b>相反</b>的瓶颈腿结论：
-      <b>顶部挂单深度</b>（瞬时能吃多少）实测<b>永续更薄</b>；<b>已成交名义额</b>（长期规模）实测<b>现货更薄</b>。
-      表里的「≤5bp 可吃」用 <b>5 档累计</b>算 —— 只看最优一档会低估 30~280 倍
-      （如 TSLA 顶深 $97，而 ≤5bp 实际可吃 $26,957）。低于 $5,000 才标「深度不足」。
-    </p>
+    <div id="verdict"><div class="loading">选一个标的，点「跑完整决策链」。这一页上的每个数字都能点回代码常量或数据文件。</div></div>
+    <div class="stages" id="stages"></div>
   </section>
 
-  <!-- 3. 时间序列 -->
+  <!-- ══════════ 2. 五路分析师 ══════════ -->
   <section class="panel">
-    <h2>基差与点差时序 <span class="hint" id="chart-hint">—</span></h2>
-    <div class="chart-toolbar" id="chart-toolbar"></div>
-    <svg id="chart" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img"
-         aria-label="基差与现货点差时间序列"></svg>
-    <div class="legend">
-      <span><i class="swatch line-basis"></i>基差 (bp)</span>
-      <span><i class="swatch line-spread"></i>现货点差 (bp)</span>
-      <span><i class="swatch band-closed"></i>休市窗口</span>
-    </div>
+    <h2>① 五路独立分析
+      <span class="hint">互不读对方结论；**没有引用已实测的量的结论一律作废**</span>
+    </h2>
+    <div class="analysts" id="analysts"><div class="loading">尚未运行</div></div>
   </section>
 
+  <!-- ══════════ 3. 辩论 + 闸门 ══════════ -->
   <div class="grid2">
-    <!-- 4. 分时段点差：休市放大了多少 -->
     <section class="panel">
-      <h2>分时段点差 <span class="hint">休市 vs 盘中</span></h2>
-      <div class="table-wrap">
-        <table id="session-table">
-          <thead>
-            <tr><th>标的</th><th>休市</th><th>盘前</th><th>盘中</th><th>盘后</th><th class="sep">倍数</th></tr>
-          </thead>
-          <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
-        </table>
-      </div>
-      <p class="foot">
-        「倍数」= 休市点差中位 ÷ 盘中点差中位。 <strong>这个倍数就是策略在休市窗口的收益来源。</strong>
-        盘中样本需等美股开盘后累积（当前若为休市时段，盘中列为空属正常）。
-      </p>
+      <h2>② 多空辩论 <span class="hint">每条论点必须给证伪条件；同一证伪条件只算一条</span></h2>
+      <div id="debate"><div class="loading">尚未运行</div></div>
     </section>
-
-    <!-- 5. 执行决策：风险与理由（项目二能力；与上面的策略视角同页，是一套流水线） -->
     <section class="panel">
-      <h2>执行决策 · 风险与理由
-        <span class="hint">「这一单该不该做、为什么、什么条件」—— 输出理由与警告，不代下单</span>
-      </h2>
-      <p class="thesis-line">
-        上面告诉你<strong>哪里</strong>有价差；这里告诉你这一单<strong>该不该做、为什么</strong>。
-        风险引擎给出<strong>可核验理由</strong>、<strong>条件点位</strong>与<strong>双向风险警告</strong>；
-        <strong>它不下单，也不构成投资建议</strong>；低风险 ≠ 无风险。
-      </p>
-      <div class="table-wrap">
-        <table id="assess-table">
-          <thead>
-            <tr>
-              <th>标的</th>
-              <th>风险</th>
-              <th>结论</th>
-              <th class="sep">可核验理由 / 警告</th>
-              <th class="sep">条件</th>
-            </tr>
-          </thead>
-          <tbody id="assess-body"><tr><td colspan="5">加载中…</td></tr></tbody>
-        </table>
-      </div>
-      <p class="hint" id="assess-note"></p>
-    </section>
-
-    <!-- 6. 数据状态：诚实标注局限 -->
-    <section class="panel">
-      <h2>数据状态 <span class="hint">诚实标注局限</span></h2>
-      <div id="status-body" class="status-body">加载中…</div>
+      <h2>③ 事件闸门 <span class="hint">LLM 在运行期的唯一职责</span></h2>
+      <div id="gate"><div class="loading">尚未运行</div></div>
     </section>
   </div>
 
-  <!-- 7. 交易结构说明 -->
+  <!-- ══════════ 4. 交易员 + 风控官 ══════════ -->
+  <div class="grid2">
+    <section class="panel">
+      <h2>④ 交易员 <span class="hint">不新造阈值、不做价格预测</span></h2>
+      <div id="trader"><div class="loading">尚未运行</div></div>
+    </section>
+    <section class="panel">
+      <h2>⑤ 风控官 <span class="hint">一票否决；只收紧，不放松</span></h2>
+      <div id="risk"><div class="loading">尚未运行</div></div>
+    </section>
+  </div>
+
+  <!-- ══════════ 5. 成本 + 溯源 ══════════ -->
+  <div class="grid2">
+    <section class="panel">
+      <h2>成本与联合成交分布 <span class="hint">实测取代独立假设</span></h2>
+      <div id="cost"><div class="loading">尚未运行</div></div>
+    </section>
+    <section class="panel">
+      <h2>可复跑溯源 <span class="hint">参数 + 阈值 + 输入 SHA256 + decision_hash</span></h2>
+      <div id="prov"><div class="loading">尚未运行</div></div>
+    </section>
+  </div>
+
+  <!-- ══════════ 6. 全标的概览 ══════════ -->
   <section class="panel">
-    <h2>交易结构</h2>
-    <div class="structure">
-      <div class="leg long">
-        <div class="leg-tag">腿 1 · 做多</div>
-        <div class="leg-name">rToken 现货</div>
-        <div class="leg-detail">bid 侧挂单（maker）—— <strong>赚</strong>点差而非付点差</div>
-      </div>
-      <div class="leg-arrow">＋</div>
-      <div class="leg short">
-        <div class="leg-tag">腿 2 · 做空</div>
-        <div class="leg-name">美股永续</div>
-        <div class="leg-detail">即时对冲方向风险 —— 付 6 bp taker 费，换方向中性</div>
-      </div>
-      <div class="leg-arrow">＝</div>
-      <div class="leg result">
-        <div class="leg-tag">收益</div>
-        <div class="leg-name">点差 + 基差收敛</div>
-        <div class="leg-detail">风险：逆向选择 + 点差在开盘瞬间塌缩</div>
-      </div>
+    <h2>全标的概览 <span class="hint">风险与理由（**不代下单**，只给理由与条件）</span></h2>
+    <div class="table-wrap">
+      <table id="ov-table">
+        <thead><tr>
+          <th>标的</th><th>风险</th><th>结论</th>
+          <th class="sep">可核验理由 / 警告</th>
+          <th class="sep">条件</th><th class="sep">事件严重度</th>
+        </tr></thead>
+        <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+      </table>
     </div>
-    <p class="foot warn">
-      ⚠️ 本项目是<strong>做市型价差捕获</strong>，<strong>不是无风险套利</strong>：
-      散户无法做 mint/redeem。本页面为参赛作品展示，<strong>非投资建议</strong>；代币 ≠ 股权。
-    </p>
+    <p class="hint" id="ov-note"></p>
+  </section>
+
+  <!-- ══════════ 7. 阈值透明化 ══════════ -->
+  <section class="panel">
+    <h2>生效阈值与来源 <span class="hint">页面上每个判断都由这些常量决定；它们全部来自实测</span></h2>
+    <div class="table-wrap">
+      <table id="params-table">
+        <thead><tr><th>参数</th><th>值</th><th>单位</th><th class="sep">来源</th><th class="sep">代码位置</th></tr></thead>
+        <tbody><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════ 8. 数据边界 ══════════ -->
+  <section class="panel">
+    <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可 `--verify` 就地核验</span></h2>
+    <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
   </section>
 </main>
 
-<footer class="bottom">
-  <span id="footer-meta">—</span>
-</footer>
-
+<footer class="bottom" id="footer">—</footer>
+<div id="toasts"></div>
 <script src="/app.js"></script>
 </body>
 </html>

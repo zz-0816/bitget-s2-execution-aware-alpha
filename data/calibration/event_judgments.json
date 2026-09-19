@@ -1,0 +1,107 @@
+{
+  "_about": "事件判定校准集（人工复核）—— 用于检查 LLM 事件判定的**一致性与危险方向**。",
+  "_why": "项目二里 LLM 的唯一运行期职责就是事件分类。没有校准集，就只能说『它能跑』，不能说『它判得稳』。",
+  "_review_process": "全部条目由本项目作者逐条复核，只依据**标题文本本身** + docs/33 的判据表；复核时**看不到** LLM 的输出（先写死期望值，再跑 LLM 比对），避免反向拟合。",
+  "_holdout_rule": "🔴 本文件**不得进入 RAG 索引**（否则等于把答案喂给被测模型）。tools/event_calibration.py --selftest 会把这条规则当成硬断言来查。",
+  "_sample_size_warning": "n 很小（10 条），**只能用于回归与危险方向检查，不能作为准确率结论**。任何材料里引用它都必须同时写出样本量。",
+  "_reviewed_by": "项目二作者（本人）",
+  "_reviewed_utc": "2026-09-19T00:00:00+00:00",
+  "_severity_meaning": {
+    "block": "挂单类方案直接作废（财报/并购/监管处罚/退市风险/监管新规）",
+    "caution": "缩小规模或放宽价位（宏观数据、行业级重大新闻、信息不足）",
+    "none": "与标的无关的普通新闻、营销内容、例行内部人交易"
+  },
+  "_danger_direction": "把 block/caution 误判成 none = **危险错误**（会让系统在最该停手的时候继续挂单）；反向（把 none 判成 caution）只是保守，代价是放弃机会。",
+  "cases": [
+    {
+      "id": "nvda-8k",
+      "base": "NVDA",
+      "headline": "[2026-09-03] NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "expected_severity": "block",
+      "basis": "SEC 8-K = 重大事项法定披露；docs/33 §1-c 判据表『财报、重大合同、并购、监管处罚 -> block』。挂单在此窗口 = 主动承担逆向选择。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json（2026-09-18 抓取的 EDGAR 一手申报）"
+    },
+    {
+      "id": "nvda-10q",
+      "base": "NVDA",
+      "headline": "[2026-08-26] NVDA 申报：10-Q（季报）",
+      "expected_severity": "block",
+      "basis": "10-Q = 季报本体，挂单被逆向选择的典型窗口。判据表同 8-K。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json"
+    },
+    {
+      "id": "nvda-form4",
+      "base": "NVDA",
+      "headline": "[2026-09-11] NVDA 申报：4（内部人交易（Form 4））",
+      "expected_severity": "none",
+      "basis": "prompt 判据表明确把『例行内部人交易』归为 none；FORM_WEIGHT['4']=1（每天都有，几乎不影响挂单）。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json"
+    },
+    {
+      "id": "nvda-form4-b",
+      "base": "NVDA",
+      "headline": "[2026-09-08] NVDA 申报：4（内部人交易（Form 4））",
+      "expected_severity": "none",
+      "basis": "同上：例行内部人交易。这条与 nvda-form4 故意重复同型，用于检查同类判定是否稳定。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json"
+    },
+    {
+      "id": "other-earnings-nb",
+      "base": "NVDA",
+      "headline": "[2026-09-18] NB 预定于 2026-09-18 发布财报（time-not-supplied）",
+      "expected_severity": "none",
+      "basis": "标的不是 NVDA —— 判据表『与标的无关的普通新闻 -> none』。⚠️ 如果模型把所有财报预告都当 block，说明它没看标的，这是**过保守**方向的错误（不危险，但会白停手）。",
+      "confidence_in_label": "medium",
+      "source": "data/derived/news_latest.json"
+    },
+    {
+      "id": "nvda-ceo-comment",
+      "base": "NVDA",
+      "headline": "Nvidia Chip Sales Could Double Next Year, CEO Jensen Huang Says",
+      "expected_severity": "caution",
+      "basis": "涉及我方标的、但**不是公司行为**（是 CEO 公开表态 / 行业级叙事），判据表归『行业级重大新闻 -> caution』。⚠️ 这条是判断题：归 none 也可辩（不构成新事实），归 block 则过重。",
+      "confidence_in_label": "medium",
+      "source": "data/derived/news_latest.json fresh_headlines（聚合 RSS）"
+    },
+    {
+      "id": "macro-fed-hikes",
+      "base": "NVDA",
+      "headline": "Three words from Kevin Warsh have Wall Street wondering how far the Fed will go with rate hikes",
+      "expected_severity": "caution",
+      "basis": "宏观（利率路径）——判据表『宏观数据（CPI/非农/利率决议）-> caution』。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json fresh_headlines"
+    },
+    {
+      "id": "peer-amd-rumor",
+      "base": "NVDA",
+      "headline": "AMD stock rises on a rumor that could give it a 2027 GPU edge",
+      "expected_severity": "caution",
+      "basis": "同业（AMD）竞争格局消息，会影响 NVDA 定价但不构成公司行为 -> 行业级 caution。",
+      "confidence_in_label": "medium",
+      "source": "data/derived/news_latest.json fresh_headlines"
+    },
+    {
+      "id": "unrelated-okta",
+      "base": "NVDA",
+      "headline": "Why Shares of Okta Stock Shot Up 10% This Week",
+      "expected_severity": "none",
+      "basis": "与标的无关的个股新闻 -> none。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json fresh_headlines"
+    },
+    {
+      "id": "unrelated-nike",
+      "base": "NVDA",
+      "headline": "Nike parts ways with Kylian Mbappé, soccer superstar signs with On",
+      "expected_severity": "none",
+      "basis": "与标的、与行业均无关 -> none。这条是**抗干扰**样本：如果模型对任何新闻都给 caution，它会在这里暴露。",
+      "confidence_in_label": "high",
+      "source": "data/derived/news_latest.json fresh_headlines"
+    }
+  ]
+}

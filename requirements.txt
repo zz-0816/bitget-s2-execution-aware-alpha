@@ -1,0 +1,21 @@
+# 项目二 · 依赖清单
+#
+# ⭐ 本项目**零第三方依赖**：只用到 Python 标准库（urllib / csv / json /
+#    http.server / threading / zoneinfo …）。所以这里没有任何包。
+#
+# 为什么这一点值得单独说：评委 `git clone` 之后**不需要 pip install**
+# 就能跑起来 —— 没有"装不上依赖"这一类失败模式。
+
+# ── 运行环境要求 ────────────────────────────────────────────────
+# Python >= 3.11
+#   硬性原因：代码用了 `datetime.UTC`（3.11 引入）做全项目的时区口径。
+#   实测版本：Python 3.14.5rc1（Windows）+ Python 3.12（Docker 镜像）。
+#
+# tzdata（仅 Linux 精简镜像需要）
+#   `common/market_calendar.py` 用 zoneinfo 读 America/New_York 判美股时段。
+#   Debian/Ubuntu 的 slim 镜像默认**没有** tz 数据库，会抛
+#   ZoneInfoNotFoundError。Dockerfile 里已经 apt-get install tzdata。
+#   Windows / macOS / 完整版 Python 镜像自带，无需处理。
+#
+# ── 可选的第三方依赖（都不装也能跑）─────────────────────────────
+#   无。LLM 走 OpenAI 兼容 HTTP 接口，直接用 urllib 调用。

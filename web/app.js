@@ -1,407 +1,556 @@
-/* Basis Terminal —— 前端逻辑
-   只消费 /api/*；无外部依赖（图表为手写 SVG，离线可用）。 */
+/* 项目二 · 执行决策台 —— 前端逻辑
+   只消费本仓库 run_p2.py 提供的 /api/*；无外部依赖（离线可用）。
+
+   ⚠️ 记录一个踩过的坑：这个页面最初是项目一的统一页面，调用的是
+   /api/overview、/api/timeline、/api/data-status —— 那三个端点**只有项目一
+   的服务才有**。独立跑起来时页面全是"加载中…"，而所有自检都是绿的
+   （因为没有一个自检去碰 HTTP）。现在：端点集合集中写在 API 里，
+   run_p2.py --selftest 会照着这份清单真的打一遍。 */
+
+'use strict';
 
 const $ = (id) => document.getElementById(id);
-const REFRESH_MS = 20000;
 
-function fmt(v, d = 2) {
-  if (v === null || v === undefined || Number.isNaN(v)) return '—';
-  return Number(v).toFixed(d);
-}
-function cls(v) { return v > 0 ? 'pos' : (v < 0 ? 'neg' : ''); }
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-async function api(path) {
-  const r = await fetch(path, { cache: 'no-store' });
-  if (!r.ok) throw new Error(path + ' -> HTTP ' + r.status);
-  return r.json();
-}
-
-/* ---------------- 顶栏 & 主题陈述 ---------------- */
-
-async function loadHealth() {
-  const h = await api('/api/health');
-  const closed = h.session === 'closed';
-  const lab = $('session-label');
-  lab.textContent = h.session_label;
-  lab.className = 'sess-label ' + (closed ? 'closed' : 'open');
-
-  // ⭐ 平台路由才是"能不能靠挂单省点差"的判据（与 session 口径相差约 4 小时）
-  const rl = $('route-label');
-  if (rl) {
-    const mk = h.maker_benefit;
-    rl.textContent = mk ? '所内撮合 · 可赚点差' : 'StockRoute · 挂单也按 Taker';
-    rl.className = 'sess-label ' + (mk ? 'open' : 'closed');
-    rl.title = h.route_label || '';
-  }
-
-  // 时间显示交给独立时钟（tickClock，每秒一次），不依赖健康检查的 30 秒节奏
-  CLOCK_OFFSET_MS = new Date(h.server_time_utc).getTime() - Date.now();
-  $('live-dot').className = 'dot on';
-
-  $('window-title').textContent = h.maker_benefit
-    ? '当前处于「所内撮合」窗口 —— 这是策略唯一可交易的时段'
-    : (closed ? '美股休市，但走 StockRoute —— 挂单也按 Taker 计费'
-              : '美股开市中 —— 走 StockRoute，挂单省不了点差');
-  $('window-body').textContent = h.maker_benefit
-    ? '周末/节假日窗口：平台启用所内撮合，区分 Maker/Taker。现货腿挂单可「赚」半幅点差 —— 这是策略的收益来源。'
-    : '常规交易时段：平台走 StockRoute 直连美股，所有订单按 Taker 计费（不分挂单/吃单）。此时段不宜做市，数据仅作对照基准。';
-  $('footer-meta').textContent =
-    '刷新间隔 ' + REFRESH_MS / 1000 + 's · 行情缓存 ' + h.tick_seconds + 's · 配对 ' + h.pairs + ' 组';
-}
-
-/* ---------------- 时钟（每秒走字，独立于网络请求） ----------------
-   之前时间只在健康检查时写一次（30 秒才刷），看起来像"卡住了"。
-   改为纯前端每秒自增：不产生任何服务端请求，也不受网络抖动影响。 */
-
-let CLOCK_OFFSET_MS = 0;
-
-function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-function tickClock() {
-  const now = new Date(Date.now() + CLOCK_OFFSET_MS);
-  const utc = pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ':' + pad(now.getUTCSeconds());
-  const local = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-  const el = $('session-time');
-  if (el) el.textContent = 'UTC ' + utc + ' · 北京时间 ' + local;
-}
-
-/* ---------------- 配对表 ---------------- */
-
-function renderPairs(rows) {
-  const tbody = document.querySelector('#pairs-table tbody');
-  if (!rows || !rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
-    return;
-  }
-  const bases = rows.map((r) => Math.abs(r.basis_bp || 0));
-  const maxAbs = Math.max(...bases, 1e-9);
-
-  tbody.innerHTML = rows.map((r) => {
-    const s = r.spot, p = r.perp;
-    const sBp = s ? s.spread_bp : null;
-    const pBp = p ? p.spread_bp : null;
-    const basis = r.basis_bp;
-    const hot = Math.abs(basis || 0) >= maxAbs * 0.98;
-    const ratio = (sBp && pBp) ? (sBp / Math.max(pBp, 1e-9)) : null;
-    // ---- 容量告警（09-14 修正）----
-    // 旧判据：perp_top_depth_usd < 5000 —— 只看**永续腿**、且只看**最优一档**。
-    // 实测该判据会把 10 个标的**全部**标成"深度不足"，而实际有 6 个够吃：
-    //   TSLA 顶深 $97 -> ≤5bp 实际可吃 $26,957（低估 278 倍）
-    //   NVDA 顶深 $665 -> $23,746 ｜ SOXL 顶深 $1,115 -> $174,386
-    // 根因：深度是可以往下吃的，只看一档完全失真；而且策略**两条腿都要成交**。
-    // 新判据：用**5 档累计**的 `depth_within_5bp_usd`（已在后端算好，取四个方向最薄者），
-    // 不足 5000 才算"深度不足"，并把**瓶颈腿**一起显示出来。
-    const cap = r.capacity || null;
-    const eatable = cap ? cap.depth_within_5bp_usd : null;
-    const topDepth = cap ? cap.min_top_depth_usd : null;
-    const binding = cap ? cap.binding_leg_top : null;
-    const thin = (eatable !== null && eatable !== undefined)
-      ? eatable < 5000
-      : (topDepth !== null && topDepth !== undefined && topDepth < 5000);
-    const thinWhy = binding ? '（瓶颈：' + (binding === 'spot' ? '现货腿' : '永续腿') + '）' : '';
-    return '<tr class="' + (hot ? 'best' : '') + '">' +
-      '<td class="base-name">' + esc(r.base) +
-        (hot ? ' <span class="tag hot">基差最大</span>' : '') +
-        (thin ? ' <span class="tag thin" title="≤5bp 滑点内可吃 ' +
-          fmt(eatable, 0) + ' USD' + thinWhy + '">深度不足</span>' : '') + '</td>' +
-      '<td>' + fmt(s && s.mid) + '</td>' +
-      '<td class="sep ' + (sBp > 10 ? 'neg' : '') + '">' + fmt(sBp) +
-        (ratio ? ' <span class="mono-dim">(' + ratio.toFixed(1) + '×)</span>' : '') + '</td>' +
-      '<td>' + fmt(p && p.mid) + '</td>' +
-      '<td class="sep">' + fmt(pBp) + '</td>' +
-      '<td class="sep ' + cls(basis) + '"><strong>' + fmt(basis) + '</strong></td>' +
-      '<td>' + (basis === null ? '—'
-        : '<span class="tag">' + (basis > 0 ? '多现货 / 空永续' : '空现货 / 多永续') + '</span>') + '</td>' +
-      // 显示"≤5bp 实际可吃"，因为那才是决定能做多大规模的量
-      '<td>' + (cap
-        ? (fmt(eatable, 0) + (binding ? ' <span class="mono-dim">' +
-            (binding === 'spot' ? '现' : '永') + '</span>' : ''))
-        : '—') + '</td>' +
-      '</tr>';
-  }).join('');
-}
-
-/* ---------------- 分时段表 ---------------- */
-
-function renderSessions(rows) {
-  const tbody = document.querySelector('#session-table tbody');
-  if (!rows || !rows.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.map((r) => {
-    const n = (v, k) => (v === null || v === undefined) ? '—'
-      : fmt(v) + ' <span class="mono-dim">n=' + (r[k] || 0) + '</span>';
-    const ratio = r.ratio;
-    const ratioCls = ratio === null ? '' : (ratio >= 3 ? 'neg' : 'pos');
-    return '<tr>' +
-      '<td class="base-name">' + esc(r.base) + '</td>' +
-      '<td>' + n(r.closed, 'closed_n') + '</td>' +
-      '<td>' + n(r.premarket, 'premarket_n') + '</td>' +
-      '<td>' + n(r.intraday, 'intraday_n') + '</td>' +
-      '<td>' + n(r.afterhours, 'afterhours_n') + '</td>' +
-      '<td class="sep ' + ratioCls + '"><strong>' +
-        (ratio === null ? '待盘中样本' : ratio.toFixed(2) + '×') + '</strong></td>' +
-      '</tr>';
-  }).join('');
-}
-
-/* ---------------- 数据状态 ---------------- */
-
-function renderStatus(st) {
-  const s = st.sampler;
-  const rows = st.spread_rows || 0;
-  const ageMin = s && s.last_utc
-    ? Math.round((Date.now() - new Date(s.last_utc).getTime()) / 60000) : null;
-  const alive = ageMin !== null && ageMin <= 5;
-
-  const raw = st.raw || {};
-  const rawLines = Object.keys(raw).sort().map((g) => {
-    const info = raw[g];
-    const n = Object.keys(info).length;
-    const tot = Object.values(info).reduce((a, b) => a + (b.rows || 0), 0);
-    const gaps = Object.values(info).reduce((a, b) => a + (b.gaps || 0), 0);
-    return '<div class="stat-row"><span class="stat-k">历史 ' + esc(g) +
-      ' <span class="mono-dim">(' + n + ' 文件)</span></span>' +
-      '<span class="stat-v">' + tot.toLocaleString() + ' 根 · 缺口 ' + gaps + '</span></div>';
-  }).join('');
-
-  $('status-body').innerHTML =
-    '<div class="stat-row"><span class="stat-k">采样器心跳</span><span class="stat-v ' +
-      (s ? (alive ? 'badge-ok' : 'badge-warn') : 'badge-bad') + '">' +
-      (s ? (alive ? '运行中 · ' + ageMin + ' 分钟前' : '已停止 · ' + ageMin + ' 分钟前')
-         : '无心跳') + '</span></div>' +
-    '<div class="stat-row"><span class="stat-k">采样轮数 / 行数</span><span class="stat-v">' +
-      (s ? (s.cycles + ' 轮') : '—') + '</span></div>' +
-    '<div class="stat-row"><span class="stat-k">盘口采样总行数</span><span class="stat-v">' +
-      rows.toLocaleString() + '</span></div>' +
-    rawLines +
-    '<div class="stat-row"><span class="stat-k">局限</span><span class="stat-v">' +
-      '现货 1min 零成交分钟不上线（缺口需按时间戳交集对齐，禁用前向填充）' +
-    '</span></div>';
-}
-
-/* ---------------- 手写 SVG 折线图 ---------------- */
-
-let TL = [];          // 时间序列缓存
-let CHART_BASE = null; // 当前展示标的
-
-function renderToolbar(bases) {
-  const bar = $('chart-toolbar');
-  const items = ['全部', ...bases];
-  bar.innerHTML = items.map((b) =>
-    '<span class="chip' + ((CHART_BASE === (b === '全部' ? null : b)) ? ' active' : '') +
-    '" data-base="' + esc(b) + '">' + esc(b) + '</span>').join('');
-  bar.querySelectorAll('.chip').forEach((el) => {
-    el.onclick = () => {
-      const v = el.dataset.base;
-      CHART_BASE = (v === '全部') ? null : v;
-      renderToolbar(bases);
-      drawChart();
-    };
-  });
-}
-
-function drawChart() {
-  const svg = $('chart');
-  const W = 1000, H = 320, PAD = { t: 18, r: 54, b: 30, l: 54 };
-  if (!TL.length) {
-    svg.innerHTML = '<text x="500" y="160" text-anchor="middle" fill="#5c6478" ' +
-      'font-size="14">等待采样数据…</text>';
-    return;
-  }
-
-  // 取值序列
-  const pick = (pt, field) => {
-    if (CHART_BASE) return pt[field][CHART_BASE];
-    const vals = Object.values(pt[field]).filter((v) => typeof v === 'number');
-    if (!vals.length) return undefined;
-    return vals.reduce((a, b) => a + b, 0) / vals.length;   // 多标的取均值
-  };
-  const basis = TL.map((p) => pick(p, 'basis'));
-  const spread = TL.map((p) => pick(p, 'spread'));
-
-  const all = basis.concat(spread).filter((v) => typeof v === 'number');
-  if (!all.length) {
-    svg.innerHTML = '<text x="500" y="160" text-anchor="middle" fill="#5c6478" ' +
-      'font-size="14">该标的暂无数据</text>';
-    return;
-  }
-  let lo = Math.min(...all), hi = Math.max(...all);
-  const padY = (hi - lo) * 0.12 || 1;
-  lo -= padY; hi += padY;
-
-  const x = (i) => PAD.l + (W - PAD.l - PAD.r) * (TL.length === 1 ? 0.5 : i / (TL.length - 1));
-  const y = (v) => PAD.t + (H - PAD.t - PAD.b) * (1 - (v - lo) / (hi - lo));
-
-  let out = '';
-
-  // 休市窗口底纹
-  let bandStart = null;
-  TL.forEach((pt, i) => {
-    const isClosed = pt.session === 'closed';
-    if (isClosed && bandStart === null) bandStart = i;
-    if ((!isClosed || i === TL.length - 1) && bandStart !== null) {
-      const x0 = x(bandStart), x1 = x(i);
-      if (x1 - x0 > 1.5) {
-        out += '<rect x="' + x0.toFixed(1) + '" y="' + PAD.t + '" width="' +
-          (x1 - x0).toFixed(1) + '" height="' + (H - PAD.t - PAD.b) +
-          '" fill="#2a2f45" opacity="0.5"/>';
-      }
-      bandStart = null;
-    }
-  });
-
-  // Y 轴网格
-  for (let k = 0; k <= 4; k++) {
-    const v = lo + (hi - lo) * k / 4;
-    const yy = y(v);
-    out += '<line x1="' + PAD.l + '" y1="' + yy.toFixed(1) + '" x2="' + (W - PAD.r) +
-      '" y2="' + yy.toFixed(1) + '" stroke="#242b3d" stroke-width="1"/>';
-    out += '<text x="' + (PAD.l - 8) + '" y="' + (yy + 4).toFixed(1) +
-      '" text-anchor="end" fill="#5c6478" font-size="11">' + v.toFixed(1) + '</text>';
-  }
-  // 零线
-  if (lo < 0 && hi > 0) {
-    out += '<line x1="' + PAD.l + '" y1="' + y(0).toFixed(1) + '" x2="' + (W - PAD.r) +
-      '" y2="' + y(0).toFixed(1) + '" stroke="#3a4256" stroke-width="1" stroke-dasharray="4 3"/>';
-  }
-
-  const line = (arr, color) => {
-    let d = '', open = false;
-    arr.forEach((v, i) => {
-      if (typeof v !== 'number') { open = false; return; }
-      d += (open ? ' L' : ' M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1);
-      open = true;
-    });
-    return d ? '<path d="' + d + '" fill="none" stroke="' + color +
-      '" stroke-width="1.8" stroke-linejoin="round"/>' : '';
-  };
-  out += line(spread, '#ffb74d');
-  out += line(basis, '#4c8dff');
-
-  // X 轴时间标签（首/中/末）
-  [0, Math.floor(TL.length / 2), TL.length - 1].forEach((i) => {
-    if (!TL[i]) return;
-    out += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 9) +
-      '" text-anchor="middle" fill="#5c6478" font-size="11">' +
-      TL[i].ts_utc.slice(11, 16) + '</text>';
-  });
-
-  svg.innerHTML = out;
-  const mode = CHART_BASE ? CHART_BASE : '全部标的均值';
-  $('chart-hint').textContent = mode + ' · ' + TL.length + ' 个采样点';
-}
-
-/* ---------------- 主循环（固定节奏，无自检轮询） ---------------- */
-
-/* ---------------- 执行决策：风险与理由（项目二） ---------------- */
-
-// 风险等级 -> 展示样式与中文
-const RISK_META = {
-  high:   { label: '高', cls: 'neg' },
-  medium: { label: '中', cls: '' },
-  low:    { label: '低', cls: 'pos' }
+// ⭐ 页面调用的**全部**端点（与 run_p2.py 的路由一一对应）
+const API = {
+  health: '/api/health',
+  bases: '/api/bases',
+  decision: '/api/decision',
+  assess: '/api/assess',
+  overview: '/api/overview',
+  params: '/api/params',
+  snapshot: '/api/snapshot',
+  alerts: '/api/alerts',
 };
 
-async function loadAssess() {
-  const body = document.getElementById('assess-body');
-  const note = document.getElementById('assess-note');
-  if (!body) return;
-  let r;
-  try {
-    r = await api('/api/assess');
-  } catch (e) {
-    body.innerHTML = '<tr><td colspan="5">风险引擎暂不可用</td></tr>';
-    return;
-  }
-  if (!r || r.available === false) {
-    // 刻意不让"可选功能不可用"把整页拖死
-    body.innerHTML = '<tr><td colspan="5">' +
-      esc((r && r.error) || '风险引擎暂不可用') + '</td></tr>';
-    if (note) note.textContent = '';
-    return;
-  }
-  body.innerHTML = (r.items || []).map(function (it) {
-    if (it.error) {
-      return '<tr><td>' + esc(it.base) + '</td><td colspan="4">' + esc(it.error) + '</td></tr>';
-    }
-    const rm = RISK_META[it.risk_level] || { label: '?', cls: '' };
-    const reasons = (it.rationale || []).map(function (x) {
-      return '<div class="r-line">· ' + esc(x) + '</div>';
-    }).join('');
-    const warns = (it.warnings || []).map(function (x) {
-      return '<div class="r-line r-warn">! ' + esc(x) + '</div>';
-    }).join('');
-    const cond = Object.keys(it.conditions || {}).map(function (k) {
-      return esc(k) + '=' + esc(String(it.conditions[k]));
-    }).join('；') || '—';
-    return '<tr>' +
-      '<td class="base-name">' + esc(it.base) +
-        (it.event_severity === 'block'
-          ? ' <span class="tag thin">事件窗口</span>' : '') + '</td>' +
-      '<td class="' + rm.cls + '"><strong>' + esc(rm.label) + '</strong></td>' +
-      '<td>' + esc(it.verdict) + '</td>' +
-      '<td class="sep r-cell">' + reasons + warns + '</td>' +
-      '<td class="sep mono-dim">' + cond + '</td>' +
-      '</tr>';
+const STATE = { base: null, qty: 5000, busy: false, seenAlerts: new Set() };
+
+/* ---------------- 工具 ---------------- */
+
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function mdInline(s) {
+  // 只做最小够用的行内标记：**粗体** 与 `代码`（先转义再替换，避免 XSS）
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+function fmt(v, d = 2) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
+  return Number(v).toFixed(d);
+}
+function pct(v, d = 2) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
+  return (Number(v) * 100).toFixed(d) + '%';
+}
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+async function api(path) {
+  const r = await fetch(path, { cache: 'no-store' });
+  const d = await r.json().catch(() => ({ ok: false, err: 'HTTP ' + r.status }));
+  if (!r.ok || d.ok === false) throw new Error(d.err || (path + ' -> HTTP ' + r.status));
+  return d;
+}
+
+const STANCE_CN = { proceed: '可执行', caution: '谨慎执行', stand_down: '不参与' };
+const RISK_CN = { low: ['低', 'pos'], medium: ['中', ''], high: ['高', 'neg'] };
+
+/* ---------------- 顶栏 ---------------- */
+
+async function loadHealth() {
+  const h = await api(API.health);
+  $('snap-ts').textContent = (h.snapshot && h.snapshot.snapshot_utc) || '—';
+  $('n-bases').textContent = (h.bases || []).length + ' 个';
+  const llm = h.llm || {};
+  $('llm-state').textContent = llm.configured
+    ? ('已配置（' + esc(llm.model || '') + '）')
+    : '未配置 → 事件判断退化为确定性日历';
+  $('llm-state').title = llm.note || '';
+  $('live-dot').className = 'dot on';
+  $('disclaimer').innerHTML =
+    '<b>阅读须知</b>　' + mdInline(h.disclaimer || '') +
+    '<br /><span class="mono-dim">离线自足：本页只读本仓库的数据快照，' +
+    '不依赖项目一、不需要网络。快照时间点 ' +
+    esc((h.snapshot && h.snapshot.snapshot_utc) || '—') +
+    '（' + (h.snapshot && h.snapshot.rounds) + ' 轮盘口；盘口是时点快照，' +
+    '交易所无历史接口）。</span>';
+  $('footer').textContent =
+    '项目二 · Execution-aware Alpha ｜ 服务 ' + (h.server_utc || '—') +
+    ' ｜ 版本 v' + h.version + ' ｜ 页面每次刷新都重新跑一遍决策链，不读缓存结论';
+  return h;
+}
+
+/* ---------------- 决策链主视图 ---------------- */
+
+function renderVerdict(d) {
+  const f = d.final, mo = d.monotonic || {};
+  const okMo = mo.stance_non_increasing !== false && mo.qty_non_increasing !== false;
+  const order = f.order;
+  const box = $('verdict');
+  box.innerHTML =
+    '<div class="verdict-bar ' + esc(f.stance) + '">' +
+      '<div><div class="stance">' + esc(STANCE_CN[f.stance] || f.stance) + '</div>' +
+      '<div class="mono-dim">最终立场 stance=' + esc(f.stance) + '</div></div>' +
+      '<div><div class="qty">' + fmt(f.qty_usd, 0) + ' USD</div>' +
+      '<div class="mono-dim">' + (order
+        ? ('方式 ' + esc(order.mode || order.kind) + ' ｜ ' + (order.slices || 0) + ' 笔 ｜ 成本 ' + fmt(order.cost_bp) + ' bp')
+        : '不下单（规模 0）') + '</div></div>' +
+      '<div class="why">' + mdInline(f.why || '') + '</div>' +
+      '<div><span class="tag ' + (okMo ? '' : 'veto') + '">' +
+        (okMo ? '单调性校验通过' : '单调性校验失败') + '</span>' +
+        '<div class="mono-dim">最终 ≤ 辩论；规模 ≤ 各环节最小值</div></div>' +
+    '</div>' +
+    (f.min_notional_binding
+      ? '<p class="hint">⚠️ 可执行规模低于名义额下限（' +
+        fmt(d.min_notional_usd || 100, 0) + ' USD）：正确结论是<b>不做</b>，' +
+        '而不是拿小到没意义的钱去做一笔。</p>' : '');
+
+  // 阶段条
+  const stages = d.stages || [];
+  $('stages').innerHTML = stages.map((s) => {
+    const st = s.stance || (s.verdict === 'reject' ? 'stand_down' : '') || '';
+    return '<div class="stage">' +
+      '<div class="s-name">' + esc(s.stage || '') + '</div>' +
+      '<div class="s-stance s-' + esc(st) + '">' +
+        (st ? esc(STANCE_CN[st] || st) : (s.verdict ? esc(s.verdict) : '—')) + '</div>' +
+      '<div class="s-detail">' +
+        (s.qty_usd !== undefined && s.qty_usd !== null ? (fmt(s.qty_usd, 0) + ' USD ｜ ') : '') +
+        mdInline((s.detail || '').slice(0, 150)) + '</div></div>';
   }).join('');
-  if (note) {
-    const nSrc = (r.items || []).filter(function (x) { return !x.source_count; }).length;
-    note.textContent = (r.disclaimer || '') +
-      (nSrc ? '  ｜ ' + nSrc + ' 个标的无可回溯事件来源，其事件判断的置信度已被压到 0.40。' : '');
-  }
 }
 
-async function refresh() {
-  try {
-    const [ov, ses, st] = await Promise.all([
-      api('/api/overview'), api('/api/session-compare'), api('/api/data-status'),
-    ]);
-    renderPairs(ov);
-    renderSessions(ses);
-    renderStatus(st);
+function renderAnalysts(d) {
+  const list = d.analysts || [];
+  $('analysts').innerHTML = list.map((a) => {
+    const ev = (a.evidence || []).map((e) =>
+      '<div>· ' + esc(e.metric) + ' = <b>' + esc(e.value) + '</b>' +
+      '<span class="mono-dim"> ← ' + esc(e.source) + '</span></div>').join('');
+    return '<div class="acard' + (a.valid ? '' : ' invalid') + '">' +
+      '<div class="a-head"><span class="a-dim">' + esc(a.dimension) + '</span>' +
+      '<span class="a-conf">置信度 ' + fmt(a.confidence, 2) + '</span></div>' +
+      '<div><span class="badge ' + esc(a.verdict) + '">' + esc(a.verdict) + '</span>' +
+      (a.valid ? '' : ' <span class="tag veto">已作废</span>') +
+      ' <span class="mono-dim">证据 ' + (a.evidence || []).length + ' 条</span></div>' +
+      (a.notes ? '<div class="a-notes">' + mdInline(a.notes) + '</div>' : '') +
+      (a.invalid_reason ? '<div class="a-notes neg">作废原因：' + esc(a.invalid_reason) + '</div>' : '') +
+      (ev ? '<div class="a-ev">' + ev + '</div>' : '') +
+      '<div class="a-src">' + esc((a.sources || []).join(' ｜ ')) + '</div>' +
+      '</div>';
+  }).join('') || '<div class="loading">无报告</div>';
+}
 
-    const basisVals = ov.map((r) => r.basis_bp).filter((v) => typeof v === 'number');
-    const spotVals = ov.map((r) => r.spot && r.spot.spread_bp).filter((v) => typeof v === 'number');
-    const perpVals = ov.map((r) => r.perp && r.perp.spread_bp).filter((v) => typeof v === 'number');
-    const med = (a) => {
-      if (!a.length) return null;
-      const s = [...a].sort((p, q) => p - q);
-      return s[Math.floor(s.length / 2)];
-    };
-    $('m-pairs').textContent = ov.length;
-    $('m-basis').textContent = fmt(med(basisVals));
-    $('m-spot').textContent = fmt(med(spotVals));
-    $('m-perp').textContent = fmt(med(perpVals));
+function renderDebate(d) {
+  const dv = d.debate || {};
+  const v = dv.verdict || {};
+  const side = (s, cls) => {
+    const o = dv[s] || {};
+    const args = (o.arguments || []).map((a) =>
+      '<div class="arg"><div class="cl">' + mdInline(a.claim || '') + '</div>' +
+      '<div class="fa"><b>证伪条件</b>：' + mdInline(a.falsifier || '（未给）') + '</div></div>').join('');
+    const dropped = (o.dropped || []).length;
+    return '<div class="side ' + cls + '">' +
+      '<div class="sd-head"><span>' + (cls === 'bull' ? '🐂 多头立论' : '🐻 空头立论') + '</span>' +
+      '<span>得分 ' + fmt(o.weight, 2) + '</span></div>' +
+      (args || '<div class="arg mono-dim">无论点</div>') +
+      (dropped ? '<div class="fa mono-dim">' + dropped + ' 条论点因给不出证伪条件被没收</div>' : '') +
+      '</div>';
+  };
+  const cross = dv.cross || {};
+  const cx = (x, label) => {
+    if (!x) return '';
+    const t = x.target_claim || x.target || '';
+    const f = x.target_falsifier || x.falsifier || '';
+    const r = x.rebuttal || x.text || x.response || (typeof x === 'string' ? x : '');
+    return '<div class="cx"><b>' + label + '</b> 指名对方最强一条：' + mdInline(t) +
+      (f ? '（其证伪条件：' + mdInline(f) + '）' : '') +
+      (r ? '<br />反驳：' + mdInline(r) : '') + '</div>';
+  };
+  $('debate').innerHTML =
+    '<div class="costbar"><span class="cb-name">多头 / 空头得分</span>' +
+      '<span class="cb-track"><span class="cb-fill" style="width:' +
+        clamp(100 * (v.bull_weight || 0) / Math.max(0.01, (v.bull_weight || 0) + (v.bear_weight || 0)), 0, 100) +
+        '%;background:linear-gradient(90deg,#1d8f63,#35c98a)"></span></span>' +
+      '<span class="cb-val">' + fmt(v.bull_weight, 2) + ' vs ' + fmt(v.bear_weight, 2) + '</span></div>' +
+    '<p><span class="tag">裁决</span> <b class="s-' + esc(v.stance) + '">' +
+      esc(STANCE_CN[v.stance] || v.stance) + '</b>　' + mdInline(v.reason || '') + '</p>' +
+    (v.weighting_changed_stance
+      ? '<p class="hint">⭐ 证据强度加权**改变了结论**：未加权时 raw ' +
+        fmt(v.raw_bull_weight, 2) + ' vs ' + fmt(v.raw_bear_weight, 2) +
+        '，加权后 ' + fmt(v.bull_weight, 2) + ' vs ' + fmt(v.bear_weight, 2) +
+        '（measured 1.0 / verified 0.85 / derived 0.6 / inference 0.3）</p>' : '') +
+    '<div class="debate-split">' + side('bull', 'bull') + side('bear', 'bear') + '</div>' +
+    (cross.bull_rebuts || cross.bear_rebuts
+      ? '<div class="cross"><div class="sd-head"><span>交叉质证</span>' +
+        '<span class="mono-dim">必须指名对方最强一条 + 复述其证伪条件</span></div>' +
+        cx(cross.bull_rebuts, '多头 → 空头') + cx(cross.bear_rebuts, '空头 → 多头') + '</div>'
+      : '') +
+    ((v.direction_conflicts || []).length
+      ? '<p class="hint neg">方向自相矛盾扣分 ' + fmt(v.direction_penalty, 2) + '/条：' +
+        esc(v.direction_conflicts.join('；')).slice(0, 400) + '</p>' : '');
+}
+
+function renderGate(d) {
+  const g = d.gate || {};
+  const sev = g.gate_severity || 'none';
+  const cls = sev === 'block' ? 'neg' : (sev === 'caution' ? '' : 'pos');
+  $('gate').innerHTML =
+    '<div class="verdict-bar ' + (sev === 'block' ? 'stand_down' : (sev === 'caution' ? 'caution' : 'proceed')) + '">' +
+      '<div><div class="stance">' + esc(sev) + '</div>' +
+      '<div class="mono-dim">severity</div></div>' +
+      '<div class="why">' + mdInline(g.gate_reason || '') + '</div></div>' +
+    '<table><tbody>' +
+      '<tr><th>判断来源</th><td class="' + (String(g.gate_source).startsWith('llm') ? 'pos' : '') + '">' +
+        esc(g.gate_source) + '</td></tr>' +
+      '<tr><th>是否允许挂单</th><td>' + (g.maker_allowed ? '允许' : '<b class="neg">禁止（硬规则）</b>') + '</td></tr>' +
+      '<tr><th>硬约束</th><td>severity=block → <b>挂单类方案直接作废</b>；agent 不能推翻</td></tr>' +
+      (d.prompt && d.prompt.version
+        ? '<tr><th>prompt 版本</th><td class="mono">' + esc(d.prompt.version) +
+          (d.prompt.sha256 ? ' ｜ sha256 ' + esc(String(d.prompt.sha256).slice(0, 16)) : '') +
+          (d.prompt.path ? ' ｜ ' + esc(d.prompt.path) : '') + '</td></tr>' : '') +
+    '</tbody></table>' +
+    (String(g.gate_source).startsWith('llm')
+      ? '<p class="hint">✅ 本次由 <b>LLM</b> 判事件 —— 这是大模型在运行期的唯一职责。</p>'
+      : '<p class="hint">⚠️ <b>本次未使用 LLM</b>：事件判断退化为确定性日历，' +
+        '只挡得住可计算事件（期权到期/休市），<b>挡不住突发新闻与财报</b>。' +
+        '这是如实标注，不是"没跑过却假装跑过"。</p>');
+}
+
+function renderTrader(d) {
+  const t = d.trader || {};
+  const modes = t.all_modes_bp || {};
+  const best = t.mode;
+  // 门槛来自后端（agent_team.EDGE_THRESHOLD_BP），前端不硬编码第二个真相
+  const thr = typeof d.edge_threshold_bp === 'number' ? d.edge_threshold_bp : 11.34;
+  const vals = Object.values(modes).filter((x) => typeof x === 'number');
+  const maxAbs = Math.max(1, ...vals.map((x) => Math.abs(x)), thr);
+  const bars = Object.keys(modes).map((k) =>
+    '<div class="costbar' + (k === best ? ' best' : '') + '">' +
+      '<span class="cb-name">' + esc(k) + (k === best ? ' ✓' : '') + '</span>' +
+      '<span class="cb-track"><span class="cb-fill" style="width:' +
+        clamp(100 * Math.abs(modes[k]) / maxAbs, 2, 100) + '%"></span></span>' +
+      '<span class="cb-val ' + (modes[k] > thr ? 'neg' : 'pos') + '">' + fmt(modes[k]) + ' bp</span></div>').join('');
+  const o = t.order;
+  $('trader').innerHTML =
+    (bars || '<div class="loading">无成本方案</div>') +
+    '<div class="thr-line"><span>净收益判据门槛 ' + thr + ' bp</span></div>' +
+    '<table><tbody>' +
+      '<tr><th>选定方式</th><td><b>' + esc(t.mode || '—') + '</b></td>' +
+          '<th>成本</th><td>' + fmt(t.cost_bp) + ' bp</td></tr>' +
+      '<tr><th>规模</th><td>' + (o ? fmt(o.qty_usd, 0) + ' USD' : '—') + '</td>' +
+          '<th>拆单</th><td>' + (o ? (o.slices + ' 笔 × 上限 ' + fmt(o.slice_usd, 0)) : '—') + '</td></tr>' +
+      '<tr><th>价位</th><td colspan="3">' + esc(t.price || (o && o.price_desc) || '—') + '</td></tr>' +
+      '<tr><th>规模上限来自</th><td colspan="3">' + esc((o && o.size_cap_by) || '—') + '</td></tr>' +
+      '<tr><th>毛边际 / 距门槛</th><td colspan="3">' +
+        fmt(t.gross_edge_bp) + ' bp ／ <b class="' + ((t.edge_gap_bp || 0) < 0 ? 'neg' : 'pos') + '">' +
+        fmt(t.edge_gap_bp) + ' bp</b></td></tr>' +
+      ((o && o.size_bounds) ? o.size_bounds.map((b) =>
+        '<tr><th>约束</th><td colspan="3">' + esc(b.name) + ' → ' + fmt(b.usd, 0) + ' USD</td></tr>').join('') : '') +
+      ((t.barred_modes || []).length ? '<tr><th>被禁方式</th><td colspan="3" class="neg">' +
+        esc(t.barred_modes.join('、')) + '</td></tr>' : '') +
+    '</tbody></table>' +
+    ((t.blocked_by || []).length
+      ? '<p class="hint neg">未下单原因：' + mdInline(t.blocked_by[0]) + '</p>'
+      : '') +
+    '<p class="hint">交易员<b>不新造阈值、不做价格预测</b>：价位＝中价 ± 实测半幅点差；' +
+    '规模＝min(请求, 可捕获名义额(实测), 首档深度×25%)。</p>';
+}
+
+function renderRisk(d) {
+  const r = d.risk || {};
+  const rules = r.rules || [];
+  const rows = rules.map((x) =>
+    '<tr class="' + (x.triggered ? 'hit' : '') + (x.agent ? ' agent-rule' : '') + '">' +
+      '<td>' + esc(x.id) + (x.agent ? ' <span class="tag agent">agent 提出</span>' : '') + '</td>' +
+      '<td><span class="tag ' + (x.level === 'veto' ? 'veto' : 'caution') + '">' + esc(x.level) + '</span></td>' +
+      '<td>' + esc(x.action) + '</td>' +
+      '<td class="sep">' + mdInline(x.statement || '') + '</td>' +
+      '<td class="sep mono-dim">' + mdInline(x.falsifier || '') + '</td>' +
+      '<td>' + (x.triggered ? '<b class="neg">触发</b>' : '<span class="mono-dim">未触发</span>') + '</td>' +
+    '</tr>').join('');
+  const hyps = (d.risk_hypotheses || []).map((h) =>
+    '<div class="arg"><div class="cl">' + esc(h.id) + '：' + mdInline(h.hypothesis || '') + '</div>' +
+    '<div class="fa">实测量 <b>' + esc(h.metric) + ' = ' + esc(h.value) + '</b> ｜ 阈值 ' +
+      esc(h.threshold) + '</div>' +
+    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + esc(h.action) + '</div></div>').join('');
+  $('risk').innerHTML =
+    '<div class="verdict-bar ' + (r.verdict === 'reject' ? 'stand_down' : (r.verdict === 'caution' ? 'caution' : 'proceed')) + '">' +
+      '<div><div class="stance">' + esc(r.verdict) + '</div>' +
+      '<div class="mono-dim">' + (r.checked_rules || 0) + ' 条规则</div></div>' +
+      '<div class="why">' + mdInline(r.reason || '') + '</div></div>' +
+    '<p>' + ((r.hits || []).length
+      ? '<span class="tag veto">触发</span> ' + esc(r.hits.join('、'))
+      : '<span class="tag">无规则触发</span>') +
+      (r.qty_out_usd !== null && r.qty_out_usd !== undefined
+        ? '　<span class="mono-dim">风控规模上限 ' + fmt(r.qty_out_usd, 0) + ' USD</span>' : '') + '</p>' +
+    (hyps ? '<div class="side"><div class="sd-head"><span>🛡️ agent 提出的风险假设</span>' +
+      '<span class="mono-dim">每条必须有 实测量+阈值+证伪条件</span></div>' + hyps + '</div>' : '') +
+    '<div class="table-wrap" style="max-height:320px;overflow:auto"><table>' +
+      '<thead><tr><th>规则</th><th>级别</th><th>动作</th><th class="sep">引用什么</th>' +
+      '<th class="sep">什么条件下撤销</th><th>本次</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="hint">风控官<b>只收紧，不放松</b>；每条规则都留痕（含未触发的）：' +
+    '引用什么 · 触发做什么 · <b>什么条件下撤销</b>。</p>';
+}
+
+function renderCost(d) {
+  const c = d.cost || {};
+  const bar = (name, val, good) => (typeof val === 'number'
+    ? '<div class="costbar"><span class="cb-name">' + name + '</span>' +
+      '<span class="cb-track"><span class="cb-fill" style="width:' +
+      clamp(Math.abs(val) * 4, 2, 100) + '%;' + (good ? 'background:linear-gradient(90deg,#1d8f63,#35c98a)' : '') +
+      '"></span></span><span class="cb-val">' + val.toFixed(1) + ' bp</span></div>' : '');
+  $('cost').innerHTML =
+    '<table><tbody>' +
+      '<tr><th>最优方式</th><td><b>' + esc(c.best_mode || '—') + '</b></td>' +
+          '<th>成本</th><td>' + fmt(c.best_cost) + ' bp</td></tr>' +
+      '<tr><th>现货半幅点差</th><td>' + fmt(c.half_s, 3) + ' bp</td>' +
+          '<th>永续半幅点差</th><td>' + fmt(c.half_p, 3) + ' bp</td></tr>' +
+      '<tr><th>route / session</th><td>' + esc(c.route || '—') + ' / ' + esc(c.session || '—') + '</td>' +
+          '<th>腿风险 leg_risk</th><td>' + fmt(c.leg_risk) + '</td></tr>' +
+    '</tbody></table>' +
+    '<h2 style="margin-top:14px">双腿联合成交分布 <span class="hint">' +
+      esc(c.joint_source === 'measured' ? '实测' : (c.joint_source || '—')) + '</span></h2>' +
+    bar('P(两腿都成交)', c.p_both, true) +
+    bar('P(只成交一腿)', c.p_part, false) +
+    bar('P(都没成交)', c.p_none, false) +
+    '<table style="margin-top:10px"><tbody>' +
+      '<tr><th>独立假设 P(两腿)</th><td class="mono-dim">' + pct(c.p_both_indep) +
+        '（旧口径近似，已被实测取代）</td></tr>' +
+      '<tr><th>只用一腿独立概率</th><td class="mono-dim">现货 ' + pct(c.p_s) +
+        ' ｜ 永续 ' + pct(c.p_p) + '</td></tr>' +
+      '<tr><th>样本</th><td class="mono-dim">现货 ' + (c.n_s || 0) + ' 条 ｜ 永续 ' +
+        (c.n_p || 0) + ' 条 ｜ 窗口 ' + (c.joint_prov ? '' : '') + '</td></tr>' +
+    '</tbody></table>' +
+    '<p class="hint">' + mdInline(c.joint_prov || '') + '</p>' +
+    ((c.invalidated || []).length
+      ? '<p class="hint neg">被硬规则作废的方式：' + esc(c.invalidated.join('、')) + '</p>' : '');
+}
+
+function renderProv(d) {
+  const man = d.input_manifest || [];
+  $('prov').innerHTML =
+    '<div class="hashbox"><div class="mono-dim">decision_hash（本次全部契约字段的哈希）</div>' +
+      '<div class="mono" style="color:var(--green);word-break:break-all">' + esc(d.decision_hash || '—') + '</div>' +
+      '<div class="mono-dim" style="margin-top:6px">log_format ' + esc(d.log_format || '') +
+      ' ｜ 生成于 ' + esc(d.generated_utc || '') + '</div></div>' +
+    '<p class="prov" style="margin-top:10px">输入清单（存在性 + SHA256(16)）：</p>' +
+    '<div class="table-wrap" style="max-height:220px;overflow:auto"><table><tbody>' +
+      man.map((m) => '<tr><td class="mono">' + esc(m.path) + '</td>' +
+        '<td>' + (m.exists ? '<span class="pos">存在</span>' : '<span class="neg">缺失</span>') + '</td>' +
+        '<td class="mono-dim">' + esc((m.sha256_16 || '').slice(0, 16)) + '</td></tr>').join('') +
+    '</tbody></table></div>' +
+    '<p class="hint">复跑（同一份数据快照下，契约字段应逐字节一致）：' +
+    '<code>python project2/agent_team.py --base ' + esc(d.base) + ' --trader --log</code>；' +
+    '再用 <code>--replay data/reports/&lt;本次日志&gt;.json</code> 比对。</p>';
+}
+
+async function runDecision(base, qty) {
+  if (STATE.busy) return;
+  STATE.busy = true;
+  $('run').disabled = true;
+  $('run-state').textContent = '正在跑决策链（读快照 + 5 路分析 + 辩论 + 闸门 + 交易员 + 风控官）…';
+  try {
+    const d = (await api(API.decision + '?base=' + encodeURIComponent(base) + '&qty=' + qty)).decision;
+    renderVerdict(d); renderAnalysts(d); renderDebate(d); renderGate(d);
+    renderTrader(d); renderRisk(d); renderCost(d); renderProv(d);
+    $('run-state').textContent = '完成 ｜ ' + d.base + ' ｜ ' + d.generated_utc;
   } catch (e) {
+    $('run-state').innerHTML = '<span class="neg">失败：' + esc(e.message) + '</span>';
     $('live-dot').className = 'dot err';
-    console.error(e);
+  } finally {
+    STATE.busy = false;
+    $('run').disabled = false;
   }
 }
 
-async function loadTimeline() {
+/* ---------------- 全标的概览 ---------------- */
+
+function renderOverview(items) {
+  const tb = document.querySelector('#ov-table tbody');
+  if (!items || !items.length) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">无数据</td></tr>';
+    return;
+  }
+  tb.innerHTML = items.map((it) => {
+    const rm = RISK_CN[it.risk_level] || ['?', ''];
+    const reasons = (it.rationale || []).map((x) => '<div>· ' + mdInline(x) + '</div>').join('');
+    const warns = (it.warnings || []).map((x) => '<div class="neg">! ' + mdInline(x) + '</div>').join('');
+    const cond = Object.keys(it.conditions || {}).map((k) => esc(k) + '=' + esc(String(it.conditions[k]))).join('；') || '—';
+    const sev = ((it.event || {}).severity) || '—';
+    return '<tr>' +
+      '<td class="base-name"><a href="#" data-base="' + esc(it.base) + '">' + esc(it.base) + '</a></td>' +
+      '<td class="' + rm[1] + '"><b>' + rm[0] + '</b></td>' +
+      '<td>' + esc(it.verdict) + '</td>' +
+      '<td class="sep">' + reasons + warns + '</td>' +
+      '<td class="sep mono-dim">' + cond + '</td>' +
+      '<td class="sep ' + (sev === 'block' ? 'neg' : '') + '">' + esc(sev) + '</td></tr>';
+  }).join('');
+  tb.querySelectorAll('a[data-base]').forEach((a) => {
+    a.onclick = (ev) => {
+      ev.preventDefault();
+      selectBase(a.dataset.base);
+      runDecision(a.dataset.base, Number($('qty').value) || 5000);
+    };
+  });
+}
+
+async function loadOverview() {
   try {
-    TL = await api('/api/timeline');
-    const bases = [...new Set(TL.flatMap((p) => Object.keys(p.basis)))].sort();
-    renderToolbar(bases);
-    drawChart();
-  } catch (e) { console.error(e); }
+    const d = await api(API.overview + '?qty=' + (Number($('qty').value) || 5000));
+    renderOverview(d.items);
+    const noSrc = (d.items || []).filter((x) => !(x.sources || []).length).length;
+    $('ov-note').innerHTML = mdInline(d.disclaimer || '') +
+      (noSrc ? '　｜ ' + noSrc + ' 个标的无可回溯事件来源，其事件判断的置信度已被压到 0.40。' : '');
+  } catch (e) {
+    document.querySelector('#ov-table tbody').innerHTML =
+      '<tr><td colspan="6" class="empty neg">加载失败：' + esc(e.message) + '</td></tr>';
+  }
+}
+
+/* ---------------- 阈值表 ---------------- */
+
+async function loadParams() {
+  try {
+    const d = await api(API.params);
+    document.querySelector('#params-table tbody').innerHTML = (d.params || []).map((p) =>
+      '<tr><td>' + esc(p.name) + '</td>' +
+      '<td class="mono"><b>' + esc(p.value) + '</b></td>' +
+      '<td class="mono-dim">' + esc(p.unit) + '</td>' +
+      '<td class="sep">' + esc(p.source) + '</td>' +
+      '<td class="sep mono-dim">' + esc(p.code) + '</td></tr>').join('');
+  } catch (e) {
+    document.querySelector('#params-table tbody').innerHTML =
+      '<tr><td colspan="5" class="empty neg">加载失败：' + esc(e.message) + '</td></tr>';
+  }
+}
+
+/* ---------------- 快照（极简 markdown 渲染） ---------------- */
+
+function mdToHtml(md) {
+  const lines = String(md).split(/\r?\n/);
+  let out = '', inCode = false, inTable = false, inList = false;
+  const closeAll = () => {
+    if (inTable) { out += '</tbody></table>'; inTable = false; }
+    if (inList) { out += '</ul>'; inList = false; }
+  };
+  for (const raw of lines) {
+    const line = raw;
+    if (/^```/.test(line)) {
+      closeAll();
+      out += inCode ? '</pre>' : '<pre>';
+      inCode = !inCode;
+      continue;
+    }
+    if (inCode) { out += esc(line) + '\n'; continue; }
+    if (/^\s*$/.test(line)) { closeAll(); continue; }
+    let m;
+    if ((m = line.match(/^(#{1,3})\s+(.*)$/))) {
+      closeAll();
+      const lvl = m[1].length;
+      out += '<h' + lvl + '>' + mdInline(m[2]) + '</h' + lvl + '>';
+      continue;
+    }
+    if (/^\|/.test(line)) {
+      if (/^\|[\s:\-|]+\|$/.test(line.trim())) continue;   // 分隔行
+      const cells = line.trim().replace(/^\||\|$/g, '').split('|');
+      if (!inTable) {
+        out += '<table><tbody>';
+        inTable = true;
+        out += '<tr>' + cells.map((c) => '<th>' + mdInline(c.trim()) + '</th>').join('') + '</tr>';
+      } else {
+        out += '<tr>' + cells.map((c) => '<td>' + mdInline(c.trim()) + '</td>').join('') + '</tr>';
+      }
+      continue;
+    }
+    if (inTable) { out += '</tbody></table>'; inTable = false; }
+    if ((m = line.match(/^\s*(?:[-*]|\d+\.)\s+(.*)$/))) {
+      if (!inList) { out += '<ul>'; inList = true; }
+      out += '<li>' + mdInline(m[1]) + '</li>';
+      continue;
+    }
+    if (inList) { out += '</ul>'; inList = false; }
+    out += '<p>' + mdInline(line) + '</p>';
+  }
+  closeAll();
+  if (inCode) out += '</pre>';
+  return out;
+}
+
+async function loadSnapshot() {
+  try {
+    const d = await api(API.snapshot);
+    $('snapshot').innerHTML = mdToHtml(d.markdown);
+  } catch (e) {
+    $('snapshot').innerHTML = '<div class="neg">加载失败：' + esc(e.message) + '</div>';
+  }
+}
+
+/* ---------------- 右下角告警弹窗（接 data/positions/alerts.json） ---------------- */
+
+function toast(level, title, detail) {
+  const box = $('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast' + (level === 'critical' ? '' : ' info');
+  el.innerHTML = '<span class="t-close">✕</span>' +
+    '<div class="t-head">' + esc(title) + '</div><div>' + mdInline(detail) + '</div>';
+  el.querySelector('.t-close').onclick = () => el.remove();
+  box.appendChild(el);
+  if (level !== 'critical') setTimeout(() => el.remove(), 12000);
+  while (box.children.length > 4) box.removeChild(box.firstChild);
+}
+
+async function pollAlerts() {
+  try {
+    const d = await api(API.alerts);
+    const list = d.alerts || [];
+    if (!d.exists) return;
+    list.forEach((a, i) => {
+      const key = (a.code || '') + '|' + (a.base || '') + '|' + (a.ts || i);
+      if (STATE.seenAlerts.has(key)) return;
+      STATE.seenAlerts.add(key);
+      toast(a.level || 'warn',
+        (a.level === 'critical' ? '🔴 ' : '⚠️ ') + (a.base ? a.base + ' · ' : '') + (a.title || a.code || '告警'),
+        (a.detail || '') + (a.action ? '　→ ' + a.action : ''));
+    });
+  } catch (e) { /* 告警是可选功能：不可用时不该拖死整页 */ }
+}
+
+/* ---------------- 启动 ---------------- */
+
+function selectBase(b) {
+  STATE.base = b;
+  const box = $('base-chips');
+  box.innerHTML = (STATE.bases || []).map((x) =>
+    '<span class="chip' + (x === b ? ' active' : '') + '" data-b="' + esc(x) + '">' + esc(x) + '</span>').join(' ');
+  box.querySelectorAll('.chip').forEach((el) => {
+    el.onclick = () => {
+      selectBase(el.dataset.b);
+      runDecision(el.dataset.b, Number($('qty').value) || 5000);
+    };
+  });
 }
 
 async function boot() {
-  await loadHealth();
-  await refresh();
-  await loadTimeline();
-  // 风险与理由单独加载：它不可用时**不影响**上面的策略视图（可选功能不该拖死整页）
-  loadAssess();
-  tickClock();
-  setInterval(tickClock, 1000);            // 时钟每秒走字（纯前端）
-  setInterval(refresh, REFRESH_MS);
-  setInterval(loadTimeline, REFRESH_MS * 3);
-  setInterval(loadHealth, 30000);
+  try {
+    const h = await loadHealth();
+    STATE.bases = h.bases || [];
+    selectBase(STATE.base || STATE.bases[0]);
+  } catch (e) {
+    $('live-dot').className = 'dot err';
+    $('disclaimer').innerHTML = '<b class="neg">无法连接本机服务</b>：' + esc(e.message) +
+      '　（请在仓库根目录运行 <code>python run_p2.py</code>）';
+    return;
+  }
+  $('run').onclick = () => runDecision(STATE.base, Number($('qty').value) || 5000);
+  $('run-overview').onclick = loadOverview;
+  $('qty').onchange = () => runDecision(STATE.base, Number($('qty').value) || 5000);
+
+  loadParams();
+  loadSnapshot();
+  loadOverview();
+  pollAlerts();
+  setInterval(pollAlerts, 60000);
+  runDecision(STATE.base, Number($('qty').value) || 5000);
 }
 boot();

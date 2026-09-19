@@ -1,0 +1,30 @@
+# 跨平台换行与二进制标记
+#
+# 为什么需要它：本项目要在 Windows（作者本机）与 Linux/macOS（评委、Docker、
+# Render/Fly）上都能跑。Git 的 `core.autocrlf` 在 Windows 上默认把工作区文件
+# 转成 CRLF —— 一个带着 CRLF 的 `start_demo.sh` 在 Linux 上会直接报
+# `bad interpreter: /usr/bin/env bash^M`，而且**在 Windows 上完全看不出来**。
+#
+# 规则：仓库里一律存 LF；只有 Windows 的 .cmd/.bat 用 CRLF。
+
+* text=auto eol=lf
+
+# Windows 批处理必须是 CRLF（cmd.exe 对 LF 的容忍度不可靠）
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制：不要做任何换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.exe binary
+*.zip binary
+*.gz binary
+*.woff binary
+*.woff2 binary
+
+# 数据快照：CSV/JSON 都按文本走 LF（与 data/SNAPSHOT.md 里的 SHA256 对应）
+*.csv text eol=lf
+*.json text eol=lf

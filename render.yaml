@@ -1,0 +1,32 @@
+# 项目二 · 一键部署（Render 免费层）
+#
+# 用法：把本仓库推到 GitHub（公开）→ Render 控制台 New + → Blueprint → 选本仓库。
+# 详细步骤与实测证据见 docs/43-公网可访问.md。
+#
+# 为什么用 native python 而不是 Docker：本项目**零第三方依赖**，
+# 原生运行时构建只要几秒，也省掉一层镜像构建的失败面。
+# （Dockerfile 同样可用，是给需要一致环境的场景准备的。）
+services:
+  - type: web
+    name: execution-aware-alpha
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python run_p2.py --host 0.0.0.0"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      # 下面两个是**可选**的：不配也能跑（事件判断退化为确定性日历并如实标注）。
+      # 配了就会真实调用 LLM 做事件分类 —— 注意这是会产生费用的。
+      - key: LLM_API_KEY
+        sync: false          # 在 Render 控制台里手填，不进仓库
+      - key: LLM_BASE_URL
+        value: "https://api.deepseek.com"
+      - key: LLM_MODEL
+        value: "deepseek-v4-pro"
+      - key: LLM_THINKING
+        value: "off"

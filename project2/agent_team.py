@@ -334,7 +334,19 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
                                 "project2/events_calendar.json"))
             used_llm = str(src).startswith("llm")
             n_tok = ((a.get("llm") or {}).get("llm_usage") or {})
-            if used_llm:
+            _ev = a.get("event") or {}
+            _drv = a.get("event_driven") or {}
+            if used_llm and _ev.get("cache_reused"):
+                # ⭐ 复用缓存也必须**说清楚是复用**：别让日志看起来像刚调过 LLM。
+                #    代价（最坏判定龄 = TTL）在 docs/42 §3 里写明了。
+                note += ("♻️ 本次**复用上一次 LLM 判定**（来源=%s，判定龄 %.0f 分钟）："
+                         "事件驱动闸门判定本轮**全是已见过的条目**（%s），"
+                         "所以没有重复调用 LLM。"
+                         "🔴 复用的是上一次判定的**原值**，没有因为『无新条目』降级；"
+                         "最新申报由 EDGAR 立即触发路径兜住（新 8-K/10-Q/10-K 会强制重判）。"
+                         % (src, a["event"].get("cache_age_min") or 0.0,
+                            (_drv.get("reason") or "")[:60]))
+            elif used_llm:
                 note += ("✅ 本次由 **LLM** 判事件（来源=%s，tokens 输入 %s / 输出 %s）"
                          "—— 运行期职责已真实执行。"
                          "⚠️ 置信度被压到 %.2f 不是 LLM 的问题："
@@ -345,6 +357,14 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
                 note += ("⚠️ **本次未使用 LLM**（来源=%s）："
                          "事件判断退化为确定性日历，只能挡可计算事件"
                          "（期权到期/休市），**挡不住突发新闻与财报**" % src)
+            # prompt 可回溯：某次判断用的是哪一版 prompt（T4-A）
+            if _ev.get("prompt_sha256"):
+                note += ("｜prompt %s（source=%s, sha256=%s…）"
+                         % (_ev.get("prompt_version"),
+                            _ev.get("prompt_source"),
+                            str(_ev.get("prompt_sha256"))[:16]))
+            if _drv.get("reason"):
+                note += "｜事件驱动：%s" % str(_drv.get("reason"))[:70]
         except Exception as exc:  # noqa: BLE001
             e.append(ev("闸门调用异常", repr(exc)[:60], "project2/event_gate.py"))
     except ImportError:

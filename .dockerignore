@@ -1,0 +1,14 @@
+# 构建镜像时不需要进上下文的东西
+.git
+.gitignore
+__pycache__/
+*.pyc
+.env
+*.env
+!.env.example
+_tmp_*
+data/positions/open.json
+data/positions/alerts.json
+data/reports/_*.txt
+data/derived/event_driven_state.json
+*.log

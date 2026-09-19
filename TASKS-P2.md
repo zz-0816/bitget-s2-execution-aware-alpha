@@ -1,103 +1,115 @@
 # 项目二任务清单（独立工作区）
 
-> 生成 **2026-09-19** ｜ 由项目一的 `tools/isolate_p2.py` 自动生成
-> 项目一工作区：`D:\bitgetS2_factory_trading`（**本项目不依赖它**）
+> 生成 **2026-09-19** ｜ 由项目一的 `tools/isolate_p2.py` 隔离生成
+> 项目一工作区：`D:\bitgetS2_factory_trading`（**本项目运行时不依赖它**）
+> 最近更新 **2026-09-19**：补齐"可独立提交"的全部缺漏（见 §2 完成记录）
+
+---
 
 ## 0. 当前状态
 
 | 项 | 状态 |
 |---|---|
 | 代码隔离 | ✅ 已拆出（34 个文件） |
-| 数据快照 | ✅ 已生成 |
+| 数据快照 | ✅ 已生成，**盘口改为"最后 400 轮"**（39.6 MB / 26 项，与 trades 尾部对齐） |
+| 快照可核验 | ✅ `python tools/snapshot_manifest.py --verify`（冻结项逐字节） |
 | 独立启动入口 | ✅ `python run_p2.py`（默认 8788 端口） |
-| 自检 | ✅ `python run_p2.py --selftest` |
+| 自检 | ✅ `python run_p2.py --selftest`（**12 步**，含 HTTP 冒烟 + 页面渲染冒烟） |
 | 命令行演示 | ✅ `python run_p2.py --demo NVDA` |
-| Demo 公网可访问 | ❌ **待办**（提交所需，见下 T1） |
-| 独立仓库 | ❌ **待办**（T2） |
-| 手册 6 段填表 | ⚠️ 草稿已就绪（README 内），需按表单格式再核一遍 |
+| **独立页面** | ✅ 已重写为项目二自己的页面（原来那个是项目一的，独立跑是**空白页**） |
+| **公网可访问** | ✅ 三条路都可跑：临时隧道（**已从公网侧实测回打**）/ Render / Fly / Docker —— 见 `docs/43` |
+| prompt 版本化 | ✅ `prompts/event_gate.v2.md`（可回溯到版本 + SHA256） |
+| 事件驱动降本 | ✅ `NEWS_EVENT_DRIVEN` **真正接进决策链**（原来只在配置里写着，没代码读它） |
+| 事件判定校准集 | ✅ `data/calibration/event_judgments.json`（n=10，**对 RAG 留出**） |
+| 提交材料 | ✅ `docs/40`（填表照抄）+ `docs/41`（赛道对比与两投接口） |
+| 提交前清单 | ✅ `SUBMISSION-CHECKLIST.md` |
+| 独立仓库 | ✅ 本地 git 仓库已就绪（`.gitignore` 已就位，密钥不入库） |
+| **合规 X 帖** | ❌ **只能你本人发**（硬门禁：无 X 帖 = 提交不完整） |
+| 主题定案 | ⚠️ 两套措辞都已备好，**临场勾选**（见 §3） |
 
-## 1. 已复制进来的文件
+---
 
-- `project2/execution_cost.py`
-- `project2/agent_team.py`
-- `project2/event_gate.py`
-- `project2/market_events.py`
-- `project2/mcp_client.py`
-- `project2/signal_adapter.py`
-- `project2/events_calendar.json`
-- `project2/demo_architecture.svg`
-- `project2/demo_architecture.png`
-- `common/config.py`
-- `common/console.py`
-- `common/market_calendar.py`
-- `common/rag_memory.py`
-- `tools/news_sources.py`
-- `tools/position_watch.py`
-- `tools/sentiment_sampler.py`
-- `tools/threshold_calibration.py`
-- `tools/model_compare.py`
-- `tools/joint_fill_analysis.py`
-- `tools/joint_fill_check.py`
-- `tools/recover_sampling.py`
-- `web/index.html`
-- `web/app.js`
-- `web/styles.css`
-- `docs/14-往返摩擦预算与精确化成交判定.md`
-- `docs/29-现货腿零成交事件（0914起）.md`
-- `docs/32-代币化美股监管突破（SEC创新豁免）.md`
-- `docs/33-Agent团队分工图与规格.md`
-- `docs/34-项目二叙事重写（agent团队主线）.md`
-- `docs/35-真实LLM实调记录（模型对比）.md`
-- `docs/36-辩论层证据强度加权与阈值敏感性.md`
-- `docs/25-多Agent协作方案（可行性评估）.md`
-- `docs/DATA_DICT.md`
-- `.env.example`
+## 1. 文件构成
 
-缺失项：
-（无）
+### 1.1 隔离时复制进来的（34 个）
 
-## 2. 待办任务（按优先级）
+`project2/`（execution_cost · agent_team · event_gate · market_events · mcp_client ·
+signal_adapter · events_calendar.json · 架构图）、`common/`（config · console ·
+market_calendar · rag_memory，**冻结副本**）、`tools/`（消息面 · 持仓巡检 · 情绪采样 ·
+阈值敏感性 · 模型对比 · 联合分布 · 采样恢复）、`web/`、`docs/`（14/25/29/32/33/34/35/36/DATA_DICT）、
+`.env.example`
 
-### 🔴 T1 · Demo 公网可访问（提交硬需求）
+### 1.2 本项目新增（本次补齐缺漏）
 
-现在只能本机 `http://127.0.0.1:8788`。三条路：
-1. **最小自包含包**（当前状态）：评委 `git clone` + `python run_p2.py` 即可用
-   —— 若表单只收"仓库链接"就够用；
-2. **公网部署**：需要服务器/域名；注意数据快照要一起部署；
-3. **录屏 + 截图**：最省事，但赛道三重视"可访问"，分低一些。
+| 文件 | 为什么需要 |
+|---|---|
+| `run_p2.py`（重写） | 原入口只提供 3 个端点，**页面要的 4 个端点根本不存在**；现在端点、自检、隧道、部署全在这里 |
+| `web/index.html` `web/app.js` `web/styles.css`（重写） | 独立页面：决策链 / 概览 / 阈值透明化 / 快照 / 告警弹窗 |
+| `tools/snapshot_manifest.py` | 快照清单**生成 + 就地核验**；把三类文件分开列分开验 |
+| `tools/web_smoke.py` + `tools/web_render_check.js` | 真起服务 → 真取数 → 在最小 DOM 里**真渲染一遍**页面 |
+| `tools/event_calibration.py` + `data/calibration/event_judgments.json` | 事件判定的一致性/危险方向校准；**留出规则**（校准集不得进 RAG） |
+| `prompts/` | 事件判断 prompt 外部化 + 版本化 |
+| `data/reports/debate-*.json|.md`（14 个） | 让 RAG 的"决策案例"**出处真实存在**（原来 7 条案例指向的文件根本没复制进来） |
+| `Dockerfile` `render.yaml` `fly.toml` `requirements.txt` `.dockerignore` | 一键部署 |
+| `一键开公网Demo.cmd` `start_demo.sh` | 双击/一条命令起服务 + 公网链接 |
+| `docs/40` `docs/41` `docs/42` `docs/43` `SUBMISSION-CHECKLIST.md` | 提交材料、赛道接口、prompt 与事件驱动、部署 |
 
-### 🔴 T2 · 独立仓库与提交材料
+### 1.3 本次修掉的三处"说了没做"
 
-- [ ] 建独立 git 仓库（`git init` 已可直接用，`.gitignore` 已就位）
-- [ ] 确认 `common/` 是**冻结副本**（已在文件头标注来源与冻结日期）
-- [ ] 填表：主题 = 赛道? · 子主题 ?（**待定：见 §3**）
-- [ ] 免责与术语合规：「做市型价差捕获」「代币 ≠ 股权」「非投资建议」
+这三条都是**文档/配置里写着、代码里没有**，属于本项目最该避免的失败模式：
 
-### 🟡 T3 · 数据快照的补充
-
-- [ ] 现在盘口是**截断**的（前 100 轮）——若演示需要更长区间，重跑项目一的
-      `tools/export_p2_snapshot.py --rounds 400`
-- [ ] 快照只覆盖 09-12~09-14 的现货成交带（`docs/29` 已说明原因）
-- [ ] **现货腿零成交**必须写进材料（不是藏起来）
-
-### 🟡 T4 · 你之前确认要补的 prompt / RAG 细化
-
-- [ ] `docs/33` 规格表里所有 ⚠️ 项：每个 agent 的 prompt 版本化（现在 prompt 在
-      `event_gate.LLM_PROMPT`，可外置为 `prompts/*.md` 便于版本管理）
-- [ ] RAG：现在索引 182 块（口径文档 + 决策案例）；考虑加入
-      "人工复核过的历史事件判定"作为校准集
-- [ ] 事件驱动降本已做（`NEWS_EVENT_DRIVEN=on`）；可再加"EDGAR 新申报立即触发"
-
-### 🟢 T5 · 前端（可选）
-
-- [ ] 右下角**闪烁弹窗**接 `data/positions/alerts.json`（持仓期巡检已产出该文件）
-- [ ] 页面目前是项目一的统一页面；项目二**独立页面**可只保留"执行决策"区块
-
-## 3. 待你决定的一件事：投哪个主题
-
-| 方案 | 第一次提交 | 第二次提交 |
+| # | 症状 | 修法 |
 |---|---|---|
-| A | 赛道一 · 具名「套利」 | 赛道一 · **开放主题** Execution-aware Alpha |
-| B（推荐） | 赛道一 · 具名「套利」 | **赛道三** · 具名「执行辅助」 |
+| 1 | `NEWS_EVENT_DRIVEN=on` 写在 `common/config.py` 与 `.env.example` 里，注释说"只在出现新条目时才调 LLM"，但**没有任何代码读这个配置** → 每轮都调 | 真正接进决策链：无新条目时**复用上次 LLM 判断**（带 TTL，如实标注判定龄），**不允许**降级成 none；EDGAR 新申报则跳过缓存立即调。见 `docs/42` |
+| 2 | 页面调用的 4 个端点只有项目一的服务才有 → 独立跑**整页空白**，而自检全绿 | 端点全部实现在 `run_p2.py`；自检 ⑨ 照着前端声明的端点真打一遍，⑩ 再用 Node 渲染一遍 |
+| 3 | `common/rag_memory.py` 的索引包含了 `project2/README.md`（**项目一目录结构**下的路径），本仓库没有 → 静默少索引一整类文档 | 改为按本仓库真实结构取；并把本地修改**逐条记在文件头**（冻结副本的漂移记录） |
 
-见 `docs/31` 与项目一的 `docs/23` 修正 2。**定下来后本清单的 T2 才能完成。**
+---
+
+## 2. 待办（**只剩需要你本人在场才能做的**）
+
+### 🔴 T1 · 合规 X 帖（硬门禁，不做即无效提交）
+
+- [ ] 转发官方活动帖（**必须是转发，不是引用转推**）
+- [ ] 内容含 `#BitgetHackathon` + `@Bitget_AI`，**有实质介绍**（纯转发 = 不完整）
+- [ ] 发帖**之后**再填表（表单要填帖子链接）
+- 草稿与检查单：项目一 `docs/16-X帖草稿.md`
+
+### 🔴 T2 · 主题勾选（两套措辞都已写好，你只需要选一个）
+
+见 §3。填表文案在 `docs/40` §「主题与子主题」；对比与推荐在 `docs/41`。
+
+### 🟡 T3 · 提交当天的公网链接与截图
+
+```powershell
+python run_p2.py --tunnel          # 拿到临时公网地址 -> 截图（含地址栏）
+python run_p2.py --demo NVDA       # 命令行版，写进材料
+```
+
+- [ ] 从**另一台机器/手机**打开过公网链接（不是只在本机点过）
+- [ ] 截图含：地址栏 + 页面顶部**快照时间点** + 最终裁决与 `decision_hash`
+- [ ] 材料里写明"这条链接是临时的"，并给出失效后自己起的一条命令
+
+### 🟢 T4 · 可选（不影响提交有效性）
+
+- [ ] 录屏（`docs/43` §2 列了"截图里必须出现哪四样"）
+- [ ] 配 `LLM_API_KEY` 后跑 `python tools/event_calibration.py --run`，
+      把一致率与**危险方向错误数**写进材料（不配 key 时它会明确报"未执行"）
+
+---
+
+## 3. 投哪个主题（两套都备好了，临场勾）
+
+| 方案 | 赛道 / 子主题 | 评分方式 | 说明 |
+|---|---|---|---|
+| **A** | 赛道三 AI Trading Desk · 具名「**执行辅助**」 | 纯评委主观 | 手册点名要的正是"拆单 + 盘口深度分析 + 滑点管理"，本项目三样全有 |
+| **B** | 赛道一 Alpha Factory · **开放主题** Execution-aware Alpha | 纯量化 | 沿用 `docs/34` 的既有叙事 |
+
+**推荐 A**：两次提交落在**两个不同赛道**（项目一在赛道一），风险不相关；
+B 会让两份材料同处赛道一（同批评委、同一套数据叙事），互相稀释差异化。
+
+⚠️ 规则层面两者都不违规：手册允许"最多向 2 个不同主题提交，每个主题须是独立项目，
+分两次填表"。选 A 不是为了合规，是为了**不把两个项目放进同一个池子**。
+
+**Demo 的麻烦程度与赛道无关** —— 同一个仓库、同一个页面、同一条命令；
+赛道三反而**不需要**展示 Sharpe/回撤那套回测指标，页面要讲的东西更少。

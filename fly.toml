@@ -1,0 +1,42 @@
+# 项目二 · 一键部署（Fly.io）
+#
+# 用法：
+#   fly launch --no-deploy --copy-config      # 用本文件作为配置
+#   fly deploy
+#   fly open
+#
+# 说明：本项目零第三方依赖，镜像构建只做"复制 + 装 tzdata"，很快。
+#      free/最低配 256MB 内存足够（页面单次决策链约 1 秒，读的是 40MB 数据快照）。
+
+app = "execution-aware-alpha"
+primary_region = "sin"          # 新加坡，离国内近一些
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8788"
+  # 可选：配了 LLM_API_KEY 才会真实调用 LLM 做事件分类（会有费用）。
+  # 用 `fly secrets set LLM_API_KEY=...` 注入，不要写进本文件。
+  LLM_BASE_URL = "https://api.deepseek.com"
+  LLM_MODEL = "deepseek-v4-pro"
+  LLM_THINKING = "off"
+
+[http_service]
+  internal_port = 8788
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.checks]
+    [[http_service.checks.http]]
+      interval = "30s"
+      timeout = "10s"
+      grace_period = "15s"
+      method = "GET"
+      path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

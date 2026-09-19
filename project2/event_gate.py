@@ -38,6 +38,16 @@
    * `auto`   —— 有 key 用 llm，没有就用 static
 3. **可复现**：`static` 模式的输出完全确定；`llm` 模式的输出与 prompt 一起落盘，
    便于事后审计"当时模型看到了什么、判了什么"。
+4. **prompt 版本化（T4-A）**：prompt 不在代码里，而在 `prompts/event_gate.v*.md`
+   （取版本号最大的一版）。每次判断都带上**正文的 SHA256**，
+   于是"某次判断用的是哪一版 prompt"可以事后核验。`prompts/` 缺失时退回
+   本文件里的内嵌兜底，并如实标注 `prompt_source="embedded"`。
+5. **事件驱动降本（T4-B）**：`NEWS_EVENT_DRIVEN=on` 时，若本轮候选标题**全是
+   已见过的条目**（判据复用 `tools/news_sources.py` + `news_state.json`），
+   则**不调** LLM，而是复用上一次判定（带 `EVENT_CACHE_TTL_MIN`）。
+   🔴 **绝不允许**因为"没有新条目"就把 severity 降级成 `none` ——
+   那等于把风险藏起来。新的**重大 EDGAR 申报**（8-K/10-Q/10-K/S-1/SC 13D）
+   会**跳过缓存立即重判**。详见 `gate_decision()` 与 `docs/42`。
 
 ━━ 与项目一的关系 ━━
 **只读**。本文件不修改项目一任何文件（见 `project2/README.md` §0 硬边界规则）。
@@ -52,8 +62,11 @@
 
 import argparse
 import datetime as dt
+import glob
+import hashlib
 import json
 import os
+import re
 import sys
 
 P2 = os.path.dirname(os.path.abspath(__file__))
@@ -158,9 +171,314 @@ def static_gate(base, now_ms):
             "source": "static"}
 
 
-# ---------------------------------------------------------------- LLM 路径
+# ---------------------------------------------------------------- 事件驱动降本
 
-PROMPT_VERSION = "v2-2026-09-18"    # prompt 改动必须升版本号，否则日志分不清新旧判断
+# T4-B：`NEWS_EVENT_DRIVEN=on` 时的成本控制。**保守优先**（理由见下）。
+EVENT_CACHE_TTL_MIN = 30     # 复用上一次 LLM 判定的最长判定龄（分钟）；可用 EVENT_CACHE_TTL_MIN 覆盖
+EVENT_DRIVEN_FILE = os.path.join(BASE, "data", "derived", "event_driven_state.json")
+NEWS_LATEST_FILE = os.path.join(BASE, "data", "derived", "news_latest.json")
+
+# `tools/news_sources.py` 的**同一批**判定输入：状态文件与条目 key 规则都用它的，
+# 不另起一套 —— 否则"有没有新条目"这件事会有两个真相。
+NEWS_STATE_FILE = os.path.join(BASE, "data", "derived", "news_state.json")
+FORM_WEIGHT_MAJOR = 3        # form 权重 >= 3 才算"重大表种"（见 news_sources.FORM_WEIGHT）
+
+
+def _prompt_module():
+    """取 `tools/news_sources.py` 模块。失败返回 None（调用方一律退回保守路径）。"""
+    try:
+        import news_sources as _ns
+        return _ns
+    except ImportError:
+        pass
+    tp = os.path.join(BASE, "tools")
+    if tp not in sys.path:
+        sys.path.insert(0, tp)
+    try:
+        import news_sources as _ns       # noqa: F811
+        return _ns
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _read_json(path, default=None):
+    """读 JSON，失败返回 default（**绝不抛**）—— 状态文件坏了不能把闸门带崩。"""
+    try:
+        with open(path, encoding="utf-8-sig") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def _entry_key(it):
+    """条目 key —— **与 `news_sources._item_key` 逐字一致**（同一判据，不另起一套）。
+
+    优先用模块里的实现；拿不到模块时用等价的本地实现（见 `_entry_key_selftest`）。
+    """
+    m = _prompt_module()
+    if m is not None and hasattr(m, "_item_key"):
+        return m._item_key(it)
+    return it.get("url") or ("%s|%s" % (it.get("source", ""), it.get("title", "")))
+
+
+def _news_seen():
+    """`data/derived/news_state.json` 里"已经见过的条目 key"集合。读不到返回 None。"""
+    st = _read_json(NEWS_STATE_FILE, None)
+    if not isinstance(st, dict):
+        return None
+    seen = st.get("seen")
+    if not isinstance(seen, dict):
+        return None
+    return set(seen)
+
+
+def _news_first_run():
+    """`news_state.json` 是否还没 bootstrap（首轮必须调 LLM，否则会漏掉全部现存事件）。"""
+    st = _read_json(NEWS_STATE_FILE, None)
+    return not (isinstance(st, dict) and st.get("bootstrapped"))
+
+
+def _num(v, default):
+    """把配置值转成 float；非法值退回默认（配置写错**不能**放宽闸门）。"""
+    if isinstance(v, bool):
+        return default
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def _news_latest():
+    """读 `news_latest.json`。这份文件**由 news_sources.py 落盘**，本文件只读。"""
+    d = _read_json(NEWS_LATEST_FILE, None)
+    return d if isinstance(d, dict) else {}
+
+
+def _filing_candidates(items):
+    """本轮出现的**申报**条目（`kind == "filing"`）。"""
+    return [i for i in items
+            if isinstance(i, dict) and i.get("kind") == "filing"]
+
+
+def _edgar_trigger(items, seen):
+    """⭐ **EDGAR 立即触发**：本标的**新出现**的重大申报 -> 跳过缓存，立即调 LLM。
+
+    判据（两条都要满足）：
+      ① `kind == "filing"`，且表单权重 >= `FORM_WEIGHT_MAJOR`（8-K/10-Q/10-K/S-1/SC 13D…）
+         —— Form 4（内部人交易，权重 1）**不算**，它每天都有一堆，不应触发；
+      ② 该条目的 key **不在** `news_state.json` 的 seen 里 = 本轮才第一次见到。
+         拿不到 seen（状态文件缺失/损坏）时**按"有新申报"处理** —— 保守优先。
+
+    返回命中列表（`[]` = 无触发）。
+    """
+    m = _prompt_module()
+    weights = getattr(m, "FORM_WEIGHT", None) if m is not None else None
+    if not isinstance(weights, dict):
+        weights = {"8-K": 5, "10-Q": 5, "10-K": 5, "S-1": 3, "SC 13D": 3,
+                   "SC 13G": 3, "DEF 14A": 2, "4": 1}
+    out = []
+    for it in _filing_candidates(items):
+        try:
+            w = int(weights.get(it.get("form") or "", 0))
+        except (TypeError, ValueError):
+            w = 0
+        if w < FORM_WEIGHT_MAJOR:
+            continue
+        if seen is not None and _entry_key(it) in seen:
+            continue
+        out.append(it)
+    return out
+
+
+def _latest_headlines(base):
+    """候选标题（`news_latest.json` 里已按类别/相关度筛好的那批）。"""
+    d = _news_latest()
+    heads = d.get("fresh_headlines") or d.get("headlines_for_gate") or []
+    return [h for h in (heads or []) if h]
+
+
+def _candidate_items(headlines):
+    """候选标题 -> 条目（用于算 key）。标题只在新闻条目里挑出来的，能对上。"""
+    d = _news_latest()
+    items = d.get("items") if isinstance(d.get("items"), list) else []
+    hs = set(headlines or [])
+    picks = []
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        labels = ("[%s] %s" % (it.get("date", "")[:10], it.get("title", "")),
+                  "[%s] %s" % (it.get("date", ""), it.get("title", "")))
+        if any(l in hs for l in labels):
+            picks.append(it)
+    if picks:
+        return picks
+    out = []
+    for h in (headlines or []):
+        m = re.match(r"^\[([^\]]*)\]\s*(.*)$", h or "")
+        out.append({"source": "news", "date": m.group(1) if m else "",
+                    "title": (m.group(2) if m else h) or ""})
+    return out
+
+
+def gate_decision(base, headlines, items=None, now_ms=None, state=None):
+    """⭐ **事件驱动降本**：这一轮到底该不该调 LLM（T4-B 的核心）。
+
+    用户配置 `NEWS_EVENT_DRIVEN=on` 的语义（`.env.example` / `common/config.py`）：
+    **只在出现新条目时才调 LLM**。本函数把它落到决策链里 ——
+    在此之前这个配置**没有任何代码读它**，是"说了没做"。
+
+    ━━ 规则表（保守优先）━━
+
+    | 情形 | 动作 | reason |
+    |---|---|---|
+    | `NEWS_EVENT_DRIVEN=off` | 每轮都调 | `event_driven_off` |
+    | 该标的新出现**重大 EDGAR 申报**（权重 >= 3） | **跳过缓存，立即调** | `edgar_new_material_filing` |
+    | 候选标题能确证**全是已见过的**，且缓存未过 TTL | 复用缓存，**不调** | `no_new_items_cache_hit` |
+    | 缓存不存在 / 已过 TTL | 照常调 | `no_new_items_but_cache_missing` / `cache_expired` |
+    | 无新条目但**候选集合与缓存那次不同** | 调 | `cand_set_changed` |
+    | 无新条目但缓存判定来自**另一版 prompt** | 调 | `prompt_changed` |
+    | 拿不到候选（空标题 / 状态文件缺失 / 状态未 bootstrap） | 照常调 | `no_candidates` / `no_state` / `first_run` |
+
+    🔴 **两条不许碰的红线**：
+      ① 绝不允许因为"没有新条目"就把 severity 降级成 `none` —— 那等于把风险藏起来；
+         复用缓存复用的是**上一次 LLM 的判定原值**，一字不改（只加"判定龄"标注）。
+      ② 拿不到候选时**不许复用缓存**：宁可多花一次调用，也不拿"看不见"当"没风险"。
+
+    返回 dict：``should_call_llm`` / ``reuse`` / ``cache`` / ``reason`` /
+    ``cand_keys`` / ``cand_is_headlines`` / ``age_min`` / ``seen_known`` /
+    ``n_items`` / ``n_fresh`` / ``fresh`` / ``first_run`` / ``edgar_triggers`` /
+    ``ttl_min`` / ``enabled`` / ``state_saved``。
+    """
+    now_ms = now_ms or int(dt.datetime.now(dt.UTC).timestamp() * 1000)
+    cfg = {}
+    try:
+        from common import config as _cfgmod          # noqa: N813
+        cfg = _cfgmod.load() or {}
+    except Exception:  # noqa: BLE001
+        cfg = {}
+    if not cfg:
+        cfg = dict(os.environ)
+    enabled = str(cfg.get("NEWS_EVENT_DRIVEN", "on")).strip().lower() in (
+        "on", "1", "true", "yes")
+    ttl = _num(cfg.get("EVENT_CACHE_TTL_MIN", EVENT_CACHE_TTL_MIN),
+               EVENT_CACHE_TTL_MIN)
+    if ttl < 0:
+        ttl = EVENT_CACHE_TTL_MIN
+
+    out = {"enabled": enabled, "should_call_llm": True, "reuse": False,
+           "cache": None, "reason": "", "cand_keys": [], "cand_is_headlines": False,
+           "age_min": None, "seen_known": False, "n_items": 0, "n_fresh": 0,
+           "fresh": [], "first_run": False, "edgar_triggers": [],
+           "ttl_min": ttl, "state_saved": False,
+           "cache_file": os.path.relpath(EVENT_DRIVEN_FILE, BASE)}
+    if not enabled:
+        out["reason"] = "event_driven_off（NEWS_EVENT_DRIVEN=off：每轮都调 LLM）"
+        return out
+
+    if items is None:
+        d = _news_latest()
+        items = d.get("items") if isinstance(d.get("items"), list) else []
+    if state is None:
+        state = _read_json(EVENT_DRIVEN_FILE, None)
+    if not isinstance(state, dict):
+        state = {}
+    seen = _news_seen()
+    seen_known = seen is not None
+    first = _news_first_run()
+    cands = _candidate_items(headlines)
+    cand_keys = [k for k in (_entry_key(i) for i in cands) if k]
+    trig = _edgar_trigger(items, seen)
+    out.update({"cand_keys": cand_keys, "seen_known": seen_known,
+                "n_items": len(items), "first_run": first, "edgar_triggers": trig,
+                "cand_is_headlines": not cands})
+
+    # ① EDGAR 新重大申报 —— 一级信号，最高优先级，跳过缓存
+    if trig:
+        out["reason"] = ("edgar_new_material_filing（新申报：%s）"
+                         % "、".join(sorted({str(i.get("form") or "?")
+                                             for i in trig})))
+        out.update(_mark_state(items, out))
+        return out
+
+    # ② 「全是已见过的」必须能**确证**：拿到候选 + 拿到状态 + 已 bootstrap
+    if not cand_keys:
+        out["reason"] = ("no_candidates（本轮没有候选标题，无法确证『无新条目』）"
+                         if not first else "first_run（消息面状态未 bootstrap）")
+        return out
+    if not seen_known:
+        out["reason"] = "no_state（news_state.json 不可读，无法确证『无新条目』）"
+        return out
+    if first:
+        out["reason"] = "first_run（news_state.json 未 bootstrap：首轮必调，否则漏掉现存事件）"
+        out.update(_mark_state(items, out))
+        return out
+    unseen = [k for k in cand_keys if k not in seen]
+    if unseen:
+        out["reason"] = "new_items（%d 条候选本轮才第一次见到）" % len(unseen)
+        out.update(_mark_state(items, out))
+        return out
+
+    # ③ 确证无新条目 -> 复用上一次 LLM 判定（带 TTL）
+    prev = state.get("bases", {}).get(base) if isinstance(state.get("bases"), dict) else None
+    if not isinstance(prev, dict) or not prev.get("verdict"):
+        out["reason"] = "no_new_items_but_cache_missing（无新条目，但没有可复用的 LLM 判定）"
+        return out
+    t_ms = _num(prev.get("ts_ms"), 0.0)
+    age_min = (now_ms - t_ms) / 60000.0 if t_ms else 1e9
+    out["age_min"] = age_min
+    out["cache"] = prev
+    if age_min > ttl:
+        out["reason"] = ("cache_expired（无新条目，但判定龄 %.1fmin > TTL %.0fmin）"
+                         % (age_min, ttl))
+        return out
+    if sorted(prev.get("cand_keys") or []) != sorted(cand_keys):
+        out["reason"] = ("cand_set_changed（无新条目，但候选集合与缓存那次不同）")
+        return out
+    # prompt 升版本 = 判断口径变了 -> 上一次判定不再有代表性，作废重判。
+    # （缓存里记了 sha256，所以这里能发现；宁可多一次调用，也别把旧口径的
+    #  判断挂在新口径的日志上）
+    _cur_sha = _refresh_prompt().sha256
+    _old_sha = prev.get("prompt_sha256")
+    if _old_sha and _old_sha != _cur_sha:
+        out["reason"] = ("prompt_changed（缓存判定用的是 prompt %s / %.16s，"
+                         "当前是 %.16s -> 不作废就是拿旧口径的判断冒充新的）"
+                         % (prev.get("prompt_version") or "?", str(_old_sha),
+                            _cur_sha))
+        return out
+    out["should_call_llm"] = False
+    out["reuse"] = True
+    out["reason"] = ("no_new_items_cache_hit（%d 条候选全是已见过的，"
+                     "复用 %.1f 分钟前的 LLM 判定，TTL %.0f 分钟）"
+                     % (len(cand_keys), age_min, ttl))
+    return out
+
+
+def _mark_state(items, out):
+    """把本轮条目交给 `news_sources.event_driven_check`（**复用它的判据**）并落盘。
+
+    只在"确实要去调 LLM"的路径上做 —— 复用缓存那一轮**不写状态**：
+    没有新的观察，就不该改动"已经见过什么"的记录。
+    """
+    m = _prompt_module()
+    upd = {}
+    if m is None or not hasattr(m, "event_driven_check"):
+        return upd
+    try:
+        st = m._load_state() if hasattr(m, "_load_state") else {}
+        should, fresh, st = m.event_driven_check(list(items or []), st)
+        st["bootstrapped"] = True
+        st["calls"] = int(st.get("calls", 0)) + (1 if should else 0)
+        if hasattr(m, "_save_state"):
+            m._save_state(st)
+        upd["state_saved"] = True
+        upd["n_fresh"] = len(fresh)
+        upd["fresh"] = fresh
+    except Exception:  # noqa: BLE001
+        upd["state_saved"] = False
+    return upd
+
+
+# ---------------------------------------------------------------- LLM 路径
 
 # 🔴 用户明确选择（2026-09-18）：**保守优先** ——
 # LLM 调用失败时**暂停挂单**，而不是退回确定性日历继续做。
@@ -169,7 +487,13 @@ PROMPT_VERSION = "v2-2026-09-18"    # prompt 改动必须升版本号，否则�
 # 代价：LLM 抖动时会放弃一些本可做的机会 —— 这个代价是**明知且接受**的。
 FAIL_CLOSED_ON_LLM_ERROR = True
 
-LLM_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一**任务是判断：
+# ━━ prompt 版本化（T4-A）━━
+#
+# 这一段是**内嵌兜底**：`prompts/event_gate.v2.md` 的正文**逐字**复制。
+# `prompts/` 缺失、没有版本文件、或解析失败时退回它，并在结果里如实标注
+# `prompt_source="embedded"`。两边的 SHA256 不一致时自检会**直接报错**
+# （`_prompt_selftest`）—— 防止"文件改了、兜底没改"这种漂移。
+EMBEDDED_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一**任务是判断：
 给定的新闻标题里，是否存在会让我方"挂单被逆向选择"的信息事件。
 
 你要输出严格的 JSON，不要任何解释文字：
@@ -188,6 +512,169 @@ LLM_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一**任
    不得据此编造不存在的事件。
 3. 保守原则：不确定时给 "caution"，不要给 "none"。
 """
+
+EMBEDDED_PROMPT_VERSION = "v2-2026-09-18"    # 🔒 与 prompts/event_gate.v2.md 的 version 一致
+
+PROMPTS_DIR = os.path.join(BASE, "prompts")
+PROMPT_GLOB = "event_gate.v*.md"
+PROMPT_BODY_SEP = "\n---\n"
+PROMPT_META_KEYS = ("prompt_id", "version", "updated", "owner", "purpose",
+                    "changelog", "notes", "source")
+
+
+class Prompt:
+    """一个**版本化**的 prompt：元信息 + 正文 + SHA256 指纹。
+
+    为什么要版本化（而不是把 prompt 常量留在代码里）：
+      * 改 prompt 不该等于改代码 —— 评审时"这一版 prompt 是什么"应当是**独立可读**的；
+      * 新版**新建文件**、旧版**保留**，于是"某次判断用的是哪一版"可回溯；
+      * `sha256` 进闸门返回值与日志，"文件被悄悄改过"这件事会**暴露**（对不上号）。
+    """
+
+    def __init__(self, body, meta=None, path=None, version=None, source="embedded"):
+        self.body = body
+        self.meta = meta or {}
+        self.path = path
+        self.version = version or EMBEDDED_PROMPT_VERSION
+        self.source = source
+
+    @property
+    def sha256(self):
+        """正文的 SHA256（**只覆盖正文**，所以元信息改动不会改变指纹）。"""
+        return hashlib.sha256(self.body.encode("utf-8")).hexdigest()
+
+    @property
+    def prompt_id(self):
+        return self.meta.get("prompt_id") or "event_gate"
+
+    def describe(self):
+        return ("prompt %s ｜ version=%s ｜ source=%s ｜ sha256=%s ｜ %s"
+                % (self.prompt_id, self.version, self.source, self.sha256[:16],
+                   os.path.relpath(self.path, BASE) if self.path else "（内嵌兜底）"))
+
+    def dict(self):
+        return {"prompt_id": self.prompt_id, "version": self.version,
+                "sha256": self.sha256, "sha256_16": self.sha256[:16],
+                "source": self.source,
+                "path": os.path.relpath(self.path, BASE) if self.path else None,
+                "updated": self.meta.get("updated"), "owner": self.meta.get("owner")}
+
+
+def _version_key(name):
+    """从文件名 `event_gate.v12.md` 取版本号 `(12,)`；不匹配返回 None。"""
+    m = re.search(r"\.v(\d+(?:\.\d+)*)\.md$", name or "")
+    if not m:
+        return None
+    return tuple(int(x) for x in m.group(1).split("."))
+
+
+def _parse_prompt_text(text, path=None):
+    """解析 prompt 文件：`key: value` 元信息 + `---` 分隔的正文。
+
+    缩进行是**上一条元信息的续行**（changelog / purpose 都会用到）。
+    ⚠️ **只有正文**会进 prompt；元信息一个字都不进（否则等于改了 prompt 语义）。
+    """
+    lines = (text or "").replace("\r\n", "\n").split("\n")
+    sep = None
+    for i, ln in enumerate(lines):
+        if ln.strip() == "---":
+            sep = i
+            break
+    if sep is None:
+        raise ValueError("缺少 '%s' 分隔线" % PROMPT_BODY_SEP.strip())
+    meta_lines = lines[:sep]
+    body = "\n".join(lines[sep + 1:]).strip()
+    if not body:
+        raise ValueError("正文为空（'---' 之后什么都没有）")
+
+    meta, last = {}, None
+    for ln in meta_lines:
+        s = ln.strip()
+        if not s or set(s) <= set("=-"):
+            continue
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.*)$", s)
+        if m:
+            last = m.group(1)
+            meta[last] = m.group(2).strip()
+        elif ln[:1].isspace() and last:
+            # 续行：changelog 的条目、purpose 的换行、注释都用这个形式
+            meta[last] = (meta[last] + " " + s).strip()
+    return meta, body
+
+
+def load_prompt(prompts_dir=None, force=False):
+    """读 `prompts/event_gate.v*.md` 里**版本号最大**的一版；失败退回内嵌兜底。
+
+    返回值永远可用（never None）：调用方不需要写 try/except。
+    结果里 `source` 如实标注是 `file:<相对路径>` 还是 `embedded`。
+    """
+    pdir = prompts_dir or PROMPTS_DIR
+    cands = []
+    for p in glob.glob(os.path.join(pdir, PROMPT_GLOB)):
+        vk = _version_key(os.path.basename(p))
+        if vk is not None:
+            cands.append((vk, p))
+    if not cands:
+        return Prompt(EMBEDDED_PROMPT.strip(), {}, None,
+                      EMBEDDED_PROMPT_VERSION, "embedded")
+    cands.sort(key=lambda x: x[0])
+    _vk, path = cands[-1]
+    try:
+        with open(path, encoding="utf-8-sig") as fh:
+            text = fh.read()
+        meta, body = _parse_prompt_text(text, path)
+        ver = str(meta.get("version") or "").strip()
+        if not ver:
+            m = re.search(r"(v\d+(?:\.\d+)*)", os.path.basename(path))
+            ver = m.group(1) if m else EMBEDDED_PROMPT_VERSION
+        return Prompt(body, meta, path, ver,
+                      "file:" + os.path.relpath(path, BASE).replace("\\", "/"))
+    except Exception as exc:  # noqa: BLE001
+        # 解析失败**不许静默**：退回兜底，但把原因留在 meta 里，一路带到日志
+        return Prompt(EMBEDDED_PROMPT.strip(),
+                      {"parse_error": "%s: %s" % (type(exc).__name__, exc),
+                       "failed_path": os.path.relpath(path, BASE)},
+                      None, EMBEDDED_PROMPT_VERSION, "embedded")
+
+
+_PROMPT_CACHE = {"p": None}
+_LAST_PROMPT = {"p": None}
+
+
+def _refresh_prompt():
+    """（重新）加载 prompt —— 只做一次；自检用 `force=True` 绕开缓存。"""
+    if _PROMPT_CACHE["p"] is None:
+        _PROMPT_CACHE["p"] = load_prompt()
+    return _PROMPT_CACHE["p"]
+
+
+def prompt_now(force=False):
+    """当前生效的 prompt（含版本 / 来源 / SHA256）。第一次调用时才去读盘。
+
+    ⚠️ 同时把模块级 `PROMPT` / `PROMPT_VERSION` 指过去 —— 它们对外是"当前版本"，
+    必须与这里返回的是同一份（`force=True` 之后不许还留着旧值）。
+    """
+    global PROMPT, PROMPT_VERSION
+    if force:
+        _PROMPT_CACHE["p"] = None
+    p = _refresh_prompt()
+    PROMPT = p
+    PROMPT_VERSION = p.version
+    return p
+
+
+def _last_prompt():
+    """**最近一次真正发给 LLM 的那个 prompt** —— 判断的可回溯指纹取它。
+
+    为什么不让调用方各取一次：`assess()` 会先加载一次、`llm_gate()` 再用一次，
+    两次之间文件被改的话，日志里的 SHA256 就可能不是**实际发出去**的那份。
+    所以以"发送方"记录的为准。
+    """
+    return _LAST_PROMPT["p"] or _refresh_prompt()
+
+
+PROMPT = _refresh_prompt()
+PROMPT_VERSION = PROMPT.version      # 从加载结果推导，**不再硬编码**
 
 
 def llm_gate(base, now_ms, headlines, model, api_key, base_url,
@@ -209,6 +696,11 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
     import urllib.request
     import threading
 
+    # 🔴 prompt 快照：**这一次调用**用的是哪一版 prompt，在这里定格。
+    #    调用方（assess）事后取 SHA256 时取的是这一份，不会与"发出去的"错位。
+    _p = _refresh_prompt()
+    _LAST_PROMPT["p"] = _p
+
     user_msg = ("标的：%s\n时间：%s\n"
                 % (base, dt.datetime.fromtimestamp(now_ms / 1000, dt.UTC).isoformat()))
     if rag_context:
@@ -218,7 +710,7 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": LLM_PROMPT},
+            {"role": "system", "content": _p.body},
             {"role": "user", "content": user_msg},
         ],
         "temperature": 0,
@@ -276,6 +768,10 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
         fallback["llm_attempts"] = box["attempts"]
         fallback["llm_errors"] = box["errors"][-3:]
         fallback["llm_dropped_thinking"] = box["dropped_thinking"]
+        # 失败也留痕：重试的仍然是**这一版** prompt，审计时要说清
+        fallback["prompt_version"] = _p.version
+        fallback["prompt_sha256"] = _p.sha256
+        fallback["prompt_source"] = _p.source
         return fallback
     try:
         content = box["r"]["choices"][0]["message"]["content"]
@@ -287,7 +783,10 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
                 "reason": str(d.get("reason", ""))[:200],
                 "confidence": float(d.get("confidence", 0.0)),
                 "source": "llm",
-                "prompt_version": PROMPT_VERSION,
+                "prompt_version": _p.version,
+                # ⭐ 可核验：这次判断具体用了哪一版 prompt（正文的 SHA256 前 16 位）
+                "prompt_sha256": _p.sha256,
+                "prompt_source": _p.source,
                 "headlines": headlines,
                 "llm_ok": True,
                 "llm_attempts": box["attempts"],
@@ -299,6 +798,9 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
         fallback = static_gate(base, now_ms)
         fallback["source"] = "static(LLM 响应解析失败: %r)" % (exc,)
         fallback["llm_ok"] = False
+        fallback["prompt_version"] = _p.version
+        fallback["prompt_sha256"] = _p.sha256
+        fallback["prompt_source"] = _p.source
         return fallback
 
 
@@ -374,6 +876,78 @@ def _sources_of(records):
     return out
 
 
+def _load_cache():
+    """读事件驱动缓存（`data/derived/event_driven_state.json`）。坏文件 -> 空表。"""
+    d = _read_json(EVENT_DRIVEN_FILE, None)
+    return d if isinstance(d, dict) else {}
+
+
+def _save_cache(base, llm, d, now_ms, ttl_min):
+    """把**这一次真实的 LLM 判定**落盘，供 `NEWS_EVENT_DRIVEN=on` 时复用。
+
+    与 `news_state.json` **分开两个文件**：那个文件由 `news_sources.py` 管理、
+    且在数据快照里有 SHA256（改它等于改快照）；这里只写我们自己新增的运行时产物。
+    """
+    st = _load_cache()
+    bases = st.get("bases")
+    if not isinstance(bases, dict):
+        bases = {}
+    bases[base] = {
+        "ts_ms": now_ms,
+        "updated_utc": dt.datetime.fromtimestamp(now_ms / 1000, dt.UTC).isoformat(),
+        "verdict": {k: llm.get(k) for k in
+                    ("in_window", "severity", "reason", "confidence")},
+        "n_headlines": len(d.get("headlines") or []),
+        # 候选集合指纹：判定所依据的输入集合，复用时必须一致
+        "cand_keys": sorted(d.get("cand_keys") or []),
+        "prompt_version": llm.get("prompt_version"),
+        "prompt_sha256": llm.get("prompt_sha256"),
+        "ttl_min": ttl_min,
+    }
+    st["bases"] = bases
+    st["updated_ms"] = now_ms
+    st["ttl_min"] = ttl_min
+    st["note"] = ("事件驱动缓存：**只复用**上一次真实的 LLM 判定，"
+                  "绝不在『无新条目』时把 severity 降级成 none")
+    os.makedirs(os.path.dirname(EVENT_DRIVEN_FILE), exist_ok=True)
+    with open(EVENT_DRIVEN_FILE, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(st, fh, ensure_ascii=False, indent=1, sort_keys=True)
+    return bases[base]
+
+
+def _cache_detail(dec, now_ms):
+    """缓存复用的**如实标注**：判定龄 + 无新条目的理由 + 原始判定版本与指纹。"""
+    prev = dec.get("cache") or {}
+    v = prev.get("verdict") or {}
+    age = dec.get("age_min")
+    ttl = dec.get("ttl_min")
+    out = {
+        "in_window": bool(v.get("in_window")),
+        "severity": v.get("severity"),
+        "reason": str(v.get("reason") or ""),
+        "confidence": v.get("confidence"),
+        # 来源里写清"这是缓存"，别让日志看起来像刚调过 LLM
+        "source": ("llm(cache: 无新条目, 判定龄 %s｜TTL %.0fmin)"
+                   % (("%.0fmin" % age) if age is not None and age < 1e8 else "?",
+                      float(ttl or 0.0))),
+        "prompt_version": prev.get("prompt_version"),
+        "prompt_sha256": prev.get("prompt_sha256"),
+        "prompt_source": "cache",
+        "cache_reused": True,
+        "cache_age_min": None if age is None else round(float(age), 2),
+        "cached_at_ms": prev.get("ts_ms"),
+        "cached_at_utc": prev.get("updated_utc"),
+        "n_headlines": prev.get("n_headlines"),
+        "llm_ok": True,          # 复用的那次 LLM 判定是成功的
+        "llm_reused": True,
+    }
+    if v.get("severity") == "none":
+        out["reason"] = ((out["reason"] + "；").lstrip("；")
+                         + "⚠️ 这是 %.0f 分钟前 LLM 判的 none（无新条目），"
+                           "非本轮重新判断" % float(age or 0.0))
+    return out
+
+
 def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
            model=None, api_key=None, base_url=None, headlines=None,
            rag_context=None):
@@ -418,6 +992,9 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
     confidence = CONF_CAP_STATIC if not sources else 0.85
     llm_err = None
     llm_meta = {}
+    # T4-B：事件驱动降本的判定（**必须如实带出去**：这次到底调了 LLM 没有、为什么）
+    dec = {"enabled": False, "should_call_llm": True, "reuse": False, "reason":
+           "mode=static：不涉及 LLM（无 key 时行为与改动前一致）"}
     _rag_default_used = {"v": False}
     if mode == "llm":
         try:
@@ -433,31 +1010,49 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
             if not key:
                 llm_err = "未配置 LLM_API_KEY（`.env` 里填；见 .env.example）"
             else:
-                # RAG：把我们的口径与历史案例注入，让模型知道策略边界
-                rag = rag_context
-                if rag is None:
-                    try:
-                        from common import rag_memory as _rag
-                        rag = _rag.build_context(base)
-                        _rag_default_used["v"] = bool(rag)
-                    except Exception:  # noqa: BLE001
-                        rag = None
-                llm = llm_gate(base, now_ms, list(headlines or []),
-                               (model or cfg.get("model") or "deepseek-flash"), key,
-                               (base_url or cfg.get("base_url")
-                                or "https://api.deepseek.com"),
-                               timeout=cfg.get("timeout", 45),
-                               max_retry=cfg.get("max_retry", 2),
-                               thinking=cfg.get("thinking", False),
-                               rag_context=rag)
-                llm_meta = {k: llm.get(k) for k in
-                            ("llm_ok", "llm_attempts", "llm_usage", "prompt_version")
-                            if k in llm}
-                if llm.get("source") == "llm":
-                    ev = llm
-                    confidence = float(llm.get("confidence", 0.5))
+                # ---- 事件驱动闸门：决定"这一轮要不要调 LLM"（T4-B）----
+                dec = gate_decision(base, list(headlines or []), now_ms=now_ms)
+                if dec.get("reuse") and FAIL_CLOSED_ON_LLM_ERROR:
+                    # ⚠️ 复用缓存时**必须**保留上一次 LLM 判定的原值：
+                    #    "没有新条目" ≠ "没有风险"。把 severity 降级成 none
+                    #    就等于把风险藏起来 —— 这条红线不许碰。
+                    ev = _cache_detail(dec, now_ms)
+                    confidence = float(ev.get("confidence") or 0.5)
+                    prompt_now()      # 让 llm.prompt_* 回填到"当前生效版本"
                 else:
-                    llm_err = str(llm.get("source", ""))[:110]
+                    # RAG：把我们的口径与历史案例注入，让模型知道策略边界
+                    rag = rag_context
+                    if rag is None:
+                        try:
+                            from common import rag_memory as _rag
+                            rag = _rag.build_context(base)
+                            _rag_default_used["v"] = bool(rag)
+                        except Exception:  # noqa: BLE001
+                            rag = None
+                    llm = llm_gate(base, now_ms, list(headlines or []),
+                                   (model or cfg.get("model") or "deepseek-flash"), key,
+                                   (base_url or cfg.get("base_url")
+                                    or "https://api.deepseek.com"),
+                                   timeout=cfg.get("timeout", 45),
+                                   max_retry=cfg.get("max_retry", 2),
+                                   thinking=cfg.get("thinking", False),
+                                   rag_context=rag)
+                    llm_meta = {k: llm.get(k) for k in
+                                ("llm_ok", "llm_attempts", "llm_usage",
+                                 "prompt_version", "prompt_sha256", "prompt_source")
+                                if k in llm}
+                    if llm.get("source") == "llm":
+                        ev = llm
+                        ev["event_driven"] = dec
+                        confidence = float(llm.get("confidence", 0.5))
+                        # 只缓存**这次真实拿到**的 LLM 判定
+                        try:
+                            _save_cache(base, llm, dec, now_ms,
+                                        dec.get("ttl_min") or EVENT_CACHE_TTL_MIN)
+                        except Exception:  # noqa: BLE001
+                            pass
+                    else:
+                        llm_err = str(llm.get("source", ""))[:110]
         except Exception as exc:  # noqa: BLE001
             llm_err = "%s: %s" % (type(exc).__name__, str(exc)[:60])
     if llm_err and mode == "llm":
@@ -535,7 +1130,14 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
         "event": {"in_window": bool(ev.get("in_window")),
                   "severity": sev, "reason": ev.get("reason", ""),
                   "source": ev.get("source", ""),
-                  "fail_closed": bool(ev.get("fail_closed"))},
+                  "fail_closed": bool(ev.get("fail_closed")),
+                  # ⭐ 这次判断具体用了哪一版 prompt（T4-A）：可事后核验
+                  "prompt_version": ev.get("prompt_version") or PROMPT_VERSION,
+                  "prompt_sha256": ev.get("prompt_sha256") or _last_prompt().sha256,
+                  "prompt_source": ev.get("prompt_source") or _last_prompt().source,
+                  # T4-B：复用缓存时如实带出判定龄（"最坏情况下判定龄 = TTL"）
+                  "cache_reused": bool(ev.get("cache_reused")),
+                  "cache_age_min": ev.get("cache_age_min")},
         "confidence": round(confidence, 2),
         "sources": sources,
         "risk_level": risk,
@@ -544,9 +1146,16 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
         "warnings": warnings,
         "conditions": conditions,
         # LLM 执行留痕：这次到底用没用 LLM、用了几次、花了多少 token
-        "llm": {"used": ev.get("source", "").startswith("llm"),
+        # ⚠️ prompt 指纹取 `_last_prompt()`（**实际发出去的那一份**为谁），
+        #    而不是现读一次文件 —— 万一进程运行期间文件被改，日志会对不上号。
+        "llm": {"used": str(ev.get("source", "")).startswith("llm"),
                 "err": llm_err, "fail_closed": bool(ev.get("fail_closed")),
-                "prompt_version": PROMPT_VERSION, **llm_meta},
+                "prompt_version": _last_prompt().version,
+                "prompt_sha256": _last_prompt().sha256,
+                "prompt_source": _last_prompt().source,
+                # T4-B 留痕：这次是"调了 LLM"还是"复用了缓存"，以及为什么
+                "event_driven": dec, **llm_meta},
+        "event_driven": dec,
         "rag_used": bool(rag_context is not None or _rag_default_used.get("v")),
     }
 
@@ -566,6 +1175,18 @@ def render_assess(a, verbose=True):
     if not a["sources"]:
         L.append("      ~ 无可回溯来源 -> 置信度已被压到 %.2f（不允许把猜测当确信）"
                  % CONF_CAP_NO_SOURCE)
+    # ⭐ 可核验性：这一行让人能事后回溯"当时用的是哪一版 prompt"
+    _e = a.get("event") or {}
+    L.append("      · prompt：%s ｜ source=%s ｜ sha256=%s"
+             % (_e.get("prompt_version") or PROMPT_VERSION,
+                _e.get("prompt_source") or "?",
+                str(_e.get("prompt_sha256") or "")[:16]))
+    _d = a.get("event_driven") or {}
+    if _d:
+        L.append("      · 事件驱动：%s ｜ 本轮%s"
+                 % (_d.get("reason") or "-",
+                    "**不调** LLM（复用上一次判断）"
+                    if not _d.get("should_call_llm", True) else "调 LLM"))
     if verbose:
         print("\n".join(L))
     return "\n".join(L)
@@ -656,6 +1277,299 @@ def render_risk_engine_selftest():
     print("\n风险与理由引擎自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
 
+
+# ------------------------------------------------ prompt 版本化 + 事件驱动自检
+
+MOCK_LLM_VERDICT = {"is_event_window": True, "severity": "block",
+                    "reason": "合成：重大合同（mock，不打网络）", "confidence": 0.9}
+
+
+def _mock_llm_gate(base, now_ms, headlines, model, api_key, base_url, **kw):
+    """替身：不打网络，返回一个**会被复用的**结构完整的 LLM 判定。"""
+    _p = _refresh_prompt()
+    _LAST_PROMPT["p"] = _p
+    return {"in_window": True, "severity": "block",
+            "reason": "合成：重大合同（mock，不打网络）", "confidence": 0.9,
+            "source": "llm", "prompt_version": _p.version,
+            "prompt_sha256": _p.sha256, "prompt_source": _p.source,
+            "headlines": list(headlines or []), "llm_ok": True, "llm_attempts": 1,
+            "llm_usage": {"prompt_tokens": 100, "completion_tokens": 20,
+                          "model": "mock"}}
+
+
+def _prompt_event_driven_selftest():
+    """T4-A + T4-B 自检：prompt 版本化不许漂移；事件驱动不许把风险藏起来。"""
+    ok = True
+
+    def chk(cond, msg):
+        nonlocal ok
+        ok = ok and bool(cond)
+        print("  [%s] %s" % ("OK " if cond else "!! ", msg))
+
+    # ---------- ① prompt 版本化 ----------
+    p = prompt_now(force=True)
+    chk(bool(p.body) and len(p.body) > 100,
+        "prompt 可加载：%s" % p.describe())
+    chk(p.source.startswith("file:"),
+        "prompt 来自外部文件（不是内嵌兜底）：%s" % p.source)
+    chk(p.body.strip() == EMBEDDED_PROMPT.strip(),
+        "外部 prompt 正文与内嵌兜底**逐字一致**（改了文件没改兜底 -> 这里会报错）")
+    chk(p.version == EMBEDDED_PROMPT_VERSION,
+        "PROMPT_VERSION 从加载结果推导：%s（兜底副本 %s）"
+        % (PROMPT_VERSION, EMBEDDED_PROMPT_VERSION))
+    chk(len(p.sha256) == 64,
+        "prompt SHA256 前 16 位 = %s（判断可回溯到具体 prompt 版本）" % p.sha256[:16])
+    _emo = load_prompt(prompts_dir=os.path.join(BASE, "__no_such_prompt_dir__"))
+    chk(_emo.source == "embedded" and _emo.body == EMBEDDED_PROMPT.strip(),
+        "prompts/ 缺失 -> 退回内嵌兜底且如实标注 prompt_source=embedded")
+    _bad = os.path.join(BASE, "_tmp_bad_prompt")
+    try:
+        os.makedirs(_bad, exist_ok=True)
+        with open(os.path.join(_bad, "event_gate.v99.md"), "w",
+                  encoding="utf-8", newline="\n") as fh:
+            fh.write("没有分隔线的坏文件\n")
+        _b = load_prompt(prompts_dir=_bad)
+        chk(_b.source == "embedded" and (not _b.meta.get("parse_error")
+                                         or "parse_error" in _b.meta),
+            "prompt 文件解析失败 -> 退回内嵌兜底，并把原因写进 meta"
+            "（%s）" % (_b.meta.get("parse_error") or "无")[:40])
+    finally:
+        import shutil
+        shutil.rmtree(_bad, ignore_errors=True)
+    _keys = [_version_key("event_gate.v%d.md" % v) for v in (2, 10, 3)]
+    chk(_keys == [(2,), (10,), (3,)] and max(_keys) == (10,),
+        "版本号按数字比大小（不是字符串）：v2 < v3 < v10 -> 取 v10")
+
+    # ---------- ② 事件驱动：判据与 news_sources 一致 ----------
+    _m = _prompt_module()
+    if _m is None:
+        chk(False, "拿不到 tools/news_sources.py（事件驱动判据无法复用）")
+    else:
+        _it = {"url": "https://x/1", "source": "edgar", "title": "t"}
+        chk(_entry_key(_it) == _m._item_key(_it),
+            "条目 key 与 news_sources._item_key 一致（同一判据，不另起一套）")
+
+    _now = 1_800_000_000_000
+    # 🔒 **零网络、零落盘污染**：事件驱动的三个文件路径全部指向临时目录，
+    #    绝不碰真实的 data/derived/news_state.json（那是快照里带 SHA256 的文件）。
+    #    临时目录放在**工作区内**（`_tmp_*` 已在 .gitignore）：沙箱只允许写工作区。
+    import shutil
+    _tmpdir = os.path.join(BASE, "_tmp_eg_t4_selftest")
+    shutil.rmtree(_tmpdir, ignore_errors=True)
+    os.makedirs(_tmpdir, exist_ok=True)
+    _saved_paths = {n: globals()[n] for n in
+                    ("EVENT_DRIVEN_FILE", "NEWS_STATE_FILE", "NEWS_LATEST_FILE",
+                     "PROMPTS_DIR")}
+    _saved_env = {k: os.environ.get(k) for k in ("NEWS_EVENT_DRIVEN",
+                                                 "EVENT_CACHE_TTL_MIN")}
+    _saved_prompt = _PROMPT_CACHE["p"]
+    _saved_gate = globals()["llm_gate"]
+    _items = [{"url": "https://x/f1", "source": "edgar", "kind": "filing",
+               "form": "8-K", "title": "NVDA 8-K", "date": "2026-09-18"},
+              {"url": "https://x/n1", "source": "yahoo", "kind": "news",
+               "title": "普通新闻", "date": "2026-09-18"}]
+    _heads = ["[2026-09-18] NVDA 8-K", "[2026-09-18] 普通新闻"]
+    try:
+        globals()["EVENT_DRIVEN_FILE"] = os.path.join(_tmpdir, "ed_state.json")
+        globals()["NEWS_STATE_FILE"] = os.path.join(_tmpdir, "news_state.json")
+        globals()["NEWS_LATEST_FILE"] = os.path.join(_tmpdir, "news_latest.json")
+        with open(NEWS_LATEST_FILE, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump({"probed_at": "2026-09-18T00:00:00+00:00",
+                       "items": _items, "headlines_for_gate": _heads}, fh)
+        _from_heads = _candidate_items(_heads)
+        chk([_entry_key(i) for i in _from_heads]
+            == [_entry_key(i) for i in _items],
+            "候选标题 -> 条目的 key 能对上（同一判据，不另起一套）")
+        _seen = {_entry_key(i) for i in _items}
+
+        def _seed_news_state(seen=None):
+            with open(NEWS_STATE_FILE, "w", encoding="utf-8", newline="\n") as fh:
+                json.dump({"bootstrapped": True,
+                           "seen": {k: "2026-09-18T00:00:00+00:00"
+                                    for k in (seen if seen is not None else _seen)},
+                           "calls": 1}, fh)
+        _seed_news_state()
+        _prev = {"ts_ms": _now - 12 * 60000,
+                 "updated_utc": "2026-09-18T00:00:00+00:00",
+                 "verdict": dict(MOCK_LLM_VERDICT), "n_headlines": len(_heads),
+                 "cand_keys": sorted(_seen), "prompt_version": p.version,
+                 "prompt_sha256": p.sha256, "ttl_min": 30}
+        _st = {"bases": {"NVDA": _prev}}
+
+        # ① 全旧条目 -> **不调 LLM**，复用上一次判定（且不改 severity）
+        d = gate_decision("NVDA", _heads, items=_items, now_ms=_now, state=_st)
+        chk((not d["should_call_llm"]) and d["reuse"]
+            and d["reason"].startswith("no_new_items_cache_hit"),
+            "全是已见过的条目 -> **不调 LLM**，复用缓存（%s）" % d["reason"])
+        _cd = _cache_detail(d, _now)
+        chk("cache" in _cd["source"] and "判定龄" in _cd["source"],
+            "来源如实标注为缓存复用：%s" % _cd["source"])
+        chk(_cd["severity"] == MOCK_LLM_VERDICT["severity"],
+            "🔴 复用缓存**不改 severity**：缓存里是 %s，复用后仍是 %s"
+            "（绝不当成 none）" % (MOCK_LLM_VERDICT["severity"], _cd["severity"]))
+
+        # ② 缓存过 TTL -> 照常调 LLM
+        d2 = gate_decision("NVDA", _heads, items=_items,
+                           now_ms=_now + 31 * 60000, state=_st)
+        chk(d2["should_call_llm"] and d2["reason"].startswith("cache_expired"),
+            "缓存超 TTL(30min) -> 照常调 LLM（%s）" % d2["reason"])
+
+        # ③ 新 EDGAR 重大申报 -> 跳过缓存立即调
+        _new = _items + [{"url": "https://x/f9", "source": "edgar",
+                          "kind": "filing", "form": "8-K", "title": "NVDA 新 8-K",
+                          "date": "2026-09-18"}]
+        d3 = gate_decision("NVDA", _heads, items=_new, now_ms=_now, state=_st)
+        chk(d3["should_call_llm"]
+            and d3["reason"].startswith("edgar_new_material_filing")
+            and d3["edgar_triggers"],
+            "新 EDGAR 重大申报(8-K) -> 跳过缓存立即调 LLM（%s）" % d3["reason"])
+        _new4 = _items + [{"url": "https://x/f10", "source": "edgar",
+                           "kind": "filing", "form": "4", "title": "NVDA Form 4",
+                           "date": "2026-09-18"}]
+        d3b = gate_decision("NVDA", _heads, items=_new4, now_ms=_now, state=_st)
+        chk(not d3b["edgar_triggers"],
+            "Form 4（权重 1，每天一堆）**不**触发 EDGAR 立即调用（不误伤正常路径）")
+
+        # ④ 拿不到候选 / 拿不到状态 -> 宁可多调一次，绝不复用
+        d4 = gate_decision("NVDA", [], items=_items, now_ms=_now, state=_st)
+        chk(d4["should_call_llm"] and not d4["reuse"],
+            "本轮没有候选标题 -> **不**复用缓存（%s）" % d4["reason"])
+        d5 = gate_decision("NVDA", ["[2026-09-18] 从未见过的头条"], items=_items,
+                           now_ms=_now, state=_st)
+        chk(d5["should_call_llm"] and d5["reason"].startswith("new_items"),
+            "候选里出现没见过的条目 -> 调 LLM（%s）" % d5["reason"])
+        d6 = gate_decision("NVDA", _heads, items=_items, now_ms=_now,
+                           state=dict(_st, bases={}))
+        chk(d6["should_call_llm"] and "cache_missing" in d6["reason"],
+            "无新条目但没有可复用判定 -> 调 LLM（%s）" % d6["reason"])
+        _st_oldp = {"bases": {"NVDA": dict(_prev, prompt_sha256="f" * 64)}}
+        d6d = gate_decision("NVDA", _heads, items=_items, now_ms=_now,
+                            state=_st_oldp)
+        chk(d6d["should_call_llm"] and d6d["reason"].startswith("prompt_changed"),
+            "缓存判定来自**另一版 prompt** -> 作废重判（%s）" % d6d["reason"])
+        # ⚠️ 这两条要用**不含重大申报**的候选来测：否则会先命中 EDGAR 立即触发
+        #    （那也是正确的行为，但测的就不是这两条规则了）
+        _quiet_items = [{"url": "https://x/n1", "source": "yahoo", "kind": "news",
+                         "title": "普通新闻", "date": "2026-09-18"}]
+        _quiet_heads = ["[2026-09-18] 普通新闻"]
+        os.remove(NEWS_STATE_FILE)
+        d6b = gate_decision("NVDA", _quiet_heads, items=_quiet_items,
+                            now_ms=_now, state=_st)
+        chk(d6b["should_call_llm"] and d6b["reason"].startswith("no_state"),
+            "news_state.json 不可读 -> **不**复用（无法确证『无新条目』）：%s"
+            % d6b["reason"])
+        with open(NEWS_STATE_FILE, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump({"seen": {}}, fh)
+        d6c = gate_decision("NVDA", _quiet_heads, items=_quiet_items,
+                            now_ms=_now, state=_st)
+        chk(d6c["should_call_llm"] and d6c["reason"].startswith("first_run"),
+            "消息面状态未 bootstrap -> 首轮必调（%s）" % d6c["reason"])
+        _seed_news_state()
+
+        # ⑤ NEWS_EVENT_DRIVEN=off -> 行为与改动前一致：每轮都调
+        from common import config as _cfgm
+        os.environ["NEWS_EVENT_DRIVEN"] = "off"
+        _cfgm.load(force=True)
+        d7 = gate_decision("NVDA", _heads, items=_items, now_ms=_now, state=_st)
+        chk(d7["should_call_llm"] and d7["reason"].startswith("event_driven_off")
+            and not d7["enabled"],
+            "NEWS_EVENT_DRIVEN=off -> 每轮都调，行为与改动前一致（%s）"
+            % d7["reason"])
+        os.environ["NEWS_EVENT_DRIVEN"] = "on"
+        os.environ["EVENT_CACHE_TTL_MIN"] = "7"
+        _cfgm.load(force=True)
+        d8 = gate_decision("NVDA", _heads, items=_items,
+                           now_ms=_now + 8 * 60000, state=_st)
+        chk(d8["should_call_llm"] and d8["reason"].startswith("cache_expired")
+            and abs(d8["ttl_min"] - 7.0) < 1e-9,
+            "EVENT_CACHE_TTL_MIN 可配置：7 分钟时 8 分钟的判定龄即过期（TTL=%.0f）"
+            % d8["ttl_min"])
+
+        # ⑥ 端到端（mock LLM，零网络）：调一次 -> 落盘缓存 -> 第二轮复用
+        os.environ["EVENT_CACHE_TTL_MIN"] = "30"
+        _cfgm.load(force=True)
+        globals()["llm_gate"] = _mock_llm_gate
+        a1 = assess("NVDA", now_ms=_now, mode="llm", api_key="test-key",
+                    headlines=_heads)
+        chk(a1["llm"]["used"] and a1["event"]["source"] == "llm"
+            and a1["event"]["severity"] == "block",
+            "第 1 轮：真调 LLM（source=%s，severity=%s）"
+            % (a1["event"]["source"], a1["event"]["severity"]))
+        chk(bool(a1["event"]["prompt_sha256"])
+            and a1["event"]["prompt_source"].startswith("file:"),
+            "闸门返回结果带 prompt 版本与 SHA256：%s / %s"
+            % (a1["event"]["prompt_version"], a1["event"]["prompt_sha256"][:16]))
+        chk(os.path.exists(EVENT_DRIVEN_FILE),
+            "LLM 判定已落盘 %s（**新文件**，不碰 news_state.json）"
+            % os.path.relpath(EVENT_DRIVEN_FILE, BASE))
+        _news_after = json.load(open(NEWS_STATE_FILE, encoding="utf-8"))
+        chk(_news_after.get("seen") == {k: "2026-09-18T00:00:00+00:00"
+                                       for k in _seen},
+            "news_state.json 的 seen 内容被**原样保留**（不重复插入、不误删）")
+        a2 = assess("NVDA", now_ms=_now + 5 * 60000, mode="llm",
+                    api_key="test-key", headlines=_heads)
+        chk(not a2["event_driven"]["should_call_llm"]
+            and a2["event"]["cache_reused"]
+            and a2["event"]["source"].startswith("llm(cache:"),
+            "第 2 轮（无新条目）：**不调 LLM**，复用缓存并如实标注（%s）"
+            % a2["event"]["source"])
+        chk(a2["event"]["severity"] == a1["event"]["severity"],
+            "🔴 复用缓存后 severity 不变（%s -> %s），**没有**因为『无新条目』降级"
+            % (a1["event"]["severity"], a2["event"]["severity"]))
+        chk((a2["event"]["cache_age_min"] or 0) > 4.9,
+            "判定龄如实带出：%.1f 分钟" % (a2["event"]["cache_age_min"] or 0.0))
+        # 无 key 时的行为**不许变**：仍然退化到 static，并明确标注"本次未使用 LLM"
+        globals()["llm_gate"] = _saved_gate
+        a3 = assess("NVDA", now_ms=_now, mode="llm", api_key="", headlines=_heads)
+        chk((not a3["llm"]["used"])
+            and a3["event"]["source"].startswith("static(LLM 未执行")
+            and a3["event"]["severity"] == "block" and a3["event"]["fail_closed"],
+            "无 key：退化为 static 并**明确标注本次未使用 LLM**"
+            "（source=%s，fail_closed=%s）"
+            % (a3["event"]["source"][:44], a3["event"]["fail_closed"]))
+    finally:
+        globals()["llm_gate"] = _saved_gate
+        for _n, _v in _saved_paths.items():
+            globals()[_n] = _v
+        _PROMPT_CACHE["p"] = _saved_prompt
+        _refresh_prompt()
+        for _k, _v in _saved_env.items():
+            if _v is None:
+                os.environ.pop(_k, None)
+            else:
+                os.environ[_k] = _v
+        try:
+            from common import config as _cfgm2
+            _cfgm2.load(force=True)
+        except Exception:  # noqa: BLE001
+            pass
+        shutil.rmtree(_tmpdir, ignore_errors=True)
+    # 副本一致性：`.env.example` 必须与 `common/config.py::write_example()` 对得上
+    try:
+        import tempfile
+        from common import config as _cfgm3
+        _fd, _tmp = tempfile.mkstemp(suffix=".example")
+        os.close(_fd)
+        _cfgm3.write_example(_tmp)
+        _want = open(_tmp, encoding="utf-8").read()
+        _have = open(os.path.join(BASE, ".env.example"), encoding="utf-8").read()
+        os.remove(_tmp)
+        chk(_want == _have,
+            ".env.example 与 common/config.py::write_example() 一致"
+            "（配置副本不许漂移）")
+        _spec = {n for n, _d, _x in _cfgm3.SPEC}
+        chk({"NEWS_EVENT_DRIVEN", "EVENT_CACHE_TTL_MIN"} <= _spec,
+            "config.SPEC 里有 NEWS_EVENT_DRIVEN 与 EVENT_CACHE_TTL_MIN")
+        _gi = open(os.path.join(BASE, ".gitignore"), encoding="utf-8").read()
+        chk("data/derived/event_driven_state.json" in _gi,
+            "运行时产物 data/derived/event_driven_state.json 已进 .gitignore")
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "配置副本一致性检查异常：%r" % (exc,))
+
+    print("\nprompt 版本化 + 事件驱动自检%s" % ("通过" if ok else "**失败**"))
+    return ok
+
+
 def selftest():
     """自检闸门逻辑。**不需要网络、不需要 API Key** —— 这是能进 CI 的前提。"""
     now = int(dt.datetime(2026, 9, 15, 12, 0, tzinfo=dt.UTC).timestamp() * 1000)
@@ -699,6 +1613,11 @@ def selftest():
         print("  [%s] 远离事件 -> none（不应长期封锁）" % ("OK " if good3 else "!! "))
     else:
         print("  [ ~ ] 日历里没有财报条目，跳过事件命中测试")
+
+    # ---- T4-A/T4-B：prompt 版本化 + 事件驱动降本 ----
+    print()
+    print("prompt 版本化 + 事件驱动降本自检（T4-A / T4-B）")
+    ok = _prompt_event_driven_selftest() and ok
 
     print("\n自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
@@ -765,6 +1684,24 @@ def main(argv=None):
     print("=" * 92)
     print("  模式：%s ｜ 事件窗口：事件前 %d 分钟 ~ 后 %d 分钟不挂单"
           % (mode, WINDOW_BEFORE_MIN, WINDOW_AFTER_MIN))
+    # prompt 可回溯：这一版 prompt 的版本 / 来源 / 指纹（T4-A）
+    _pp = prompt_now()
+    print("  prompt：%s ｜ source=%s ｜ sha256=%s"
+          % (_pp.version, _pp.source, _pp.sha256[:16]))
+    if _pp.meta.get("parse_error"):
+        print("    ⚠️ prompt 文件解析失败，已回退内嵌兜底：%s"
+              % _pp.meta.get("parse_error"))
+    # 事件驱动：这一轮会不会真去调 LLM（T4-B）
+    _ed_cfg = {}
+    try:
+        from common import config as _cfge              # noqa: N813
+        _ed_cfg = _cfge.load() or {}
+    except Exception:  # noqa: BLE001
+        _ed_cfg = {}
+    print("  事件驱动：NEWS_EVENT_DRIVEN=%s ｜ EVENT_CACHE_TTL_MIN=%s 分钟"
+          "（无新条目时复用上一次 LLM 判定；新的重大 EDGAR 申报立即重判）"
+          % (_ed_cfg.get("NEWS_EVENT_DRIVEN", "on"),
+             _ed_cfg.get("EVENT_CACHE_TTL_MIN", EVENT_CACHE_TTL_MIN)))
     print("  LLM 只输出结构化判断，**决策权在确定性代码**（%s）"
           % "；".join("%s->%s" % (k, v) for k, v in SEVERITY_ACTION.items()))
     print()

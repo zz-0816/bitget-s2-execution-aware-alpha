@@ -37,10 +37,14 @@ sys.path.insert(0, P2)
 
 ENDPOINTS = ["/api/health", "/api/bases", "/api/assess?base=NVDA",
              "/api/decision?base=NVDA&qty=5000",
-             # ⭐ 页面**默认**就带 `&position=demo`（下拉框第一项是演示单）。
-             #    这个 URL 必须在夹具里，否则页面真实走的那条路径根本没被测到 ——
-             #    实测踩到：只备无参 URL 时，子集匹配会退回到"没有在途订单"那条
-             #    分支，执行进度面板的**主要**渲染路径（触发裸露敞口）从未被验证。
+             # ⭐ 页面**默认**带的是 `&position=auto`（读真实在途订单；没有就不带）。
+             #    这个 URL 必须在夹具里：夹具匹配是"参数子集"式的，只备无参 URL 时
+             #    它也会命中，于是页面真实走的那条路径**根本没被测到** ——
+             #    实测踩到一次（默认值从 demo 改成 auto 后，执行进度面板的断言
+             #    悄悄换成了另一条分支的内容）。
+             "/api/decision?base=NVDA&qty=5000&position=auto",
+             # ⭐ 再备一份合成演示单：它带 synthetic 标记与"只成交一腿"，
+             #    是执行进度面板**信息最全**的那条渲染路径（裸露敞口 + 处置口径）。
              "/api/decision?base=NVDA&qty=5000&position=demo",
              # ⭐ 再取一份"META"的决策：本快照里它会被 agent 假设一票否决
              #    （order 为 null / stand_down），是**最容易渲染出 undefined** 的那条路径

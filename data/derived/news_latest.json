@@ -1,22 +1,18 @@
 {
-  "base": "AAPL",
+  "base": "SPY",
   "categories": {
     "earnings": 2,
     "earnings_scheduled": 8,
-    "filing": 3,
-    "filing_material": 9,
     "macro": 8,
     "other": 38
   },
   "event_driven": {
     "first_run": false,
     "n_fresh": 0,
-    "n_total": 68,
+    "n_total": 56,
     "should_call_llm": false
   },
   "headlines_for_gate": [
-    "[2026-07-31] AAPL 申报：10-Q（季报）",
-    "[2026-07-30] AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -25,166 +21,12 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-17] AAPL 申报：4（内部人交易（Form 4））",
-    "[2026-09-10] AAPL 申报：4（内部人交易（Form 4））"
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
+    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
+    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
   ],
   "items": [
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126037020/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-10",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126036226/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035636/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035362/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "3",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：3",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035359/xslF345X06/form3.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "8-K/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035325/ef20081427_8ka.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-27",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126034741/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-20",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126033928/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-13",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126032884/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-08-11",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000195004726007959/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-31",
-      "form": "10-Q",
-      "form_meaning": "季报",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-30",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm"
-    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -635,91 +477,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:00:22 +0000",
+      "date": "Fri, 18 Sep 2026 21:15:15 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most investors celebrate a stock that turns every dollar into eleven, but holding a massive winner inside a traditional IRA sets up a collision between the IRS and your retirement timeline that gets w",
-      "title": "Turning 73 Forces a Withdrawal From This Stock Whether the Owner Wants the Cash or Not",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/turning-73-forces-a-withdrawal-from-this-stock-whether-the-owner-wants-the-cash-or-not/?.tsrc=rss"
+      "summary": "Most covered call ETFs hand you a fat monthly check while quietly draining your principal, but a small group of actively managed funds has cracked the formula to deliver both. The catch is that each o",
+      "title": "After Comparing Every Covered Call ETF With Over $1 Billion in Assets, These 3 Pay Up to 8 Percent and Still Grew Your Principal",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/after-comparing-every-covered-call-etf-with-over-1-billion-in-assets-these-3-pay-up-to-8-percent-and-still-grew-your-principal/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 22:07:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The credit is bigger this year. The bill at the register still isn’t zero.",
-      "title": "Bank of America does the math on Apple's $1,200 iPhone offer",
-      "url": "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 16:03:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple’s price target hike comes on the heels of surprising consumer survey findings.",
-      "title": "Apple gets bullish Wall Street call as iPhone demand jumps",
-      "url": "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 15:11:11 +0000",
+      "date": "Fri, 18 Sep 2026 21:05:57 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Coinbase’s filing used an Apple contract as its model, which is cash-settled, has no fixed expiration, and would trade from Sunday to Friday.",
-      "title": "Coinbase Files With CFTC To List US Single-Stock Perpetual Futures, Including AAPL And TSLA Contracts",
-      "url": "https://stocktwits.com/news-articles/markets/equity/coinbase-apple-tesla-perpetual-futures-coin-tsla-aapl/cZtxEhbRBEs?.tsrc=rss"
+      "summary": "A single ETF purchase made before most investors had ever heard the term changed what passive investing looks like today, but the original is no longer the obvious choice for everyone holding it.",
+      "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/a-10000-investment-in-spy-at-its-1993-launch-is-worth-this-much-today-without-you-adding-a-dime/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 12:50:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple stock just got a price target cut due to the memory processor crunch.",
-      "title": "John Ternus's First iPhone Launch Prompted a Bank of America Price Target Cut. Is Apple Stock a Buy?",
-      "url": "https://www.fool.com/investing/2026/09/19/john-ternuss-first-iphone-launch-prompted-a-bank-o/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 11:22:00 +0000",
+      "date": "Sat, 19 Sep 2026 08:35:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The pride of Cupertino continues its winning ways, and investors are eager to jump on the bandwagon.",
-      "title": "History Says You Should Know These 3 Things Before Buying Apple Stock (AAPL)",
-      "url": "https://www.fool.com/investing/2026/09/19/history-says-3-things-before-buy-apple-stock-aapl/?.tsrc=rss"
+      "summary": "These two S&amp;P 500 ETFs seem interchangeable. They're not.",
+      "title": "VOO vs. SPY: Is There Actually a Difference?",
+      "url": "https://www.fool.com/investing/2026/09/19/voo-vs-spy-is-there-actually-a-difference/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:10:00 +0000",
+      "date": "Fri, 18 Sep 2026 21:45:11 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Buffett bought more than $77 billion of this stock in the years leading up to his retirement.",
-      "title": "Greg Abel Recently Plowed $4.2 Billion Into Warren Buffett's Favorite Stock, and It Wasn't Apple",
-      "url": "https://www.fool.com/investing/2026/09/20/greg-abel-42-billion-warren-buffetts-stock-apple/?.tsrc=rss"
+      "summary": "A seven-figure VOO balance sounds like a retirement paycheck until you do the actual math on what it deposits each month, then realize covering the rest means a tax bill your fund prospectus quietly i",
+      "title": "$1 Million in VOO Pays $871 a Month, and Covering the Gap Means Selling Shares the IRS Taxes",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/1-million-in-voo-pays-871-a-month-and-covering-the-gap-means-selling-shares-the-irs-taxes/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 19:13:00 +0000",
+      "date": "Sun, 20 Sep 2026 13:06:20 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Jim Cramer touts a former mobile phone king as an AI buy, though its Q2 cash flow raises questions.",
-      "title": "Cramer strongly recommends buying beaten-down 90s tech legend",
-      "url": "https://www.thestreet.com/investing/stocks/cramer-recommends-nokia-beaten-down-90s-ai-tech?.tsrc=rss"
+      "summary": "Replacing a married couple's Social Security income with dividends sounds straightforward until you see how brutally the math punishes the wrong yield tier at the wrong time in retirement.",
+      "title": "How to Build $3,250 a Month in Dividend Income to Cover a Married Couple’s Social Security Checks, Starting From Zero",
+      "url": "https://247wallst.com/personal-finance/2026/09/20/how-to-build-3250-a-month-in-dividend-income-to-cover-a-married-couples-social-security-checks-starting-from-zero/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 09:59:02 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Fifteen years of automatic S&amp;P 500 investing through crashes, pandemics, and AI euphoria reveals something surprising: the fund you pick matters far less than one overlooked detail that quietly de",
+      "title": "If You Had Invested $500 a Month in VOO Since Its 2010 Launch, You Would Have About $330,000 Today",
+      "url": "https://247wallst.com/investing/etf/2026/09/20/if-you-had-invested-500-a-month-in-voo-since-its-2010-launch-you-would-have-about-330000-today/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 16:05:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Both options are rooted in the same basic buy-and-hold philosophy, but one differs from the other in one way that's very important for the foreseeable future.",
+      "title": "Is Berkshire Hathaway Stock a Better Buy Than an S&amp;P 500 Index Fund?",
+      "url": "https://www.fool.com/investing/2026/09/19/is-berkshire-hathaway-stock-a-better-buy-than-an/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 23:52:05 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "A simple momentum screen applied to S&amp;P 500 stocks has quietly built a performance gap that turns identical starting portfolios into dramatically different ending balances, and the strategy costs ",
+      "title": "SPMO Owns the S&amp;P 500’s 100 Fastest-Rising Stocks. Its Momentum Screen Has Beaten the Index by 67-Points Over the Last Five Years",
+      "url": "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,51 +653,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:13:43.910811+00:00",
+  "probed_at": "2026-09-20T15:40:17.475613+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.62s",
+      "note": "耗时 1.59s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.89s",
+      "note": "耗时 1.00s",
       "ok": true
     },
     "edgar": {
-      "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 3.37s",
+      "n": 0,
+      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.65s",
+      "note": "耗时 0.66s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.70s",
+      "note": "耗时 0.65s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 1.20s",
+      "note": "提前数天（预告）｜ 耗时 0.71s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 1.18s",
+      "note": "提前数天（预告）｜ 耗时 0.60s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.62s",
+      "note": "耗时 0.78s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.08s",
+      "note": "耗时 1.54s",
       "ok": true
     }
   }

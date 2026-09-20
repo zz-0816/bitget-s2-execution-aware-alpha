@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1330" viewBox="0 0 1480 1330" font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4b5b73"/>
+    </marker>
+    <style>
+      .t   { fill:#e6edf7; }
+      .d   { fill:#9fb0c8; }
+      .f   { fill:#6f8098; }
+      .mono{ font-family:"Cascadia Mono","Consolas",monospace; }
+      .h1  { font-size:30px; font-weight:700; }
+      .h2  { font-size:20px; font-weight:700; }
+      .h3  { font-size:16px; font-weight:600; }
+      .b   { font-size:15px; }
+      .s   { font-size:13px; }
+      .xs  { font-size:12px; }
+      .box { fill:#141b2b; stroke:#26314a; stroke-width:1.5; }
+      .box2{ fill:#101728; stroke:#22304a; stroke-width:1.5; }
+      .rail{ fill:#0f1526; stroke:#22304a; stroke-width:1.5; }
+    </style>
+  </defs>
+
+  <rect width="1480" height="1330" fill="#0a0e18"/>
+
+  <!-- ══════════════ 标题 ══════════════ -->
+  <text x="48" y="56" class="t h1">从「想交易」到「该不该继续持有」—— 项目二怎么用（小白版）</text>
+  <text x="48" y="86" class="d s">执行辅助 = 盘前决策 + 执行中监控。本项目<b>不代下单</b>，输出的是「理由 + 条件 + 告警」。</text>
+  <text x="48" y="110" class="f s">整条链每一步都能单独复跑；页面与日志里都带 decision_hash。</text>
+  <line x1="48" y1="126" x2="1432" y2="126" stroke="#22304a" stroke-width="1.5"/>
+
+  <!-- ══════════════ ① 准备 ══════════════ -->
+  <rect x="48" y="146" width="1384" height="104" rx="12" class="rail"/>
+  <circle cx="82" cy="178" r="16" fill="#3b82f6"/>
+  <text x="82" y="184" text-anchor="middle" fill="#0a0e18" class="h3">1</text>
+  <text x="112" y="184" class="t h2">准备：给标的与名义额（30 秒）</text>
+  <text x="112" y="210" class="d b">打开页面 → 点一个标的 chip → 填「名义额 USD」→ 点「跑完整决策链」</text>
+  <text x="112" y="234" class="f s">页面每次刷新都重新跑一遍，不读缓存结论；跑一次约 2–3 秒（含一次 LLM 事件判定）。</text>
+  <text x="1412" y="184" text-anchor="end" class="f xs">没有账号、没有下单接口</text>
+
+  <line x1="740" y1="250" x2="740" y2="286" stroke="#4b5b73" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ══════════════ ② 能不能做 ══════════════ -->
+  <rect x="48" y="292" width="1384" height="252" rx="12" class="rail"/>
+  <circle cx="82" cy="324" r="16" fill="#3b82f6"/>
+  <text x="82" y="330" text-anchor="middle" fill="#0a0e18" class="h3">2</text>
+  <text x="112" y="330" class="t h2">现在能不能做？—— 三道关，任何一道不过就「不参与」</text>
+  <text x="1412" y="330" text-anchor="end" class="f xs">这一步只回答「做不做」，不回答「怎么做」</text>
+
+  <rect x="72" y="352" width="424" height="104" rx="10" class="box"/>
+  <text x="92" y="378" class="t h3">① 事件闸门（硬约束）</text>
+  <text x="92" y="402" class="d s">有没有正在发生的事件？</text>
+  <text x="92" y="424" class="d s">LLM 判定 <tspan class="mono">block</tspan> → 挂单类方案<b>直接作废</b></text>
+  <text x="92" y="444" class="f xs">取「确定性日历」与「LLM 判定」中更保守的一侧</text>
+
+  <rect x="528" y="352" width="424" height="104" rx="10" class="box"/>
+  <text x="548" y="378" class="t h3">② 多空辩论（不是投票）</text>
+  <text x="548" y="402" class="d s">多头 ⇄ 空头，按<b>证据强度</b>加权；论点必须给证伪条件</text>
+  <text x="548" y="424" class="d s">多头领先 ≥0.25 → 可执行 ｜ 空头领先 ≥0.25 → 不参与</text>
+  <text x="548" y="444" class="f xs">分差 &lt;0.25 = 僵持 → <tspan class="d">谨慎执行</tspan>（不是"不参与"）</text>
+
+  <rect x="984" y="352" width="424" height="104" rx="10" class="box"/>
+  <text x="1004" y="378" class="t h3">③ 风控官（一票否决）</text>
+  <text x="1004" y="402" class="d s">9 条固定规则 + agent 提出的风险假设</text>
+  <text x="1004" y="424" class="d s"><tspan class="mono">veto</tspan> → 规模归零，<b>没有商量余地</b></text>
+  <text x="1004" y="444" class="f xs">只会收紧，永远不会放宽</text>
+
+  <rect x="72" y="472" width="1336" height="56" rx="10" fill="#0f1b2e" stroke="#2a3f5f" stroke-width="1.5"/>
+  <text x="94" y="497" class="d b">看最终立场这一格就够了 —— 它是全链唯一决定「做 / 不做」的地方：</text>
+  <rect x="612" y="482" width="112" height="34" rx="17" fill="#12351f" stroke="#30a46c"/>
+  <text x="668" y="504" text-anchor="middle" fill="#5fd39a" class="s">可执行 proceed</text>
+  <rect x="738" y="482" width="132" height="34" rx="17" fill="#3a2c0e" stroke="#f5a623"/>
+  <text x="804" y="504" text-anchor="middle" fill="#ffc86b" class="s">谨慎执行 caution</text>
+  <rect x="884" y="482" width="132" height="34" rx="17" fill="#3a1417" stroke="#e5484d"/>
+  <text x="950" y="504" text-anchor="middle" fill="#ff9ba0" class="s">不参与 stand_down</text>
+  <text x="1032" y="504" class="f xs">← 当前快照里 10 个标的都是这个（见下方「为什么现在都不参与」）</text>
+
+  <line x1="740" y1="544" x2="740" y2="580" stroke="#4b5b73" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ══════════════ ③ 怎么做 ══════════════ -->
+  <rect x="48" y="586" width="1384" height="176" rx="12" class="rail"/>
+  <circle cx="82" cy="618" r="16" fill="#3b82f6"/>
+  <text x="82" y="624" text-anchor="middle" fill="#0a0e18" class="h3">3</text>
+  <text x="112" y="624" class="t h2">该怎么做？—— 只有「可做」时才走到这里</text>
+  <text x="1412" y="624" text-anchor="end" class="f xs">交易员：不新造阈值、不做价格预测</text>
+
+  <rect x="72" y="646" width="436" height="96" rx="10" class="box"/>
+  <text x="92" y="672" class="t h3">比三种执行方式的成本</text>
+  <text x="92" y="696" class="d s">双腿全挂单 ／ 现货挂单+永续吃单 ／ 双腿全吃单</text>
+  <text x="92" y="718" class="d s">取<b>成本最低</b>的一种</text>
+  <text x="92" y="736" class="f xs">成本含点差 / 手续费 / 冲击 / 逆向选择</text>
+
+  <rect x="532" y="646" width="436" height="96" rx="10" class="box"/>
+  <text x="552" y="672" class="t h3">规模被三个上界夹住</text>
+  <text x="552" y="696" class="d s">min(你请求的、可捕获名义额、首档深度 × 25%)</text>
+  <text x="552" y="718" class="d s">夹到低于 100 USD → <b>正确结论是不做</b></text>
+  <text x="552" y="736" class="f xs">而不是拿小到没意义的钱去做一笔</text>
+
+  <rect x="992" y="646" width="416" height="96" rx="10" class="box"/>
+  <text x="1012" y="672" class="t h3">出价位与拆单</text>
+  <text x="1012" y="696" class="d s">价位 = 中价 ± 实测半幅点差</text>
+  <text x="1012" y="718" class="d s">拆成若干笔，每笔不超过单笔上限</text>
+  <text x="1012" y="736" class="f xs">这些数字全部来自实测，不由 LLM 生成</text>
+
+  <line x1="740" y1="762" x2="740" y2="798" stroke="#4b5b73" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ══════════════ ④ 下单之后 ══════════════ -->
+  <rect x="48" y="804" width="1384" height="288" rx="12" class="rail"/>
+  <circle cx="82" cy="836" r="16" fill="#3b82f6"/>
+  <text x="82" y="842" text-anchor="middle" fill="#0a0e18" class="h3">4</text>
+  <text x="112" y="842" class="t h2">下单之后 —— 这一段才是「执行辅助」的核心</text>
+  <text x="1412" y="842" text-anchor="end" class="f xs">需要你提供在途持仓单；没有就不出结论</text>
+
+  <rect x="72" y="864" width="656" height="208" rx="10" class="box"/>
+  <text x="92" y="890" class="t h3">⏱️ 执行进度官（下单后立刻生效）</text>
+  <rect x="92" y="904" width="616" height="76" rx="8" class="box2"/>
+  <text x="108" y="928" fill="#ff9ba0" class="s"><b>只成交了一条腿</b> = 裸露的方向性敞口 → 否决级</text>
+  <text x="108" y="950" class="d s">二选一：① 立刻吃单补上另一腿 ② 平掉已成交的那条腿</text>
+  <text x="108" y="970" class="f xs">实测依据：P(只成交一腿) = 23.6%，是 P(两腿都成交) 的 6.6 倍 —— 一腿不跟是常态</text>
+  <rect x="92" y="988" width="616" height="70" rx="8" class="box2"/>
+  <text x="108" y="1012" fill="#ffc86b" class="s"><b>挂单 ≥ 30 分钟且这条腿零成交</b> → 警示级</text>
+  <text x="108" y="1034" class="d s">动作：复核执行方式（改价 / 撤单 / 转双腿全吃单）</text>
+  <text x="108" y="1052" class="f xs">挂单的收益完全来自成交；市场没成交时，挂单不可能成交</text>
+
+  <rect x="748" y="864" width="660" height="208" rx="10" class="box"/>
+  <text x="768" y="890" class="t h3">🛡️ 持仓期巡检（持续跑，出告警）</text>
+  <text x="768" y="916" class="d s">① <b>裸露敞口</b>：只成交一腿 —— 给出「补另一腿」的成本</text>
+  <text x="768" y="940" class="d s">② <b>事件翻脸</b>：持仓期间闸门判出 block —— 提示收紧</text>
+  <text x="768" y="964" class="d s">③ <b>逆向选择加深</b>：现货腿 f_dmid 比开仓时更负 —— 提示</text>
+  <text x="768" y="988" class="d s">④ <b>行情停滞</b>：这条腿长时间无成交 —— 「想平也平不掉」</text>
+  <rect x="768" y="1002" width="620" height="56" rx="8" fill="#3a1417" stroke="#e5484d" stroke-width="1.5"/>
+  <text x="784" y="1026" fill="#ff9ba0" class="s">输出形态：右下角闪烁弹窗（info / warn / <b>critical</b> 三级）</text>
+  <text x="784" y="1046" class="f xs">它只告警，不自动下单、不设新的硬规则</text>
+
+  <!-- ══════════════ 覆盖边界（诚实框）══════════════ -->
+  <rect x="48" y="1112" width="1384" height="122" rx="12" fill="#1a1408" stroke="#f5a623" stroke-width="2"/>
+  <text x="72" y="1142" class="t h2">⚠️ 边界：这张图回答到哪为止（这一格比上面所有功能都重要）</text>
+  <text x="72" y="1170" fill="#5fd39a" class="b">✅ 覆盖：<tspan class="d">「现在能不能做」 · 「该怎么做、拆几笔」 · 「执行中出问题会报警」</tspan></text>
+  <text x="72" y="1196" fill="#ffc86b" class="b">⚠️ 不覆盖：<tspan class="d">「什么时候止盈 / 止损离场」—— 本项目没有离场价格，也没有持有期损益口径。</tspan></text>
+  <text x="72" y="1222" class="d s">所以「什么时候离场」这个问题，本项目只回答「什么时候该<tspan class="t">复核</tspan>」，不回答「平在什么价」。</text>
+  <text x="1412" y="1222" text-anchor="end" class="f xs">这是赛道三「执行辅助」的范围，不是持仓管理系统</text>
+
+  <!-- ══════════════ 底部：为什么现在都不参与 + 三步上手 ══════════════ -->
+  <rect x="48" y="1246" width="676" height="76" rx="12" class="rail"/>
+  <text x="72" y="1272" class="t h3">为什么现在 10 个标的都「不参与」？</text>
+  <text x="72" y="1294" class="f xs">不是程序坏了，也不是演示模式：现货腿自 09-14 零成交 → 停滞 / 报价冻结判据触发；</text>
+  <text x="72" y="1312" class="f xs">逆向选择为负；NVDA/QQQ 的可执行规模被首档深度压到 37–38 USD，低于 100 USD 下限。</text>
+
+  <rect x="756" y="1246" width="676" height="76" rx="12" class="rail"/>
+  <text x="780" y="1272" class="t h3">三步上手</text>
+  <text x="780" y="1294" class="f xs">1) 跑一次自检确认环境 → 2) 决策台选标的、跑一遍，只看「最终立场」这一格；</text>
+  <text x="780" y="1312" class="f xs">3) 真的有持仓时，把持仓单写进 data/positions/open.json，再看「执行闭环」页。</text>
+</svg>

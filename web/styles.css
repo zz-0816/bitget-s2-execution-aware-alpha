@@ -613,6 +613,62 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 .flash-up   { animation: flash-up   calc(900ms * var(--m)) var(--ease-out-3); }
 .flash-down { animation: flash-down calc(900ms * var(--m)) var(--ease-out-3); }
 
+/* ==================== 11b. 概览：信息密度开关 + 条件图例 ====================
+   背景（实测的冗余）：概览表每行的「条件」原文完全一样（同一套口径），
+   但差异只在数值上。逐行重复整段解释，4 行就吃掉半个屏幕。
+   做法：① 差异化的**数值**留在行内（一行紧凑）；② 通用**口径**提到表格下方
+   的图例里只写一次；③ 列的显隐做成常驻 chips（多选、状态持久化）。
+   ⚠️ 只收不删：被收起的列会在控件行写明"已收起 N 列"，点行仍能看到完整原文。 */
+.ov-controls { gap: var(--sp-2); }
+.ctl-label {
+  color: var(--text-faint); font-size: var(--fs-11);
+  letter-spacing: .04em; text-transform: none;
+}
+.ctl-sep {
+  width: 1px; height: 16px; background: var(--line);
+  display: inline-block; margin: 0 var(--sp-1);
+}
+
+/* 行内紧凑条件：数值 + 一句极短的条件式，段间用细分隔线 */
+.cond-line { display: flex; flex-wrap: wrap; gap: var(--sp-1) 0; align-items: baseline; }
+.cond-line .cv {
+  color: var(--text-dim); font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semi);
+}
+.cond-line .cq { color: var(--text-faint); margin-left: 4px; }
+.cond-line .csep { color: var(--line-strong); margin: 0 var(--sp-2); }
+.more { color: var(--text-faint); font-style: italic; }
+
+/* 可展开的行：整行可点（紧凑模式下"还有 N 条"的出口）。
+   用 data 属性而不是 class —— 类名是拼在 HTML 字符串里的，静态检查看不见它，
+   会被误判成"CSS 里的死代码"。属性选择器没有这个问题，语义也更准（这是状态不是样式）。 */
+tbody tr[data-base] { cursor: pointer; }
+tbody tr[data-open] { background: var(--surface-2); }
+tbody tr[data-open] td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+
+/* 条件图例：把"所有标的共用同一套口径"的部分只写一次 */
+.legend {
+  margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line-subtle); border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+}
+.legend summary {
+  cursor: pointer; color: var(--text-dim); font-size: var(--fs-12);
+  transition: color var(--dur-2) var(--ease-out-2);
+}
+.legend summary:hover { color: var(--text); }
+.legend[open] summary { color: var(--text); margin-bottom: var(--sp-3); }
+.legend-body .lg-row {
+  display: flex; gap: var(--sp-3); padding: var(--sp-2) 0;
+  border-top: 1px dashed var(--line-subtle); font-size: var(--fs-12);
+  color: var(--text-dim); line-height: 1.6;
+}
+.legend-body .lg-row:first-child { border-top: 0; }
+.legend-body .lg-name {
+  flex: 0 0 88px; color: var(--text-faint); font-size: var(--fs-11);
+  padding-top: 2px;
+}
+
 /* ============================== 12. 成本条 ============================== */
 .costbar { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-1) 0; font-size: var(--fs-12); }
 .costbar .cb-name  { width: 148px; flex: 0 0 148px; color: var(--text-dim); }

@@ -224,52 +224,118 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }
 
-  // ---- ⏱️ 执行进度官：三条硬规矩都要在页面上看得见 ----
-  //   ⚠️ 加了面板却只检查"有没有渲染出东西"是不够的 —— 这一块最容易出的错
-  //      是**把"没有在途订单"画成绿灯**（没有数据 ≠ 没有风险）。
-  const ep = rendered.get('execprog') || '';
-  const epData = (fixtures[Object.keys(fixtures).find(
-    (k) => k.startsWith('/api/decision') && k.includes('position=demo'))] || {}).decision;
-  if (!epData) {
-    problems.push('夹具里没有带 position=demo 的决策 —— 页面默认走的就是这条路径');
-  } else {
-    const ed = epData.execution_progress || {};
-    if (!ed.present) {
-      problems.push('position=demo 的决策里 execution_progress 缺失（执行进度官没接线）');
-    } else {
-      if (!/合成演示持仓/.test(ep)) {
-        problems.push('合成演示单没有在页面上**显眼标注**（截图会被当成真实下单记录）');
-      }
-      (ed.hypotheses || []).forEach((h) => {
-        if (!ep.includes(h.id)) problems.push('执行中假设没有渲染出来：' + h.id);
-      });
-      (ed.actions || []).forEach((a) => {
-        if (!ep.includes(a.title)) problems.push('确定性处置口径没有渲染出来：' + a.title);
-      });
-      if ((ed.dropped || []).length && !/未过阈值/.test(ep)) {
-        problems.push('"未过阈值"的留痕没有渲染（读者无法判断判据有没有在工作）');
-      }
-      notes.push('执行进度官 ✓（' + ed.verdict + '，' + (ed.hypotheses || []).length +
-                 ' 条假设 / ' + (ed.dropped || []).length + ' 条留痕 / ' +
-                 (ed.actions || []).length + ' 条处置）');
-    }
+  // ---- 概览表：信息密度开关（列显隐 / 条件去重 / 图例）----
+  //   ⚠️ 这一块是用户实拍的反馈改的：原来每行的「条件」原文一模一样、
+  //      4 行就吃掉半个屏幕。改成"行内只放数值 + 通用口径只写一次"。
+  //      渲染对不对必须被检查，否则改回去也没人知道。
+  const head = rendered.get('ov-head') || '';
+  const chips = rendered.get('ov-cols') || '';
+  const legend = rendered.get('ov-legend-body') || '';
+  const body = rendered.get('sel:#ov-table tbody') || '';
+  const nth = (head.match(/<th/g) || []).length;
+  if (nth !== 4) {
+    problems.push('概览表默认列数应为 4（标的/风险/结论/事件），实际 ' + nth);
   }
-  // 反向：**没有**在途订单时，必须明确说"没有"，不许画绿灯
-  if (typeof sandbox.renderExecProg === 'function') {
-    const noPos = { execution_progress: { present: false },
-                    position_source: '没有在途持仓单（data/positions/open.json 不存在）' };
+  if ((chips.match(/data-col=/g) || []).length !== 6) {
+    problems.push('「显示列」应有 6 个开关 chip，实际 ' +
+      (chips.match(/data-col=/g) || []).length);
+  }
+  if ((chips.match(/aria-pressed="true"/g) || []).length !== 4) {
+    problems.push('默认应只有 4 列是打开的（理由/条件默认收起），实际 ' +
+      (chips.match(/aria-pressed="true"/g) || []).length);
+  }
+  if (!/现货点差|挂单时机/.test(legend)) {
+    problems.push('条件图例没有渲染出内容（通用口径必须只写一次，不能丢）');
+  }
+  if ((body.match(/<tr/g) || []).length < 5) {
+    problems.push('概览表行数过少（' + (body.match(/<tr/g) || []).length + '）');
+  }
+  if (/cond-line/.test(body)) {
+    problems.push('「条件」列默认应收起，但行里出现了 cond-line');
+  }
+  notes.push('概览密度开关 ✓（默认 ' + nth + ' 列 / ' + (chips.match(/data-col=/g) || []).length +
+    ' 个开关 / 图例 ' + legend.length + ' 字符）');
+
+  // 条件去重的**核心逻辑**：短值不含通用解释，完整版才含。
+  // condParts 是纯函数，直接喂合成输入 —— 不依赖夹具里有没有 conditions。
+  if (typeof sandbox.condParts === 'function') {
+    const p = sandbox.condParts('price_band_bp', 0.46);
+    if (!/0\.46 bp/.test(p.short) || !/0\.23 bp/.test(p.short)) {
+      problems.push('条件短值没带上"点差 -> 需覆盖"的换算：' + p.short);
+    }
+    if (/手续费/.test(p.short)) {
+      problems.push('条件短值里混进了通用解释（应该只在图例/完整版里出现）：' + p.short);
+    }
+    if (!/手续费/.test(p.full)) {
+      problems.push('条件完整版丢了通用解释');
+    }
+    notes.push('条件去重 ✓（短值 ' + p.short.replace(/<[^>]+>/g, '') + '）');
+  } else {
+    problems.push('condParts 不可用（条件去重的逻辑无法被测）');
+  }
+
+  // 🔴 回归：演示持仓**不能**是默认值。
+  //    实测事故：默认 demo -> 每个标的每跑一次都带"只成交一腿"的合成持仓
+  //    -> 执行进度官判裸露敞口 -> 永远"不参与"，还把真实市场原因盖掉了。
+  const pmIdx = html.indexOf('id="pos-mode"');
+  const firstOpt = pmIdx >= 0 ? (html.slice(pmIdx).match(/<option value="(\w+)"/) || [])[1] : null;
+  if (firstOpt !== 'auto') {
+    problems.push('「在途持仓」的默认值必须是 auto（真实持仓），实际 ' + firstOpt);
+  } else {
+    notes.push('在途持仓默认 auto ✓（演示单不是默认值）');
+  }
+
+  // ---- ⏱️ 执行进度官：两条分支都要验 ----
+  //   ⚠️ 加面板却只检查"有没有渲染出东西"是不够的。这一块两个方向都会错：
+  //      ① 有裸露敞口时**没标注是合成单** -> 截图会被当成真实下单记录；
+  //      ② 没有在途订单时**画绿灯** -> "没有数据"被读成"没有风险"。
+  //   主渲染路径现在走的是 `position=auto`（页面默认），夹具里它 present=false。
+  //   ⚠️ 先把**页面默认渲染的结果**取下来再用：下面的 demo 分支会覆盖 execprog，
+  //      顺序写反会读到 demo 的内容（实测踩到，报"默认路径没有无在途订单"）。
+  const epDefault = rendered.get('execprog') || '';
+  const demoKey = Object.keys(fixtures).find(
+    (k) => k.startsWith('/api/decision') && k.includes('position=demo'));
+  const epData = (fixtures[demoKey] || {}).decision;
+  if (!epData) {
+    problems.push('夹具里没有带 position=demo 的决策（演示分支无法验证）');
+  } else if (typeof sandbox.renderExecProg !== 'function') {
+    problems.push('renderExecProg 不可用（执行进度官无法验证）');
+  } else {
     try {
-      sandbox.renderExecProg(noPos);
-      const e0 = rendered.get('execprog') || '';
-      if (!/无在途订单/.test(e0)) {
-        problems.push('没有在途订单时页面没有明确说"无在途订单"');
-      } else if (/正常|通过|✓/.test(e0)) {
-        problems.push('没有在途订单时页面画了绿灯 —— 没有数据 ≠ 没有风险');
+      sandbox.renderExecProg(epData);
+      const ep = rendered.get('execprog') || '';
+      const ed = epData.execution_progress || {};
+      if (!ed.present) {
+        problems.push('position=demo 的决策里 execution_progress 缺失（执行进度官没接线）');
       } else {
-        notes.push('无在途订单分支 ✓（如实说明，不画绿灯）');
+        if (!/合成演示持仓/.test(ep)) {
+          problems.push('合成演示单没有在页面上显眼标注（截图会被当成真实下单记录）');
+        }
+        (ed.hypotheses || []).forEach((h) => {
+          if (!ep.includes(h.id)) problems.push('执行中假设没有渲染出来：' + h.id);
+        });
+        (ed.actions || []).forEach((a) => {
+          if (!ep.includes(a.title)) problems.push('确定性处置口径没有渲染出来：' + a.title);
+        });
+        if ((ed.dropped || []).length && !/未过阈值/.test(ep)) {
+          problems.push('"未过阈值"的留痕没有渲染（读者无法判断判据有没有在工作）');
+        }
+        notes.push('执行进度官·有敞口分支 ✓（' + ed.verdict + '，' +
+                   (ed.hypotheses || []).length + ' 条假设 / ' + (ed.dropped || []).length +
+                   ' 条留痕 / ' + (ed.actions || []).length + ' 条处置，含合成单标注）');
       }
     } catch (e) {
-      problems.push('渲染"无在途订单"时抛异常：' + e.message);
+      problems.push('渲染 demo 执行进度时抛异常：' + e.message);
+    }
+  }
+  // 页面**默认**路径（position=auto）必须落在"无在途订单"上，且不画绿灯
+  {
+    if (!/无在途订单/.test(epDefault)) {
+      problems.push('页面默认路径（position=auto，无持仓单）没有显示"无在途订单"');
+    } else if (/正常|通过|✓/.test(epDefault)) {
+      problems.push('无在途订单时页面画了绿灯 —— 没有数据 ≠ 没有风险');
+    } else {
+      notes.push('执行进度官·无持仓分支 ✓（如实说明，不画绿灯）');
     }
   }
 
@@ -298,6 +364,34 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       }
     } catch (e) {
       problems.push('渲染 stand_down 决策时抛异常：' + e.message);
+    }
+  }
+
+  // ---- 🔴 最后一段：多规则不隐藏（放在最后，因为它会重画 verdict 与阶段条）----
+  //   事故：agent 规则被排到 vetoes 首位 -> 理由栏只写 agent:partial_fill_naked，
+  //   把真正的市场原因 debate_stand_down 藏了。原因可以被排序，但不许被隐藏。
+  if (typeof sandbox.renderVerdict === 'function') {
+    const fake = {
+      base: 'X', time_basis: null,
+      final: { stance: 'stand_down', qty_usd: 0, order: null,
+               why: '风控官一票否决：agent:a' },
+      monotonic: { stance_non_increasing: true, qty_non_increasing: true },
+      risk: { hits: ['agent:a', 'debate_stand_down'],
+              vetoes: ['agent:a', 'debate_stand_down'] },
+      stages: [],
+    };
+    try {
+      sandbox.renderVerdict(fake);
+      const vv = rendered.get('verdict') || '';
+      if (!/debate_stand_down/.test(vv)) {
+        problems.push('多条触发规则时，被排到后面的那条没有显示出来（会被误读成唯一原因）');
+      } else if (!/触发规则共/.test(vv)) {
+        problems.push('没有提示"触发规则共 N 条"');
+      } else {
+        notes.push('多规则不隐藏 ✓（排在后面的 veto 也列出来了）');
+      }
+    } catch (e) {
+      problems.push('渲染多规则决策时抛异常：' + e.message);
     }
   }
   function esc0(s) { return String(s || '').slice(0, 60); }

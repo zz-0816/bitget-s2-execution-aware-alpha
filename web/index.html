@@ -146,8 +146,8 @@
           <span class="field">
             <label for="pos-mode">在途持仓</label>
             <select id="pos-mode" title="持仓单由用户/上层提供；本服务只读不写。没有在途订单时这一块不显示结论 —— 没有数据 ≠ 没有风险">
-              <option value="demo">合成演示单：现货腿已成交 / 永续腿未成交</option>
-              <option value="auto">自动读 data/positions/open.json</option>
+              <option value="auto">自动读 data/positions/open.json（没有就不带）</option>
+              <option value="demo">合成演示单：现货腿已成交 / 永续腿未成交（仅演示）</option>
               <option value="none">不带上在途订单（看没有持仓的样子）</option>
             </select>
           </span>
@@ -175,16 +175,32 @@
         <h2 class="panel-title">横向对比
           <span class="hint">每一行的理由都能回溯到数据文件；没有可回溯事件来源的标的，事件置信度已被压低</span>
         </h2>
+        <!-- 信息密度开关：默认只留三列（标的/风险/结论 + 事件），
+             理由与条件按需打开。<b>收起来的信息必须还能一键看到</b> ——
+             所以「显示列」是常驻的，且被收起的列会在控件行写明"已收起 N 列"。 -->
+        <div class="controls ov-controls">
+          <span class="ctl-label">显示列</span>
+          <span class="chips" id="ov-cols"></span>
+          <span class="ctl-sep" aria-hidden="true"></span>
+          <span class="ctl-label">行密度</span>
+          <span class="chips" id="ov-density">
+            <button type="button" class="chip active" data-density="compact">紧凑</button>
+            <button type="button" class="chip" data-density="full">展开全部</button>
+          </span>
+          <span class="mono-dim" id="ov-count" role="status" aria-live="polite"></span>
+        </div>
         <div class="table-wrap">
           <table id="ov-table">
-            <thead><tr>
-              <th>标的</th><th>风险</th><th>结论</th>
-              <th class="sep">可核验理由 / 警告</th>
-              <th class="sep">条件</th><th class="sep">事件严重度</th>
-            </tr></thead>
+            <thead><tr id="ov-head"></tr></thead>
             <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
           </table>
         </div>
+        <!-- 「条件」每一行都一模一样（同一套口径），逐行重复是纯冗余。
+             这里只写一次，行内只留差异化的数值。 -->
+        <details class="legend" id="ov-legend">
+          <summary>「条件」怎么读 —— 所有标的共用同一套口径，所以不逐行重复</summary>
+          <div id="ov-legend-body" class="legend-body"><div class="loading">加载中…</div></div>
+        </details>
         <p class="hint" id="ov-note"></p>
       </div>
     </section>

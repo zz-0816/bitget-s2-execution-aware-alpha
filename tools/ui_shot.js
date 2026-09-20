@@ -46,7 +46,7 @@ function parseArgs(argv) {
     else if (k === "--eval") a.eval = v, i++;
     else if (k === "--eval-file") a.evalFile = v, i++;
     else if (k === "--json") a.json = v, i++;
-    else if (k === "--click") a.click = v, i++;
+    else if (k === "--click") { (a.clicks = a.clicks || []).push(v); i++; }
     else if (k === "--until") a.until = v, i++;
     else if (k === "--width") a.width = +v, i++;
     else if (k === "--height") a.height = +v, i++;
@@ -188,8 +188,24 @@ async function main() {
       return r.result && r.result.value;
     };
 
-    // ---- 可选：点击某元素 ----
-    if (args.click) {
+    // ---- 可选：依次点击若干元素（**可以给多次 --click**）----
+    //   ⚠️ 原来是单值（后一个覆盖前一个）。要验"打开某列 + 切到展开密度"
+    //      这种**两个开关配合**的界面就得点两下 —— 单值只能点到一个，
+    //      于是截图看起来"点了没反应"，其实是工具不够用。
+    if (args.clicks && args.clicks.length) {
+      for (const sel of args.clicks) {
+        const okClick = await evalJS(`(() => {
+          const el = document.querySelector(${JSON.stringify(sel)});
+          if (!el) return false;
+          el.scrollIntoView({block:'center'}); el.click(); return true;
+        })()`);
+        console.log(okClick ? `  [OK ] 点击 ${sel}` : `  [!! ] 找不到 ${sel}`);
+        if (!okClick) { process.exitCode = 1; }
+        await sleep(args.settle);
+      }
+    }
+    // 兼容旧的单次写法（--click 现在进 args.clicks，这里只是兜底）
+    else if (args.click) {
       const okClick = await evalJS(`(() => {
         const el = document.querySelector(${JSON.stringify(args.click)});
         if (!el) return false;

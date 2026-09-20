@@ -96,11 +96,27 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
    直接摊到页面上等于让读者去猜 `price_band_bp=0.46` 是什么意思。
    这里翻成中文，并把值里的技术词也换掉（route=in_house → 内部撮合）。
    ⚠️ 不改接口字段：run_record / 表单稿引用的是原始键名，改了会破坏可复跑契约。
-   未知键**不隐藏** —— 回退成"键名去下划线 + 原值"，宁可丑一点也不吞信息。 */
+   未知键**不隐藏** —— 回退成"键名去下划线 + 原值"，宁可丑一点也不吞信息。
+
+   ⭐ v3.1：把每条条件拆成 **短值** 与 **解释** 两半。
+   原因是实测的冗余：这 3 条条件**每个标的都完全一样**（同一套口径、同一段解释），
+   而差异只在数值上。逐行重复整段解释 -> 4 行就占掉半个屏幕，真正要看的东西被挤走。
+   现在：行内只留短值（差异化的部分），解释**提到表格下方只写一次**。 */
 const COND_LABEL = {
   price_band_bp: '现货点差',
   size_usd: '单笔规模',
   timing: '挂单时机',
+};
+
+/* 解释文案（表格下方图例里只出现一次）。
+   写成常量是因为里面要引用"这个项目为什么这么定"的依据。
+   ⚠️ 这里**不写 markdown 的星号加粗**：这些文案会走 mdInline，
+      但静态检查（ui_design_check）会把源码里的 `**` 判成"页面上会原样显示"。
+      与其给检查开例外，不如直接不写 —— 图例里本来就不需要强调。 */
+const COND_EXPLAIN = {
+  price_band_bp: '挂单赚不回点差，就等于白付一次手续费 —— 所以点差是挂单的成本底线，不是收益。',
+  size_usd: '单笔规模上限 = min(可捕获名义额、首档深度 × 25%)，超过就不是"能吃到的量"了。',
+  timing: '外部股票路由期间挂单不省点差；只有在内盘撮合时才值得挂单。',
 };
 
 function plainToken(s) {
@@ -111,25 +127,34 @@ function plainToken(s) {
     .replace(/\bsession\b/gi, '交易时段');
 }
 
-function condText(k, v) {
+/* 返回 { short, full }：short 进表格（只放差异化的值），full 用于悬停/展开 */
+function condParts(k, v) {
   if (k === 'price_band_bp') {
-    return '<b>现货点差</b> ' + mdInline(fmt(v)) + ' bp' +
-      '<span class="mono-dim">（挂单赚不回它，就等于白付一次手续费）</span>';
+    const bp = fmt(v);
+    return {
+      short: '<span class="cv">' + bp + ' bp</span><span class="cq">→ 需覆盖 ' +
+        fmt((Number(v) || 0) / 2) + ' bp</span>',
+      full: '<b>现货点差</b> ' + mdInline(bp) + ' bp —— 挂单需至少覆盖 ' +
+        mdInline(fmt((Number(v) || 0) / 2)) + ' bp 才不亏手续费',
+    };
   }
   if (k === 'size_usd') {
-    return '<b>单笔规模</b> 不超过 ' + mdInline(fmt(v, 0)) + ' USD';
+    return {
+      short: '<span class="cv">≤ ' + fmt(v, 0) + ' USD</span>',
+      full: '<b>单笔规模</b> 不超过 ' + mdInline(fmt(v, 0)) + ' USD',
+    };
   }
   if (k === 'timing') {
-    return '<b>挂单时机</b> ' + mdInline(plainToken(v));
+    const t = plainToken(v);
+    // "仅在内盘撮合时挂单；外部股票路由 期间挂单不省点差" 里的后半段也是通用解释，
+    // 行内只留前半段，后半段进图例。
+    const head = String(t).split(/[；;]/)[0] || t;
+    return { short: '<span class="cv">' + esc(head) + '</span>',
+             full: '<b>挂单时机</b> ' + mdInline(t) };
   }
-  return '<b>' + esc(COND_LABEL[k] || String(k).replace(/_/g, ' ')) + '</b> ' +
-    mdInline(plainToken(v));
-}
-
-function conditionsHtml(conds) {
-  const keys = Object.keys(conds || {});
-  if (!keys.length) return '—';
-  return keys.map((k) => '<div>· ' + condText(k, conds[k]) + '</div>').join('');
+  return { short: '<span class="cv">' + esc(plainToken(v)) + '</span>',
+           full: '<b>' + esc(COND_LABEL[k] || String(k).replace(/_/g, ' ')) + '</b> ' +
+             mdInline(plainToken(v)) };
 }
 
 async function api(path) {
@@ -227,6 +252,21 @@ function renderVerdict(d) {
         (okMo ? '单调性校验通过' : '单调性校验失败') + '</span>' +
         '<span class="mono-dim">最终 ≤ 辩论；规模 ≤ 各环节最小值</span></div>' +
     '</div>' +
+    /* 🔴 **所有**触发规则都要列出来。
+       实测踩到：执行进度官的那条 agent 规则因为"优先级最高"而被放在 vetoes 首位，
+       于是 `f.why`（只写第一条）显示成 "风控官一票否决：agent:partial_fill_naked"，
+       把**真正的市场原因** `debate_stand_down` 完全盖住了 —— 读者会以为是持仓问题，
+       其实是这一单本来就不该做。原因可以被排序，但不许被隐藏。 */
+    (function () {
+      const hits = (d.risk && d.risk.hits) || [];
+      if (hits.length <= 1) return '';
+      const head = (d.risk.vetoes || [])[0] || hits[0];
+      return '<p class="hint">触发规则共 <b>' + hits.length + ' 条</b>（上面只写了排在最前的一条 ' +
+        '<code>' + esc(head) + '</code>）：' +
+        hits.map((h) => '<span class="tag ' +
+          (((d.risk.vetoes || []).indexOf(h) >= 0) ? 'veto' : 'caution') + '">' +
+          esc(h) + '</span>').join(' ') + '</p>';
+    })() +
     (f.min_notional_binding
       ? '<p class="hint">⚠️ 可执行规模低于名义额下限（' +
         fmt(d.min_notional_usd || 100, 0) + ' USD）：正确结论是<b>不做</b>，' +
@@ -674,7 +714,12 @@ async function runDecision(base, qty) {
   if (STATE.busy) return;
   STATE.busy = true;
   $('run').disabled = true;
-  const pm = ($('pos-mode') && $('pos-mode').value) || 'demo';
+  /* 默认 auto：读真实的 data/positions/open.json，没有就不带在途订单。
+     ⚠️ 这里曾经默认 `demo`（合成演示单），后果很严重：**每个标的每跑一次**
+        都会带上"现货已成交、永续未成交"，执行进度官判裸露敞口 -> 一票否决 ->
+        页面上永远显示"不参与"，而且理由栏写的是 `agent:partial_fill_naked`，
+        把真实的市场原因盖掉了。演示数据绝不能是默认值。 */
+  const pm = ($('pos-mode') && $('pos-mode').value) || 'auto';
   $('run-state').textContent = '正在跑决策链（读快照 + 5 路分析 + 辩论 + 闸门 + 交易员 + 风控官 + 执行进度）…';
   if ($('pos-state')) $('pos-state').textContent = '在途持仓模式：' + pm;
   try {
@@ -719,25 +764,166 @@ function flashChangedRows(tb) {
   });
 }
 
+/* ---------------- 全标的概览 ----------------
+   信息密度：默认 3 列 + 事件，理由/条件按需打开；行内只放差异化内容，
+   通用口径（"条件怎么读"）提到表格外的图例里**只写一次**。
+   ⚠️ 收起不等于藏起来：被收起的列会显示"已收起 N 列"，
+      且行展开后能看到完整原文（含 warnings）。 */
+
+/* 列定义。`on` 是默认是否显示 —— 默认只留最需要横向扫的几列。 */
+const OV_COLS = [
+  { key: 'base', label: '标的', on: true, sep: false, th: '标的' },
+  { key: 'risk', label: '风险', on: true, sep: false, th: '风险' },
+  { key: 'verdict', label: '结论', on: true, sep: false, th: '结论' },
+  { key: 'event', label: '事件', on: true, sep: true, th: '事件严重度' },
+  { key: 'reason', label: '理由', on: false, sep: true, th: '可核验理由 / 警告' },
+  { key: 'cond', label: '条件', on: false, sep: true, th: '条件（数值）' },
+];
+
+const OV_STATE = { cols: null, density: 'compact', open: {} };
+
+function ovLoad() {
+  try {
+    const raw = window.localStorage && window.localStorage.getItem('p2.ovcols');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      OV_STATE.cols = {};
+      OV_COLS.forEach((c) => { OV_STATE.cols[c.key] = (c.key in saved) ? !!saved[c.key] : c.on; });
+    }
+    const d = window.localStorage && window.localStorage.getItem('p2.ovdensity');
+    if (d === 'full' || d === 'compact') OV_STATE.density = d;
+  } catch (e) { /* 隐私模式 / 无 localStorage：用默认值，不报错 */ }
+  if (!OV_STATE.cols) {
+    OV_STATE.cols = {};
+    OV_COLS.forEach((c) => { OV_STATE.cols[c.key] = c.on; });
+  }
+}
+
+function ovSave() {
+  try {
+    if (window.localStorage) {
+      window.localStorage.setItem('p2.ovcols', JSON.stringify(OV_STATE.cols));
+      window.localStorage.setItem('p2.ovdensity', OV_STATE.density);
+    }
+  } catch (e) { /* 存不下就算了，不影响使用 */ }
+}
+
+function ovVisible() { return OV_COLS.filter((c) => OV_STATE.cols[c.key]); }
+
+/* 列开关 chips（多选、常驻、状态持久化） */
+function renderOvControls(nRows, hiddenCols) {
+  const box = $('ov-cols');
+  if (!box) return;
+  box.innerHTML = OV_COLS.map((c) =>
+    '<button type="button" class="chip' + (OV_STATE.cols[c.key] ? ' active' : '') +
+    '" data-col="' + esc(c.key) + '" aria-pressed="' + (OV_STATE.cols[c.key] ? 'true' : 'false') +
+    '">' + esc(c.label) + '</button>').join('');
+  box.querySelectorAll('.chip').forEach((el) => {
+    el.onclick = () => {
+      OV_STATE.cols[el.dataset.col] = !OV_STATE.cols[el.dataset.col];
+      ovSave();
+      renderOverview(STATE.ovItems || []);
+    };
+  });
+  const db = $('ov-density');
+  if (db) {
+    db.querySelectorAll('.chip').forEach((el) => {
+      el.classList.toggle('active', el.dataset.density === OV_STATE.density);
+      el.onclick = () => {
+        OV_STATE.density = el.dataset.density;
+        OV_STATE.open = {};           // 切密度时复位展开状态，避免"切了没反应"的错觉
+        ovSave();
+        renderOverview(STATE.ovItems || []);
+      };
+    });
+  }
+  const cnt = $('ov-count');
+  if (cnt) {
+    cnt.textContent = nRows + ' 个标的' + (hiddenCols.length
+      ? ' ｜ 已收起 ' + hiddenCols.length + ' 列（' +
+        hiddenCols.map((c) => c.label).join('、') + '）' : '');
+  }
+}
+
+/* 图例：把"所有标的共用"的口径只写一次 */
+function renderOvLegend(items) {
+  const body = $('ov-legend-body');
+  if (!body) return;
+  const seen = {}, order = [];
+  (items || []).forEach((it) => {
+    Object.keys(it.conditions || {}).forEach((k) => {
+      if (!seen[k]) { seen[k] = it.conditions[k]; order.push(k); }
+    });
+  });
+  body.innerHTML = order.length
+    ? order.map((k) => '<div class="lg-row"><div class="lg-name">' +
+        esc(COND_LABEL[k] || k) + '</div><div>' +
+        (COND_EXPLAIN[k] ? mdInline(COND_EXPLAIN[k])
+                         : '（口径见 data/SNAPSHOT.md 与 docs/DATA_DICT.md）') +
+        '</div></div>').join('') +
+      '<p class="hint">上表「条件」列只放<b>每个标的不同的数值</b>；' +
+      '同一段口径不逐行重复。</p>'
+    : '<div class="loading">接口没有返回 conditions</div>';
+}
+
 function renderOverview(items) {
   const tb = document.querySelector('#ov-table tbody');
+  const head = $('ov-head');
   if (!items || !items.length) {
     tb.innerHTML = '<tr><td colspan="6" class="empty">无数据</td></tr>';
     return;
   }
+  STATE.ovItems = items;
+  ovLoad();
+  const vis = ovVisible();
+  const hidden = OV_COLS.filter((c) => !OV_STATE.cols[c.key]);
+  renderOvControls(items.length, hidden);
+  renderOvLegend(items);
+  if (head) {
+    head.innerHTML = vis.map((c) =>
+      '<th' + (c.sep ? ' class="sep"' : '') + '>' + esc(c.th) + '</th>').join('');
+  }
+
   tb.innerHTML = items.map((it) => {
+    const b = it.base;
     const rm = RISK_CN[it.risk_level] || ['?', ''];
-    const reasons = (it.rationale || []).map((x) => '<div>· ' + mdInline(x) + '</div>').join('');
-    const warns = (it.warnings || []).map((x) => '<div class="neg">! ' + mdInline(x) + '</div>').join('');
-    const cond = conditionsHtml(it.conditions);
     const sev = ((it.event || {}).severity) || '—';
-    return '<tr data-base="' + esc(it.base) + '">' +
-      '<td class="base-name"><a href="#" data-base="' + esc(it.base) + '">' + esc(it.base) + '</a></td>' +
-      '<td class="' + rm[1] + '"><b>' + rm[0] + '</b></td>' +
-      '<td>' + mdInline(it.verdict) + '</td>' +
-      '<td class="sep">' + reasons + warns + '</td>' +
-      '<td class="sep mono-dim">' + cond + '</td>' +
-      '<td class="sep ' + (sev === 'block' ? 'neg' : '') + '">' + esc(sev) + '</td></tr>';
+    const open = !!OV_STATE.open[b] || OV_STATE.density === 'full';
+    const reasons = it.rationale || [];
+    const warns = it.warnings || [];
+    const condKeys = Object.keys(it.conditions || {});
+
+    /* 紧凑：理由只留第一条 + "还有 N 条"；条件压成一行数值。
+       open（点行或"展开全部"）：全都摊开。 */
+    let reasonHtml = '';
+    if (reasons.length || warns.length) {
+      const head1 = reasons.length ? '<div>· ' + mdInline(reasons[0]) + '</div>' : '';
+      const more = (reasons.length - 1) + warns.length;
+      const rest = open
+        ? reasons.slice(1).map((x) => '<div>· ' + mdInline(x) + '</div>').join('') +
+          warns.map((x) => '<div class="neg">! ' + mdInline(x) + '</div>').join('')
+        : (more > 0 ? '<div class="more">…还有 ' + more + ' 条（点这一行展开）</div>' : '');
+      reasonHtml = head1 + rest;
+    } else { reasonHtml = '—'; }
+
+    let condHtml = '—';
+    if (condKeys.length) {
+      const parts = condKeys.map((k) => condParts(k, it.conditions[k]));
+      condHtml = open
+        ? parts.map((x) => '<div>· ' + x.full + '</div>').join('')
+        : '<div class="cond-line">' + parts.map((x) => x.short).join('<span class="csep">｜</span>') + '</div>';
+    }
+
+    const cells = {
+      base: '<td class="base-name"><a href="#" data-base="' + esc(b) + '">' + esc(b) + '</a></td>',
+      risk: '<td class="' + rm[1] + '"><b>' + rm[0] + '</b></td>',
+      verdict: '<td>' + mdInline(it.verdict) + '</td>',
+      event: '<td class="sep ' + (sev === 'block' ? 'neg' : '') + '">' + esc(sev) + '</td>',
+      reason: '<td class="sep">' + reasonHtml + '</td>',
+      cond: '<td class="sep mono-dim">' + condHtml + '</td>',
+    };
+    return '<tr data-base="' + esc(b) + '"' + (open ? ' data-open="1"' : '') + '>' +
+      vis.map((c) => cells[c.key]).join('') + '</tr>';
   }).join('');
   flashChangedRows(tb);
   tb.querySelectorAll('a[data-base]').forEach((a) => {
@@ -748,6 +934,15 @@ function renderOverview(items) {
       showPane('pane-decision');
       showStage(0);
       runDecision(a.dataset.base, Number($('qty').value) || 5000);
+    };
+  });
+  // 点行的空白处 = 展开/收起该行（紧凑模式下"还有 N 条"的出口）
+  tb.querySelectorAll('tr[data-base]').forEach((tr) => {
+    tr.onclick = (ev) => {
+      if (ev.target.closest && ev.target.closest('a')) return;
+      const b = tr.dataset.base;
+      OV_STATE.open[b] = !OV_STATE.open[b];
+      renderOverview(STATE.ovItems);
     };
   });
 }

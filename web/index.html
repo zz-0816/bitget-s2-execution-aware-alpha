@@ -175,12 +175,11 @@
         <h2 class="panel-title">横向对比
           <span class="hint">每一行的理由都能回溯到数据文件；没有可回溯事件来源的标的，事件置信度已被压低</span>
         </h2>
-        <!-- 信息密度开关：默认只留三列（标的/风险/结论 + 事件），
-             理由与条件按需打开。<b>收起来的信息必须还能一键看到</b> ——
-             所以「显示列」是常驻的，且被收起的列会在控件行写明"已收起 N 列"。 -->
+        <!-- ⭐ 标的多选：选你想横向对比的币种（点一下加入/移出，选择**常驻**）。
+             列是固定的 6 列、全部显示 —— 用户反馈里明确要的是"选币种"而不是"选列"。 -->
         <div class="controls ov-controls">
-          <span class="ctl-label">显示列</span>
-          <span class="chips" id="ov-cols"></span>
+          <span class="ctl-label">对比标的</span>
+          <span class="chips" id="ov-bases"></span>
           <span class="ctl-sep" aria-hidden="true"></span>
           <span class="ctl-label">行密度</span>
           <span class="chips" id="ov-density">

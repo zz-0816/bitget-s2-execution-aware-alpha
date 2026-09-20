@@ -669,6 +669,13 @@ tbody tr[data-open] td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   padding-top: 2px;
 }
 
+/* 「全选 / 全不选」是操作而不是选中项：虚线边框，避免和 10 个标的状态混在一起 */
+.chip-quiet {
+  border-style: dashed; color: var(--text-faint);
+  background: transparent;
+}
+.chip-quiet:hover { color: var(--text-dim); border-color: var(--line-strong); }
+
 /* ============================== 12. 成本条 ============================== */
 .costbar { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-1) 0; font-size: var(--fs-12); }
 .costbar .cb-name  { width: 148px; flex: 0 0 148px; color: var(--text-dim); }

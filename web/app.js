@@ -765,62 +765,95 @@ function flashChangedRows(tb) {
 }
 
 /* ---------------- 全标的概览 ----------------
-   信息密度：默认 3 列 + 事件，理由/条件按需打开；行内只放差异化内容，
-   通用口径（"条件怎么读"）提到表格外的图例里**只写一次**。
-   ⚠️ 收起不等于藏起来：被收起的列会显示"已收起 N 列"，
-      且行展开后能看到完整原文（含 warnings）。 */
+   ⭐ v3.2（按用户第二次反馈重做）：
+   用户要的不是"选列"，而是**选币种**——
+   「这里显示的是可选择的币种，我可以手动多选我想横向对比的币种，
+     点击显示常驻与不显示；那些（列）都需要显示」。
 
-/* 列定义。`on` 是默认是否显示 —— 默认只留最需要横向扫的几列。 */
+   所以：
+     · **列全部显示**（6 列，不再有列开关）；
+     · 一排 **标的多选 chips**（10 个标的，点一下加入/移出对比），
+       选择**常驻**（localStorage），并写明"显示 N / 10 个标的"；
+     · 「行密度」保留：紧凑 = 行内只放差异化数值 + 通用口径进表下图例；
+       展开全部 = 每行摊开完整原文。
+   为什么行内还要压缩：10 行 ×「同一段解释」重复 10 遍正是最初被抱怨的冗余；
+   把不变量提到图例只写一次，变量留在行里 —— 这跟"列都要显示"不冲突。 */
+
+/* 列定义：**全部显示**（不再有 on/off）。 */
 const OV_COLS = [
-  { key: 'base', label: '标的', on: true, sep: false, th: '标的' },
-  { key: 'risk', label: '风险', on: true, sep: false, th: '风险' },
-  { key: 'verdict', label: '结论', on: true, sep: false, th: '结论' },
-  { key: 'event', label: '事件', on: true, sep: true, th: '事件严重度' },
-  { key: 'reason', label: '理由', on: false, sep: true, th: '可核验理由 / 警告' },
-  { key: 'cond', label: '条件', on: false, sep: true, th: '条件（数值）' },
+  { key: 'base', sep: false, th: '标的' },
+  { key: 'risk', sep: false, th: '风险' },
+  { key: 'verdict', sep: false, th: '结论' },
+  { key: 'event', sep: true, th: '事件严重度' },
+  { key: 'reason', sep: true, th: '可核验理由 / 警告' },
+  { key: 'cond', sep: true, th: '条件（数值）' },
 ];
 
-const OV_STATE = { cols: null, density: 'compact', open: {} };
+const OV_STATE = { bases: null, density: 'compact', open: {} };
 
-function ovLoad() {
+function ovLoad(items) {
+  const all = (items || []).map((it) => it.base);
   try {
-    const raw = window.localStorage && window.localStorage.getItem('p2.ovcols');
+    const raw = window.localStorage && window.localStorage.getItem('p2.ovbases');
     if (raw) {
       const saved = JSON.parse(raw);
-      OV_STATE.cols = {};
-      OV_COLS.forEach((c) => { OV_STATE.cols[c.key] = (c.key in saved) ? !!saved[c.key] : c.on; });
+      if (Array.isArray(saved) && saved.length) {
+        // 与当前接口返回的标的取交集：接口加了新标的时它默认**是选中的**，
+        // 否则"新标的不出现"会让人以为接口坏了。
+        const keep = saved.filter((b) => all.indexOf(b) >= 0);
+        OV_STATE.bases = keep.length ? keep : null;
+      }
     }
     const d = window.localStorage && window.localStorage.getItem('p2.ovdensity');
     if (d === 'full' || d === 'compact') OV_STATE.density = d;
   } catch (e) { /* 隐私模式 / 无 localStorage：用默认值，不报错 */ }
-  if (!OV_STATE.cols) {
-    OV_STATE.cols = {};
-    OV_COLS.forEach((c) => { OV_STATE.cols[c.key] = c.on; });
-  }
+  if (!OV_STATE.bases) OV_STATE.bases = all.slice();   // 默认全选
 }
 
 function ovSave() {
   try {
     if (window.localStorage) {
-      window.localStorage.setItem('p2.ovcols', JSON.stringify(OV_STATE.cols));
+      window.localStorage.setItem('p2.ovbases', JSON.stringify(OV_STATE.bases || []));
       window.localStorage.setItem('p2.ovdensity', OV_STATE.density);
     }
   } catch (e) { /* 存不下就算了，不影响使用 */ }
 }
 
-function ovVisible() { return OV_COLS.filter((c) => OV_STATE.cols[c.key]); }
+/* **纯函数**：按选中的标的过滤。抽出来是为了能被测试直接喂合成输入 ——
+   `OV_STATE` 是 const，在最小 DOM 的沙箱里拿不到（不是全局对象属性），
+   所以"能不能过滤"必须能脱离它单独验证。 */
+function ovFilter(items, sel) {
+  const list = sel || [];
+  if (!list.length) return [];
+  return (items || []).filter((it) => list.indexOf(it.base) >= 0);
+}
 
-/* 列开关 chips（多选、常驻、状态持久化） */
-function renderOvControls(nRows, hiddenCols) {
-  const box = $('ov-cols');
+function ovSelected(items) { return ovFilter(items, OV_STATE.bases); }
+
+/* 标的多选 chips（常驻、状态持久化） */
+function renderOvControls(items) {
+  const box = $('ov-bases');
   if (!box) return;
-  box.innerHTML = OV_COLS.map((c) =>
-    '<button type="button" class="chip' + (OV_STATE.cols[c.key] ? ' active' : '') +
-    '" data-col="' + esc(c.key) + '" aria-pressed="' + (OV_STATE.cols[c.key] ? 'true' : 'false') +
-    '">' + esc(c.label) + '</button>').join('');
+  const sel = OV_STATE.bases || [];
+  const allSel = sel.length === (items || []).length;
+  box.innerHTML = (items || []).map((it) =>
+    '<button type="button" class="chip' + (sel.indexOf(it.base) >= 0 ? ' active' : '') +
+    '" data-base="' + esc(it.base) + '" aria-pressed="' +
+    (sel.indexOf(it.base) >= 0 ? 'true' : 'false') + '">' + esc(it.base) + '</button>').join('') +
+    '<button type="button" class="chip chip-quiet" data-all="1">' +
+    (allSel ? '全不选' : '全选') + '</button>';
   box.querySelectorAll('.chip').forEach((el) => {
     el.onclick = () => {
-      OV_STATE.cols[el.dataset.col] = !OV_STATE.cols[el.dataset.col];
+      const all = (items || []).map((x) => x.base);
+      if (el.dataset.all) {
+        OV_STATE.bases = allSel ? [] : all.slice();
+      } else {
+        const b = el.dataset.base;
+        const cur = (OV_STATE.bases || []).slice();
+        const i = cur.indexOf(b);
+        if (i >= 0) cur.splice(i, 1); else cur.push(b);
+        OV_STATE.bases = cur;
+      }
       ovSave();
       renderOverview(STATE.ovItems || []);
     };
@@ -839,9 +872,8 @@ function renderOvControls(nRows, hiddenCols) {
   }
   const cnt = $('ov-count');
   if (cnt) {
-    cnt.textContent = nRows + ' 个标的' + (hiddenCols.length
-      ? ' ｜ 已收起 ' + hiddenCols.length + ' 列（' +
-        hiddenCols.map((c) => c.label).join('、') + '）' : '');
+    cnt.textContent = '显示 ' + sel.length + ' / ' + (items || []).length + ' 个标的' +
+      (sel.length ? '' : '　（一个都没选，表格会是空的）');
   }
 }
 
@@ -874,17 +906,24 @@ function renderOverview(items) {
     return;
   }
   STATE.ovItems = items;
-  ovLoad();
-  const vis = ovVisible();
-  const hidden = OV_COLS.filter((c) => !OV_STATE.cols[c.key]);
-  renderOvControls(items.length, hidden);
+  ovLoad(items);
+  renderOvControls(items);
   renderOvLegend(items);
-  if (head) {
-    head.innerHTML = vis.map((c) =>
+  // 表头只画一次（列是固定的 6 列，不再随开关变）
+  if (head && !head.innerHTML) {
+    head.innerHTML = OV_COLS.map((c) =>
       '<th' + (c.sep ? ' class="sep"' : '') + '>' + esc(c.th) + '</th>').join('');
   }
 
-  tb.innerHTML = items.map((it) => {
+  const shown = ovSelected(items);
+  if (!shown.length) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">' +
+      '一个标的都没选 —— 点上面的标的 chip 加入横向对比（选择会记住）</td></tr>';
+    flashChangedRows(tb);
+    return;
+  }
+
+  tb.innerHTML = shown.map((it) => {
     const b = it.base;
     const rm = RISK_CN[it.risk_level] || ['?', ''];
     const sev = ((it.event || {}).severity) || '—';
@@ -923,7 +962,7 @@ function renderOverview(items) {
       cond: '<td class="sep mono-dim">' + condHtml + '</td>',
     };
     return '<tr data-base="' + esc(b) + '"' + (open ? ' data-open="1"' : '') + '>' +
-      vis.map((c) => cells[c.key]).join('') + '</tr>';
+      OV_COLS.map((c) => cells[c.key]).join('') + '</tr>';
   }).join('');
   flashChangedRows(tb);
   tb.querySelectorAll('a[data-base]').forEach((a) => {

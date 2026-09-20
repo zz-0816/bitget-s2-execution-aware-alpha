@@ -224,25 +224,29 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }
 
-  // ---- 概览表：信息密度开关（列显隐 / 条件去重 / 图例）----
-  //   ⚠️ 这一块是用户实拍的反馈改的：原来每行的「条件」原文一模一样、
-  //      4 行就吃掉半个屏幕。改成"行内只放数值 + 通用口径只写一次"。
-  //      渲染对不对必须被检查，否则改回去也没人知道。
+  // ---- 概览表：**标的多选** + 条件去重 + 图例 ----
+  //   ⚠️ 这一块改过两版，第一版理解错了用户的意思：
+  //      用户要的是「**选币种**横向对比」（点一下加入/移出、选择常驻），
+  //      不是「选列」；而且**列都要显示**。
+  //      所以断言也按这个语义来，免得又改回去。
   const head = rendered.get('ov-head') || '';
-  const chips = rendered.get('ov-cols') || '';
+  const chips = rendered.get('ov-bases') || '';
   const legend = rendered.get('ov-legend-body') || '';
   const body = rendered.get('sel:#ov-table tbody') || '';
   const nth = (head.match(/<th/g) || []).length;
-  if (nth !== 4) {
-    problems.push('概览表默认列数应为 4（标的/风险/结论/事件），实际 ' + nth);
+  if (nth !== 6) {
+    problems.push('概览表应当是固定的 6 列（列全部显示），实际 ' + nth);
   }
-  if ((chips.match(/data-col=/g) || []).length !== 6) {
-    problems.push('「显示列」应有 6 个开关 chip，实际 ' +
-      (chips.match(/data-col=/g) || []).length);
+  const nBaseChip = (chips.match(/data-base=/g) || []).length;
+  if (nBaseChip < 5) {
+    problems.push('「对比标的」chips 太少（' + nBaseChip + '）—— 应该是接口返回的每个标的各一个');
   }
-  if ((chips.match(/aria-pressed="true"/g) || []).length !== 4) {
-    problems.push('默认应只有 4 列是打开的（理由/条件默认收起），实际 ' +
-      (chips.match(/aria-pressed="true"/g) || []).length);
+  if (!/data-all=/.test(chips)) {
+    problems.push('缺少「全选 / 全不选」开关');
+  }
+  const nOn = (chips.match(/aria-pressed="true"/g) || []).length;
+  if (nOn !== nBaseChip) {
+    problems.push('默认应当**全选**（' + nOn + ' / ' + nBaseChip + '）—— 首次打开不该是空表');
   }
   if (!/现货点差|挂单时机/.test(legend)) {
     problems.push('条件图例没有渲染出内容（通用口径必须只写一次，不能丢）');
@@ -250,11 +254,39 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   if ((body.match(/<tr/g) || []).length < 5) {
     problems.push('概览表行数过少（' + (body.match(/<tr/g) || []).length + '）');
   }
-  if (/cond-line/.test(body)) {
-    problems.push('「条件」列默认应收起，但行里出现了 cond-line');
+  notes.push('概览·标的多选 ✓（' + nth + ' 列全显示 / ' + nBaseChip +
+    ' 个标的 chip（默认全选）/ 图例 ' + legend.length + ' 字符）');
+
+  // 多选**真的能过滤**：用纯函数喂合成输入验证。
+  //   ⚠️ 不能依赖点 chip 来做这件事：最小 DOM 的 querySelectorAll 恒返回 []，
+  //      "点了没反应"和"过滤没实现"在这里看起来一模一样。
+  //   ⚠️ 也不能依赖 OV_STATE（它是 const，在 vm 沙箱里不是全局属性）——
+  //      初版就是这么写的，结果这条断言**静默没跑**。现在拿不到纯函数 = 失败。
+  //   ⚠️ 夹具 key：非 decision 端点是**按路径**存的（`/api/overview`），
+  //      写成 `/api/overview?qty=5000` 会取到 undefined -> 断言再次静默跳过。
+  //      所以"取不到夹具"本身也判失败，不允许默默什么都不做。
+  const ovFixture = fixtures['/api/overview'] || fixtures['/api/overview?qty=5000'];
+  const ovItems = (ovFixture || {}).items || [];
+  if (typeof sandbox.ovFilter !== 'function') {
+    problems.push('ovFilter 不可用（标的多选的过滤逻辑无法被验证）');
+  } else if (ovItems.length < 3) {
+    problems.push('概览夹具缺失或标的太少（' + ovItems.length + '）—— 多选过滤无法验证');
+  } else {
+    const two = [ovItems[0].base, ovItems[2].base];
+    const got = sandbox.ovFilter(ovItems, two).map((x) => x.base);
+    const none = sandbox.ovFilter(ovItems, []);
+    const all = sandbox.ovFilter(ovItems, ovItems.map((x) => x.base));
+    if (got.length !== 2 || got[0] !== two[0] || got[1] !== two[1]) {
+      problems.push('标的多选没有真的过滤（选 2 个得到 ' + JSON.stringify(got) + '）');
+    } else if (none.length !== 0) {
+      problems.push('一个都不选时应当返回空（实际 ' + none.length + ' 行）');
+    } else if (all.length !== ovItems.length) {
+      problems.push('全选时应当返回全部（实际 ' + all.length + ' / ' + ovItems.length + '）');
+    } else {
+      notes.push('标的多选过滤 ✓（选 ' + two.join('/') + ' -> ' + got.join('/') +
+        ' ｜ 都不选 -> 0 行 ｜ 全选 -> ' + all.length + ' 行）');
+    }
   }
-  notes.push('概览密度开关 ✓（默认 ' + nth + ' 列 / ' + (chips.match(/data-col=/g) || []).length +
-    ' 个开关 / 图例 ' + legend.length + ' 字符）');
 
   // 条件去重的**核心逻辑**：短值不含通用解释，完整版才含。
   // condParts 是纯函数，直接喂合成输入 —— 不依赖夹具里有没有 conditions。

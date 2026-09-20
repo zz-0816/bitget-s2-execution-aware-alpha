@@ -1,15 +1,17 @@
 {
-  "base": "QQQ",
+  "base": "HOOD",
   "categories": {
-    "earnings": 4,
+    "earnings": 3,
     "earnings_scheduled": 8,
+    "filing": 3,
+    "filing_material": 9,
     "macro": 8,
-    "other": 36
+    "other": 37
   },
   "event_driven": {
     "first_run": false,
     "n_fresh": 0,
-    "n_total": 56,
+    "n_total": 68,
     "should_call_llm": false
   },
   "headlines_for_gate": [
@@ -21,12 +23,168 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[Fri, 18 Se] Prediction: The Invesco QQQ Trust Beats the S&amp;P 500 Again Over the Next 5 Years",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
-    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
-    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers"
+    "[2026-09-17] HOOD 申报：4（内部人交易（Form 4））",
+    "[2026-09-14] HOOD 申报：4（内部人交易（Form 4））",
+    "[2026-09-10] HOOD 申报：4（内部人交易（Form 4））",
+    "[2026-09-04] HOOD 申报：4（内部人交易（Form 4））"
   ],
   "items": [
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000210858926000024/xslF345X06/wk-form4_1789677670.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-15",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009490/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-14",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000187091426000025/xslF345X06/wk-form4_1789417999.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-10",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000181742526000012/xslF345X06/wk-form4_1789074490.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-10",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009302/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-08",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009205/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-04",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000165921126000018/xslF345X06/wk-form4_1788556464.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-04",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170556026000023/xslF345X06/wk-form4_1788556416.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170711226000006/xslF345X06/wk-form4_1788468202.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000210858926000022/xslF345X06/wk-form4_1788468181.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000165921126000016/xslF345X06/wk-form4_1788468153.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Robinhood Markets, Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "HOOD 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170556026000021/xslF345X06/wk-form4_1788468129.xml"
+    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -477,91 +635,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 01:54:01 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The $72,000 ending is the easy part. Collecting it involved an 83% loss and a 15-year wait just to get back to even.",
-      "title": "History Says Buying the Nasdaq-100 at the Dot-Com Peak Still (Eventually) Turned $10,000 Into About $72,000",
-      "url": "https://www.fool.com/investing/2026/09/19/history-says-buying-the-nasdaq-100-at-the-dot-com-peak-still-eventually-turned-usd10-000-into-about-usd72-000/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 17:18:26 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Broad Market Indicators Broad-market exchange-traded funds IWM and IVV were lower. Actively tr",
-      "title": "Exchange-Traded Funds, US Equities Lower After Midday",
-      "url": "https://finance.yahoo.com/markets/articles/exchange-traded-funds-us-equities-171826497.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 13:00:50 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Defiance just launched a brutally concentrated ten-stock AI ETF, but with no holdings data, no NAV history, and barely a week of trading, investors have almost no way to know if they are buying genuin",
-      "title": "AIMG’s AI Concentration Bet Launches With a Steep 0.61% Fee and No Track Record to Prove It",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/portfolio-fit-aimg/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 01:35:00 +0000",
+      "date": "Sun, 20 Sep 2026 15:25:44 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Past returns aren't guaranteed to repeat, but investors could still see huge upside.",
-      "title": "A $100 Monthly Investment in QQQ Could Grow Into This Over 20 Years",
-      "url": "https://www.fool.com/investing/2026/09/17/100-monthly-investment-qqq-grow-20-years/?.tsrc=rss"
+      "summary": "The stock market showed choppy, mixed weekly action. But Robinhood, Sandisk, AMD and Moderna rallied into buy areas.",
+      "title": "Dow Jones Futures: Can The Market Rally Take Flight? Robinhood, Sandisk, AMD, Moderna Surge Into Buy Areas",
+      "url": "https://finance.yahoo.com/m/832159c8-6dc5-38e6-b838-d7db7090ca09/dow-jones-futures%3A-can-the.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 14:11:17 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "AI is not so fashionable, in part, because most labs are privately owned, Vlad Tenev said. So that leaves regular investors with no “skin in the game,” he said.",
+      "title": "Robinhood CEO Says Civil Liability May Not Be Enough To Contain Biggest AI Risks",
+      "url": "https://stocktwits.com/news-articles/markets/equity/robinhood-ceo-says-civil-liability-may-not-be-enough-to-contain-biggest-ai-risks/cZtCOyvRBEC?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 12:00:39 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Robinhood stock surged in an end-of-week crypto rally. SpaceX is testing an aggressive entry. They lead five stocks near buy points.",
+      "title": "Robinhood Soars, SpaceX Orbits Entry: Five Stocks Near Buy Points",
+      "url": "https://finance.yahoo.com/m/3ea37ac5-5f20-3f34-9833-1eb8ea78898c/robinhood-soars%2C-spacex.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 08:01:01 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Customers keep moving billions onto the platform every month. Reaching the milestone needs less help from the market than you might think.",
+      "title": "Prediction: Robinhood Will Pass $500 Billion in Customer Assets in 2027",
+      "url": "https://www.fool.com/investing/2026/09/19/prediction-robinhood-will-pass-usd500-billion-in-customer-assets-in-2027/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 22:05:01 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "The disposal was executed under a pre-established Rule 10b5-1 trading plan adopted in August 2025, reducing the insider's direct stake to 56,858 shares.",
+      "title": "Robinhood CFO Shiv Verma Sells 11,472 Shares for $1.3 Million",
+      "url": "https://www.fool.com/coverage/filings/2026/09/18/robinhood-cfo-shiv-verma-sells-11472-shares-for-13-million/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 15:00:00 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Robinhood’s Abhishek Fatehpuria on winning the modern financial consumer at TechCrunch Disrupt 2026. Register now to save up to $200 before September 25 at 11:59 p.m. PT.",
+      "title": "Robinhood’s Abhishek Fatehpuria on winning the modern financial consumer at TechCrunch Disrupt 2026",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/robinhood-abhishek-fatehpuria-winning-modern-150000018.html?.tsrc=rss"
     },
     {
       "category": "earnings",
-      "date": "Fri, 18 Sep 2026 00:43:01 +0000",
+      "date": "Fri, 18 Sep 2026 11:25:02 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Both funds are built on the same market leaders. The difference is how much -- and what gets left out.",
-      "title": "Prediction: The Invesco QQQ Trust Beats the S&amp;P 500 Again Over the Next 5 Years",
-      "url": "https://www.fool.com/investing/2026/09/17/prediction-the-invesco-qqq-trust-beats-the-s-and-p-500-again-over-the-next-5-years/?.tsrc=rss"
+      "summary": "Tenev made the forecast on Robinhood's February 2026 earnings call, when the business he was describing was running at roughly one dollar in every fifteen of company revenue.",
+      "title": "Robinhood’s CEO Says Prediction Markets Are Starting a ‘Supercycle That Could Drive Trillions In Annual Volume’ After 12 Billion Contracts Traded in 2025",
+      "url": "https://www.barchart.com/story/news/4676731/robinhoods-ceo-says-prediction-markets-are-starting-a-supercycle-that-could-drive-trillions-in-annual-volume-after-12-billion-contracts-traded-in-2025?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Thu, 17 Sep 2026 22:15:09 +0000",
+      "date": "Sat, 19 Sep 2026 11:45:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Splitting a half-million dollars between two popular ETFs feels like textbook diversification, but a quiet look under the hood reveals something most investors never bother to check before their next ",
-      "title": "$500,000 Split Between VOO and QQQ Owns the Same Seven Stocks Twice, and Nobody Adds Up the Overlap",
-      "url": "https://247wallst.com/investing/etf/2026/09/17/500000-split-between-voo-and-qqq-owns-the-same-seven-stocks-twice-and-nobody-adds-up-the-overlap/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 17 Sep 2026 19:05:36 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "QQQ turned $100,000 into a million dollars faster than most retirement plans dare to model, but the math depends entirely on which decade you believe comes next.",
-      "title": "If QQQ Repeats Its Last Decade, $100,000 at 40 Could Hit $1 Million by 52",
-      "url": "https://247wallst.com/investing/etf/2026/09/17/if-qqq-repeats-its-last-decade-100000-at-40-could-hit-1-million-by-52/?.tsrc=rss"
-    },
-    {
-      "category": "earnings",
-      "date": "Fri, 18 Sep 2026 18:47:39 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta Platforms surged far past its mega-cap peers in a single month while the broader tech sector sat flat, and now shareholders face a decision that hinges entirely on how you read what the July earn",
-      "title": "Meta Platforms Just Ripped 23% in a Month: Take Profits, or Buy More?",
-      "url": "https://247wallst.com/investing/2026/09/18/meta-platforms-just-ripped-23-in-a-month-take-profits-or-buy-more/?.tsrc=rss"
+      "summary": "The Fed raised rates 25 basis points on Sept. 16, and brokers and exchanges like Interactive Brokers, Robinhood, and CME Group stand to benefit from the new hiking cycle.",
+      "title": "Not Just Banks: 3 Trading Stocks to Watch After the Fed Rate Hike",
+      "url": "https://www.marketbeat.com/articles/not-just-banks-3-trading-stocks-to-watch-after-the-fed-rate-hike/?utm_source=yahoofinance&amp;utm_medium=yahoofinance&amp;.tsrc=rss"
     },
     {
       "category": "other",
@@ -653,50 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:42:29.891828+00:00",
+  "probed_at": "2026-09-20T16:09:12.579381+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.58s",
+      "note": "耗时 1.59s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 1.07s",
+      "note": "耗时 0.96s",
       "ok": true
     },
     "edgar": {
-      "n": 0,
-      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
+      "n": 12,
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.30s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.70s",
+      "note": "耗时 0.62s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.65s",
+      "note": "耗时 0.63s",
       "ok": true
     },
-    "nasdaq_calendar": {
-      "err": "<urlopen error [Errno 11001] getaddrinfo failed>",
-      "ok": false
+    "nasdaq_calendar_2026-09-20": {
+      "n": 0,
+      "note": "提前数天（预告）｜ 耗时 0.67s",
+      "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 8.35s",
+      "note": "提前数天（预告）｜ 耗时 0.62s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.78s",
+      "note": "耗时 0.81s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.26s",
+      "note": "耗时 1.85s",
       "ok": true
     }
   }

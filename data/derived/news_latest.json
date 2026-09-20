@@ -1,23 +1,25 @@
 {
-  "base": "MRVL",
+  "base": "NVDA",
   "categories": {
     "earnings": 3,
     "earnings_scheduled": 8,
-    "filing": 3,
-    "filing_material": 9,
+    "filing": 2,
+    "filing_material": 10,
     "macro": 8,
     "other": 37
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 0,
+    "n_fresh": 2,
     "n_total": 68,
-    "should_call_llm": false
+    "should_call_llm": true
   },
+  "fresh_headlines": [
+    "[Sun, 20 Se] OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
+    "[Sun, 20 Se] The Bond Market Is Rattled, and History Says That Could Be a Warning Signal to Investors"
+  ],
   "headlines_for_gate": [
-    "[2026-08-28] MRVL 申报：10-Q（季报）",
-    "[2026-08-27] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-    "[2026-08-19] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-09-03] NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -26,38 +28,157 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-16] MRVL 申报：4（内部人交易（Form 4））"
+    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））",
+    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））",
+    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-09-16",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-18",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062334/xslF345X06/wk-form4_1789598794.xml"
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000124382126000007/xslF345X06/wk-form4_1789766132.xml"
     },
     {
       "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-09-15",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-18",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062124/xslF345X06/wk-form4_1789522603.xml"
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000128385426000010/xslF345X06/wk-form4_1789766082.xml"
     },
     {
       "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-18",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000169684126000012/xslF345X06/wk-form4_1789766007.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-18",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000158867026000014/xslF345X06/wk-form4_1789765959.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-18",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764926000012/xslF345X06/wk-form4_1789765856.xml"
+    },
+    {
+      "category": "filing",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-17",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000195824426000615/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-11",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000005/xslF345X06/wk-form4_1789160684.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-08",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119903926000014/xslF345X06/wk-form4_1788901755.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-04",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764726000009/xslF345X06/wk-form4_1788555631.xml"
+    },
+    {
+      "category": "filing",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-03",
+      "form": "3",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "NVDA 申报：3",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000003/xslF345X06/wk-form3_1788468666.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
+      "date": "2026-09-03",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/nvda-20260902.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "NVIDIA CORP",
       "date": "2026-09-02",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -65,125 +186,8 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026060112/xslF345X06/wk-form4_1788380464.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-09-01",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195004726008892/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-28",
-      "form": "10-Q",
-      "form_meaning": "季报",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "MRVL 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000025/mrvl-20260801.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-27",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000022/mrvl-20260827.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-19",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057525/xslF345X06/wk-form4_1787014784.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-17",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195824426000520/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057399/xslF345X06/wk-form4_1786999519.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-06",
-      "form": "SCHEDULE 13G/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：SCHEDULE 13G/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000031506626002090/xslSCHEDULE_13G_X02/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Marvell Technology, Inc.",
-      "date": "2026-08-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "MRVL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026051905/xslF345X06/wk-form4_1785789180.xml"
+      "title": "NVDA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119903926000012/xslF345X06/wk-form4_1788387031.xml"
     },
     {
       "category": "earnings_scheduled",
@@ -635,91 +639,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 06:13:22 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Earlier this month, GlobalFoundries and Marvell Technology expanded a multi-year agreement to boost silicon germanium chip capacity at GlobalFoundries’ Vermont fab, targeting next-generation optical t",
-      "title": "How Expanded GlobalFoundries SiGe Capacity for AI Optics Will Impact Marvell Technology (MRVL) Investors",
-      "url": "https://finance.yahoo.com/technology/ai/articles/expanded-globalfoundries-sige-capacity-ai-061322931.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 17:05:00 +0000",
+      "date": "Sun, 20 Sep 2026 12:00:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Earlier this year, Nvidia invested $2 billion in semiconductor company Marvell Technology.",
-      "title": "Prediction: This Nvidia-Backed Artificial Intelligence (AI) Stock Could 10X by 2033",
-      "url": "https://www.fool.com/investing/2026/09/19/prediction-this-nvidia-backed-artificial-intellige/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 15:57:24 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "On September 17, shares of Marvell Technology, Inc. (NASDAQ:MRVL) and GLOBALFOUNDRIES Inc. (NASDAQ:GFS) moved sharply higher, with Marvell Technology, Inc. (NASDAQ:MRVL) gaining more than 4% and GLOBA",
-      "title": "Marvell (MRVL) and GlobalFoundries (GFS) Rise on Expanded Deal: What Investors Should Know",
-      "url": "https://finance.yahoo.com/technology/articles/marvell-mrvl-globalfoundries-gfs-rise-155724895.html?.tsrc=rss"
+      "summary": "A charitable remainder trust can help if you're anxious to escape a concentrated stock position without a capital gains tax hit.",
+      "title": "Sitting on Large Capital Gains? Here Is the Overlooked Trust That Helps You Exit Concentrated Stock Tax-Free",
+      "url": "https://www.kiplinger.com/taxes/tax-planning/avoid-capital-gains-with-a-charitable-remainder-trust?.tsrc=rss"
     },
     {
       "category": "earnings",
-      "date": "Sat, 19 Sep 2026 15:24:19 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Key TakeawaysMarvell Technology (MRVL) closed at $244. 25 on September 18, a fresh high that fully erases the more than 8% drop the stock took the day after its August 27 earnings call, even though no",
-      "title": "Inside the 200-Basis-Point Margin Gap Marvell Isn’t Talking About on Earnings Calls",
-      "url": "https://www.tikr.com/blog/inside-the-200-basis-point-margin-gap-marvell-isnt-talking-about-on-earnings-calls?ref=yahoofinance&amp;.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 10:01:33 +0000",
+      "date": "Sun, 20 Sep 2026 14:40:01 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A chipmaker and two power producers are raising forecasts and signing hyperscaler contracts while their stocks sit well off their peaks. That gap between fundamentals and price action may not last pas",
-      "title": "3 Stocks to Buy Before Wall Street Catches On Before September Ends",
-      "url": "https://247wallst.com/investing/2026/09/19/3-stocks-to-buy-before-wall-street-catches-on-before-september-ends/?.tsrc=rss"
+      "summary": "ChatGPT ads just passed $1 billion in annualized revenue.",
+      "title": "OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
+      "url": "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 19:16:00 +0000",
+      "date": "Sun, 20 Sep 2026 14:35:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Photonics is emerging as a key AI infrastructure technology, with surging investments and growth projections fueling interest in ETFs.",
-      "title": "Bet on These Photonics ETFs to Exploit the Next Wave of AI Revolution",
-      "url": "https://finance.yahoo.com/technology/ai/articles/bet-photonics-etfs-exploit-next-191600293.html?.tsrc=rss"
+      "summary": "Bond yields rose ahead of the Fed rate hike, and investors should be worried about Wall Street and Main Street.",
+      "title": "The Bond Market Is Rattled, and History Says That Could Be a Warning Signal to Investors",
+      "url": "https://www.fool.com/investing/2026/09/20/the-bond-market-is-rattled-and-history-says-that-c/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 16:43:15 +0000",
+      "date": "Sun, 20 Sep 2026 13:23:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The multi-year agreement covers silicon germanium production in Burlington",
-      "title": "GlobalFoundries Jumps 7% on an Expanded Marvell Agreement",
-      "url": "https://finance.yahoo.com/technology/articles/globalfoundries-jumps-7-expanded-marvell-164315855.html?.tsrc=rss"
+      "summary": "A $5,000 investment if SpaceX would need to climb 200 times to reach $1 million.",
+      "title": "Could $5,000 Invested in SpaceX Help You Retire a Millionaire?",
+      "url": "https://www.fool.com/investing/2026/09/20/could-5000-invested-in-spacex-help-you-retire-a-mi/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 15:19:00 +0000",
+      "date": "Sun, 20 Sep 2026 12:50:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "GlobalFoundries is boosting SiGe capacity for MRVL as AI and cloud data centers drive demand for high-speed optical connectivity.",
-      "title": "Can GFS' Marvell Deal for SiGe Capacity Expansion Accelerate Growth?",
-      "url": "https://finance.yahoo.com/technology/articles/gfs-marvell-deal-sige-capacity-151900054.html?.tsrc=rss"
+      "summary": "The company's strong pipeline and newer approved drugs should be enough to allay patent expiration concerns.",
+      "title": "Wall Street's Bull Case for Bristol Myers Squibb Is Getting Louder",
+      "url": "https://www.fool.com/investing/2026/09/20/wall-streets-bull-case-for-bristol-myers-squibb-is/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 12:42:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Palantir is in the AI defense spotlight, but a pair of hardware-focused rivals may offer a steadier way to play the same trend.",
+      "title": "Why You Should Avoid Palantir and Buy These 2 Defense Stocks Instead",
+      "url": "https://www.fool.com/investing/2026/09/20/why-you-should-avoid-palantir-and-buy-these-2-defe/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 12:07:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "The eVTOL industry could be a generational investment opportunity, but that doesn't mean every eVTOL stock will be a winner.",
+      "title": "Archer Aviation Trades Near $5. Could a $5,000 Investment Set You Up for Life?",
+      "url": "https://www.fool.com/investing/2026/09/20/archer-aviation-trades-near-5-could-a-5000-investm/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 11:37:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "You're shaking your head, aren't you? Hear me out.",
+      "title": "AMC Stock Is Up 73% This Year. Why Are You Still Laughing?",
+      "url": "https://www.fool.com/investing/2026/09/20/amc-stock-is-up-73-this-year-why-are-you-still-lau/?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,51 +815,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T14:57:50.619442+00:00",
+  "probed_at": "2026-09-20T15:00:05.526691+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.61s",
+      "note": "耗时 1.67s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.83s",
+      "note": "耗时 1.13s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 3.75s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.58s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.75s",
+      "note": "耗时 0.63s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.77s",
+      "note": "耗时 0.63s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.85s",
+      "note": "提前数天（预告）｜ 耗时 1.56s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.61s",
+      "note": "提前数天（预告）｜ 耗时 1.51s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.87s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.81s",
+      "note": "耗时 1.03s",
       "ok": true
     }
   }

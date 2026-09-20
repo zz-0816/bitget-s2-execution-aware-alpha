@@ -1,10 +1,10 @@
 {
-  "base": "SPY",
+  "base": "QQQ",
   "categories": {
-    "earnings": 2,
+    "earnings": 4,
     "earnings_scheduled": 8,
     "macro": 8,
-    "other": 38
+    "other": 36
   },
   "event_driven": {
     "first_run": false,
@@ -21,10 +21,10 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
+    "[Fri, 18 Se] Prediction: The Invesco QQQ Trust Beats the S&amp;P 500 Again Over the Next 5 Years",
     "[Wed, 16 Se] Federal Reserve issues FOMC statement",
     "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
-    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
+    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers"
   ],
   "items": [
     {
@@ -477,91 +477,91 @@
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:15:15 +0000",
+      "date": "Sun, 20 Sep 2026 01:54:01 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most covered call ETFs hand you a fat monthly check while quietly draining your principal, but a small group of actively managed funds has cracked the formula to deliver both. The catch is that each o",
-      "title": "After Comparing Every Covered Call ETF With Over $1 Billion in Assets, These 3 Pay Up to 8 Percent and Still Grew Your Principal",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/after-comparing-every-covered-call-etf-with-over-1-billion-in-assets-these-3-pay-up-to-8-percent-and-still-grew-your-principal/?.tsrc=rss"
+      "summary": "The $72,000 ending is the easy part. Collecting it involved an 83% loss and a 15-year wait just to get back to even.",
+      "title": "History Says Buying the Nasdaq-100 at the Dot-Com Peak Still (Eventually) Turned $10,000 Into About $72,000",
+      "url": "https://www.fool.com/investing/2026/09/19/history-says-buying-the-nasdaq-100-at-the-dot-com-peak-still-eventually-turned-usd10-000-into-about-usd72-000/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:05:57 +0000",
+      "date": "Fri, 18 Sep 2026 17:18:26 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Broad Market Indicators Broad-market exchange-traded funds IWM and IVV were lower. Actively tr",
+      "title": "Exchange-Traded Funds, US Equities Lower After Midday",
+      "url": "https://finance.yahoo.com/markets/articles/exchange-traded-funds-us-equities-171826497.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 13:00:50 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Defiance just launched a brutally concentrated ten-stock AI ETF, but with no holdings data, no NAV history, and barely a week of trading, investors have almost no way to know if they are buying genuin",
+      "title": "AIMG’s AI Concentration Bet Launches With a Steep 0.61% Fee and No Track Record to Prove It",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/portfolio-fit-aimg/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 01:35:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A single ETF purchase made before most investors had ever heard the term changed what passive investing looks like today, but the original is no longer the obvious choice for everyone holding it.",
-      "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/a-10000-investment-in-spy-at-its-1993-launch-is-worth-this-much-today-without-you-adding-a-dime/?.tsrc=rss"
+      "summary": "Past returns aren't guaranteed to repeat, but investors could still see huge upside.",
+      "title": "A $100 Monthly Investment in QQQ Could Grow Into This Over 20 Years",
+      "url": "https://www.fool.com/investing/2026/09/17/100-monthly-investment-qqq-grow-20-years/?.tsrc=rss"
     },
     {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 08:35:00 +0000",
+      "category": "earnings",
+      "date": "Fri, 18 Sep 2026 00:43:01 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "These two S&amp;P 500 ETFs seem interchangeable. They're not.",
-      "title": "VOO vs. SPY: Is There Actually a Difference?",
-      "url": "https://www.fool.com/investing/2026/09/19/voo-vs-spy-is-there-actually-a-difference/?.tsrc=rss"
+      "summary": "Both funds are built on the same market leaders. The difference is how much -- and what gets left out.",
+      "title": "Prediction: The Invesco QQQ Trust Beats the S&amp;P 500 Again Over the Next 5 Years",
+      "url": "https://www.fool.com/investing/2026/09/17/prediction-the-invesco-qqq-trust-beats-the-s-and-p-500-again-over-the-next-5-years/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:45:11 +0000",
+      "date": "Thu, 17 Sep 2026 22:15:09 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Splitting a half-million dollars between two popular ETFs feels like textbook diversification, but a quiet look under the hood reveals something most investors never bother to check before their next ",
+      "title": "$500,000 Split Between VOO and QQQ Owns the Same Seven Stocks Twice, and Nobody Adds Up the Overlap",
+      "url": "https://247wallst.com/investing/etf/2026/09/17/500000-split-between-voo-and-qqq-owns-the-same-seven-stocks-twice-and-nobody-adds-up-the-overlap/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Thu, 17 Sep 2026 19:05:36 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "QQQ turned $100,000 into a million dollars faster than most retirement plans dare to model, but the math depends entirely on which decade you believe comes next.",
+      "title": "If QQQ Repeats Its Last Decade, $100,000 at 40 Could Hit $1 Million by 52",
+      "url": "https://247wallst.com/investing/etf/2026/09/17/if-qqq-repeats-its-last-decade-100000-at-40-could-hit-1-million-by-52/?.tsrc=rss"
+    },
+    {
+      "category": "earnings",
+      "date": "Fri, 18 Sep 2026 18:47:39 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A seven-figure VOO balance sounds like a retirement paycheck until you do the actual math on what it deposits each month, then realize covering the rest means a tax bill your fund prospectus quietly i",
-      "title": "$1 Million in VOO Pays $871 a Month, and Covering the Gap Means Selling Shares the IRS Taxes",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/1-million-in-voo-pays-871-a-month-and-covering-the-gap-means-selling-shares-the-irs-taxes/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 13:06:20 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Replacing a married couple's Social Security income with dividends sounds straightforward until you see how brutally the math punishes the wrong yield tier at the wrong time in retirement.",
-      "title": "How to Build $3,250 a Month in Dividend Income to Cover a Married Couple’s Social Security Checks, Starting From Zero",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/how-to-build-3250-a-month-in-dividend-income-to-cover-a-married-couples-social-security-checks-starting-from-zero/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 09:59:02 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Fifteen years of automatic S&amp;P 500 investing through crashes, pandemics, and AI euphoria reveals something surprising: the fund you pick matters far less than one overlooked detail that quietly de",
-      "title": "If You Had Invested $500 a Month in VOO Since Its 2010 Launch, You Would Have About $330,000 Today",
-      "url": "https://247wallst.com/investing/etf/2026/09/20/if-you-had-invested-500-a-month-in-voo-since-its-2010-launch-you-would-have-about-330000-today/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 16:05:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Both options are rooted in the same basic buy-and-hold philosophy, but one differs from the other in one way that's very important for the foreseeable future.",
-      "title": "Is Berkshire Hathaway Stock a Better Buy Than an S&amp;P 500 Index Fund?",
-      "url": "https://www.fool.com/investing/2026/09/19/is-berkshire-hathaway-stock-a-better-buy-than-an/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 23:52:05 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "A simple momentum screen applied to S&amp;P 500 stocks has quietly built a performance gap that turns identical starting portfolios into dramatically different ending balances, and the strategy costs ",
-      "title": "SPMO Owns the S&amp;P 500’s 100 Fastest-Rising Stocks. Its Momentum Screen Has Beaten the Index by 67-Points Over the Last Five Years",
-      "url": "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss"
+      "summary": "Meta Platforms surged far past its mega-cap peers in a single month while the broader tech sector sat flat, and now shareholders face a decision that hinges entirely on how you read what the July earn",
+      "title": "Meta Platforms Just Ripped 23% in a Month: Take Profits, or Buy More?",
+      "url": "https://247wallst.com/investing/2026/09/18/meta-platforms-just-ripped-23-in-a-month-take-profits-or-buy-more/?.tsrc=rss"
     },
     {
       "category": "other",
@@ -653,16 +653,16 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:40:17.475613+00:00",
+  "probed_at": "2026-09-20T15:42:29.891828+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.59s",
+      "note": "耗时 1.58s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 1.00s",
+      "note": "耗时 1.07s",
       "ok": true
     },
     "edgar": {
@@ -672,7 +672,7 @@
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.66s",
+      "note": "耗时 0.70s",
       "ok": true
     },
     "fed_monetary": {
@@ -680,14 +680,13 @@
       "note": "耗时 0.65s",
       "ok": true
     },
-    "nasdaq_calendar_2026-09-20": {
-      "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.71s",
-      "ok": true
+    "nasdaq_calendar": {
+      "err": "<urlopen error [Errno 11001] getaddrinfo failed>",
+      "ok": false
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.60s",
+      "note": "提前数天（预告）｜ 耗时 8.35s",
       "ok": true
     },
     "sec_press": {
@@ -697,7 +696,7 @@
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.54s",
+      "note": "耗时 1.26s",
       "ok": true
     }
   }

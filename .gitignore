@@ -22,3 +22,10 @@ _tmp_*
 .cursor/
 .idea/
 .vscode/
+
+# cloudflared 可执行文件（52 MB，平台相关，不进库）
+# 为什么放 tools/bin：`run_p2.find_cloudflared()` 把它列为**第一优先**路径。
+# ⚠️ 实测踩到：以前只放在 %TEMP%，而临时目录**换一个会话就没了** ——
+#    于是"上一轮还能开公网隧道，这一轮静默跳过"，日志里只有一行
+#    `没找到 cloudflared，跳过隧道`。稳定路径才是对的。
+tools/bin/

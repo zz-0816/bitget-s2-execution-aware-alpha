@@ -133,6 +133,15 @@
             <span class="hint">这一单到底怎么下；或者为什么不下</span>
           </h2>
           <div id="final-plan"><div class="loading">尚未运行</div></div>
+
+          <!-- 💵 入场测算：按「名义额 USD」这个输入算账。
+               ⚠️ 它<b>不是</b>决策链的第 7 段 —— 那 6 段回答"这一单该不该做"，
+                  这一段回答"如果我按这个金额做，账怎么算"。
+                  所以它挂在第 ⑥ 格里，而不是新加一段（STAGE_PANES 是严格 6 段对齐的）。 -->
+          <h3 class="sub-title">💵 入场损益测算
+            <span class="hint">摩擦账 · 资金费 · 裸露腿期望 · 盈亏比 —— 以及<b>算不出来的</b>部分</span>
+          </h3>
+          <div id="entry"><div class="loading">尚未运行</div></div>
         </section>
       </div>
     </section>

@@ -720,6 +720,94 @@ function renderExecProg(d) {
     src;
 }
 
+/* 💵 入场损益测算 —— 「我投这么多，能赚多少 / 亏多少 / 赔率如何」
+ *
+ * 三条硬规矩（与后端 entry_math 一致，前端**不得美化**）：
+ *   1. **算不出来的必须显示出来**。"基差变动 (B_e − B_x)" 是这类交易真正的
+ *      盈亏来源，但它是未来价格 —— 后端不给数字，前端也**不许暗示**有数字。
+ *   2. 顺利情形为负时，盈亏比是"没有意义"而不是"0"或"很差"。
+ *   3. 每个数字都要能点回来源（evidence 里有 metric/value/source）。
+ * 金额直接取页面上的「名义额 USD」—— 用户填多少就算多少。 */
+function renderEntry(d) {
+  const e = (d && d.entry) || {};
+  const box = $('entry');
+  if (!box) return;
+  if (!e.ok) {
+    box.innerHTML = '<div class="verdict-bar"><div><div class="stance mono-dim">暂不可用</div>' +
+      '<div class="mono-dim">入场测算</div></div><div class="why">' +
+      mdInline(e.why || '（后端没有返回 entry）') + '</div></div>';
+    return;
+  }
+  const usd = (v) => (v === null || v === undefined) ? '—'
+    : ((v >= 0 ? '+' : '') + fmt(v, 2) + ' USD');
+  const bp = (v) => (v === null || v === undefined) ? '—'
+    : ((v >= 0 ? '+' : '') + fmt(v, 3) + ' bp');
+  const cls = (v) => (v === null || v === undefined) ? ''
+    : (v > 0 ? 'pos' : (v < 0 ? 'neg' : ''));
+
+  const f = e.friction || {};
+  const modes = (e.modes || []).map((m) => {
+    const src = (m.fee_bp === null || m.fee_bp === undefined)
+      ? '<span class="mono-dim">（此行为成本模型口径，与上两行不同源）</span>' : '';
+    return '<tr' + (m.mode === e.mode ? ' class="hit"' : '') + '>' +
+      '<td>' + esc(m.mode) + (m.mode === e.mode ? ' <span class="tag">选定</span>' : '') +
+        (src ? '<br>' + src : '') + '</td>' +
+      '<td class="mono-dim">' + bp(m.fee_bp) + '</td>' +
+      '<td class="' + cls(m.net_bp) + '"><b>' + bp(m.net_bp) + '</b></td>' +
+      '<td class="' + cls(m.net_usd) + '">' + usd(m.net_usd) + '</td></tr>';
+  }).join('');
+
+  const scen = (e.scenarios || []).map((s) =>
+    '<tr><td>' + esc(s.name) + '</td>' +
+    '<td class="mono-dim">' + (s.prob === null || s.prob === undefined ? '—'
+      : pct(s.prob, 1)) + '</td>' +
+    '<td class="' + cls(s.net_bp) + '"><b>' + bp(s.net_bp) + '</b></td>' +
+    '<td class="' + cls(s.net_usd) + '">' + usd(s.net_usd) + '</td></tr>').join('');
+
+  const ev = (e.evidence || []).map((x) =>
+    '<tr><td>' + mdInline(x.metric) + '</td><td class="mono-dim">' + esc(x.value) + '</td>' +
+    '<td class="sep mono-dim">' + esc(x.source) + '</td></tr>').join('');
+
+  const notInc = (e.not_included || []).map((x) =>
+    '<li>' + mdInline(x) + '</li>').join('');
+  const notes = (e.notes || []).map((x) => '<li class="neg">' + mdInline(x) + '</li>').join('');
+
+  const verdictCls = (e.verdict === 'positive') ? 'proceed'
+    : (e.verdict === 'negative_expectation' ? 'caution' : 'stand_down');
+  const xc = e.cross_check;
+  box.innerHTML =
+    '<div class="verdict-bar ' + verdictCls + '">' +
+      '<div><div class="stance">' + usd((e.scenarios || [{}])[0].net_usd) + '</div>' +
+      '<div class="mono-dim">投入 ' + fmt(e.qty_usd, 0) + ' USD ｜ 方式「' +
+      esc(e.mode) + '」</div></div>' +
+      '<div class="why">' + mdInline(e.why || '') + '</div></div>' +
+    '<div class="table-wrap"><table><thead><tr>' +
+      '<th>执行方式</th><th>往返费率</th><th>摩擦净额</th><th>按你的金额</th>' +
+    '</tr></thead><tbody>' + modes + '</tbody></table></div>' +
+    '<div class="table-wrap" style="margin-top:8px"><table><thead><tr>' +
+      '<th>情形</th><th>实测概率</th><th>净额</th><th>按你的金额</th>' +
+    '</tr></thead><tbody>' + scen + '</tbody></table></div>' +
+    (e.expectation ? '<p class="hint">概率加权期望（用<b>实测联合成交分布</b>加权）：<b class="' +
+      cls(e.expectation.bp) + '">' + bp(e.expectation.bp) + '</b> = ' +
+      usd(e.expectation.usd) + '　' + mdInline(e.expectation.note || '') + '</p>' : '') +
+    '<p class="hint"><b>盈亏比</b>：' +
+      (e.rr_ratio === null || e.rr_ratio === undefined
+        ? '<span class="mono-dim">不适用</span>' : '<b>' + fmt(e.rr_ratio, 2) + ' : 1</b>') +
+      '　' + mdInline(e.rr_note || '') + '</p>' +
+    '<div class="table-wrap"><table><thead><tr>' +
+      '<th>实测量</th><th>值</th><th class="sep">来源</th></tr></thead><tbody>' +
+      ev + '</tbody></table></div>' +
+    (xc ? '<p class="hint">两套成本口径交叉核对（' +
+      (xc.checks || []).map((c) => esc(c.mode) + ' 差 ' + fmt(c.diff_bp, 2) + ' bp').join('；') +
+      '）：' + mdInline(xc.note || '') + '</p>' : '') +
+    /* 🔴 这一块**必须**在页面上，而且不能折叠 —— 它是这个卡片诚实与否的分界线 */
+    '<div class="side" style="border-color:var(--warn-line)">' +
+      '<div class="sd-head"><span>⚠️ 这张表<b>算不出来</b>什么（比上面的数字更重要）</span></div>' +
+      '<ul class="not-inc">' + notInc + '</ul>' +
+      (notes ? '<ul class="not-inc">' + notes + '</ul>' : '') +
+    '</div>';
+}
+
 function renderCost(d) {
   const c = d.cost || {};
   // 条形只写 data-w（目标宽度），由 animateBars 在下一帧设 style.width —— 这样
@@ -794,7 +882,7 @@ async function runDecision(base, qty) {
     const d = (await api(API.decision + '?base=' + encodeURIComponent(base) +
       '&qty=' + qty + '&position=' + encodeURIComponent(pm))).decision;
     renderVerdict(d); renderAnalysts(d); renderDebate(d); renderGate(d);
-    renderTrader(d); renderRisk(d); renderExecProg(d); renderCost(d); renderProv(d);
+    renderTrader(d); renderRisk(d); renderEntry(d); renderExecProg(d); renderCost(d); renderProv(d);
     $('run-state').textContent = '完成 ｜ ' + d.base + ' ｜ ' + d.generated_utc;
     if ($('pos-state')) {
       const e = d.execution_progress || {};

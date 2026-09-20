@@ -423,6 +423,8 @@ def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
         # 📉 数据新鲜度：每个输入源落后多少 + 这算不算危险。
         #    离线声明模式（basis=asof）只说"旧"，实时模式但输入停了才叫 stale。
         "freshness": dec.get("freshness"),
+        # 💵 入场损益测算：给定金额 -> 能算的（摩擦/资金费/裸露期望）+ **算不出来的**
+        "entry": dec.get("entry"),
         "min_notional_usd": _min_notional(),
         "edge_threshold_bp": _edge_threshold(),
         "prompt": _prompt_info(),

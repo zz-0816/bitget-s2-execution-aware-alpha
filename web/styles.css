@@ -692,6 +692,20 @@ tbody tr[data-open] td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 }
 .chip-quiet:hover { color: var(--text-dim); border-color: var(--line-strong); }
 
+/* 💵 入场测算：「算不出来的」那一块必须显眼（它是这个卡片诚实与否的分界线） */
+.not-inc { margin: var(--sp-2) 0 0; padding-left: 1.1em; }
+.not-inc li {
+  font-size: var(--fs-12); color: var(--text-dim); line-height: 1.7;
+  margin-bottom: var(--sp-1);
+}
+/* 详情区里的小标题（入场测算挂在第 ⑥ 格下面，不是新的一段） */
+.sub-title {
+  margin: var(--sp-5) 0 var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px dashed var(--line-subtle);
+  font-size: var(--fs-14); font-weight: var(--fw-semi); color: var(--text);
+}
+
 /* ============================== 12. 成本条 ============================== */
 .costbar { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-1) 0; font-size: var(--fs-12); }
 .costbar .cb-name  { width: 148px; flex: 0 0 148px; color: var(--text-dim); }

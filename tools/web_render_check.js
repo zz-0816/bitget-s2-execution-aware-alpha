@@ -231,6 +231,42 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }
 
+  // ---- 💵 入场损益测算：能把账算清，也能把"算不出来"说清 ----
+  //   这一块最危险的失败方式是**看起来算得很全**：把"基差变动"这种真正的
+  //   盈亏来源悄悄漏掉、只留一串漂亮的摩擦数字。所以断言分两头：
+  //   ① 该有的数字都在；② **"算不出来的"必须显式列出**。
+  //   ⚠️ 页面**默认**跑的是 `position=auto` 那一份；写死别的 key 会取到
+  //      undefined -> 断言静默跳过（这个坑本轮已经踩过两次，所以这里显式判空）。
+  const autoKey = Object.keys(fixtures).find(
+    (k) => k.startsWith('/api/decision') && k.includes('position=auto'));
+  const mainDecision = (fixtures[autoKey] || {}).decision;
+  const en = rendered.get('entry') || '';
+  const ed = (mainDecision || {}).entry || {};
+  if (!ed || ed.ok === undefined) {
+    problems.push('决策里没有 entry（入场测算没接线）');
+  } else if (!ed.ok) {
+    notes.push('入场测算如实报不可用：' + String(ed.why || '').slice(0, 40));
+  } else {
+    if (!/基差变动/.test(en)) {
+      problems.push('入场测算**没有**把"基差变动算不出来"写在页面上（这是它的分界线）');
+    }
+    if (!/盈亏比/.test(en)) problems.push('入场测算没有显示盈亏比');
+    (ed.scenarios || []).forEach((s) => {
+      if (!en.includes(s.name.split('：')[0])) {
+        problems.push('情形没有渲染出来：' + s.name);
+      }
+    });
+    if (ed.scenarios && ed.scenarios.length >= 2) {
+      const a = ed.scenarios[0].net_bp, b = ed.scenarios[1].net_bp;
+      if (!(b < a)) problems.push('裸露情形的净额没有低于顺利情形（口径可能反了）');
+    }
+    if (ed.scenarios && ed.scenarios[0].net_bp <= 0 && ed.rr_ratio !== null) {
+      problems.push('顺利情形为负却给了盈亏比（应当"不适用"）');
+    }
+    notes.push('入场测算 ✓（' + ed.mode + ' ｜ 顺利 ' + ed.scenarios[0].net_bp +
+      ' bp ｜ 裸露 ' + ed.scenarios[1].net_bp + ' bp ｜ 盈亏比 ' +
+      (ed.rr_ratio === null ? '不适用' : ed.rr_ratio) + ' ｜ 已列出算不出来的部分）');
+  }
   // ---- 📉 数据新鲜度：顶栏必须写清"有多旧"，且**按模式分开措辞** ----
   //   两种"旧"在页面上长得一样就白做了：离线演示（声明过的）该安静，
   //   实时但输入停了该红。这里断言的是"页面没有把这两种混为一谈"。

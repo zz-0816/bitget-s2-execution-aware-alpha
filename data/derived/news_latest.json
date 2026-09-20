@@ -1,12 +1,12 @@
 {
-  "base": "AAPL",
+  "base": "META",
   "categories": {
-    "earnings": 2,
+    "earnings": 3,
     "earnings_scheduled": 8,
-    "filing": 3,
-    "filing_material": 9,
+    "filing": 4,
+    "filing_material": 8,
     "macro": 8,
-    "other": 38
+    "other": 37
   },
   "event_driven": {
     "first_run": false,
@@ -15,8 +15,6 @@
     "should_call_llm": false
   },
   "headlines_for_gate": [
-    "[2026-07-31] AAPL 申报：10-Q（季报）",
-    "[2026-07-30] AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -25,13 +23,15 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-17] AAPL 申报：4（内部人交易（Form 4））",
-    "[2026-09-10] AAPL 申报：4（内部人交易（Form 4））"
+    "[2026-09-17] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-16] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-11] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-10] META 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "Apple Inc.",
+      "company": "Meta Platforms, Inc.",
       "date": "2026-09-17",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -39,12 +39,64 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126037020/xslF345X06/form4.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014140/xslF345X06/ownership.xml"
     },
     {
       "category": "filing_material",
-      "company": "Apple Inc.",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-16",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014061/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-15",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001023/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-14",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001013/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-11",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013860/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
       "date": "2026-09-10",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -52,77 +104,51 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126036226/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035636/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035362/xslF345X06/form4.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013794/xslF345X06/ownership.xml"
     },
     {
       "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "3",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-09",
+      "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：3",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035359/xslF345X06/form3.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "8-K/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035325/ef20081427_8ka.htm"
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001004/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-27",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-08",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126034741/xslF345X06/form4.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013672/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-08",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001000/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Apple Inc.",
+      "company": "Meta Platforms, Inc.",
       "date": "2026-08-20",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -130,60 +156,34 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126033928/xslF345X06/form4.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012729/xslF345X06/ownership.xml"
     },
     {
       "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-13",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126032884/xslF345X06/form4.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012727/xslF345X06/ownership.xml"
     },
     {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-08-11",
-      "form": "144",
-      "form_meaning": "",
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
-      "material": false,
+      "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "AAPL 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000195004726007959/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-31",
-      "form": "10-Q",
-      "form_meaning": "季报",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-30",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012726/xslF345X06/ownership.xml"
     },
     {
       "category": "earnings_scheduled",
@@ -635,91 +635,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:00:22 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most investors celebrate a stock that turns every dollar into eleven, but holding a massive winner inside a traditional IRA sets up a collision between the IRS and your retirement timeline that gets w",
-      "title": "Turning 73 Forces a Withdrawal From This Stock Whether the Owner Wants the Cash or Not",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/turning-73-forces-a-withdrawal-from-this-stock-whether-the-owner-wants-the-cash-or-not/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 22:07:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The credit is bigger this year. The bill at the register still isn’t zero.",
-      "title": "Bank of America does the math on Apple's $1,200 iPhone offer",
-      "url": "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 16:03:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple’s price target hike comes on the heels of surprising consumer survey findings.",
-      "title": "Apple gets bullish Wall Street call as iPhone demand jumps",
-      "url": "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 15:11:11 +0000",
+      "date": "Sun, 20 Sep 2026 16:03:03 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Coinbase’s filing used an Apple contract as its model, which is cash-settled, has no fixed expiration, and would trade from Sunday to Friday.",
-      "title": "Coinbase Files With CFTC To List US Single-Stock Perpetual Futures, Including AAPL And TSLA Contracts",
-      "url": "https://stocktwits.com/news-articles/markets/equity/coinbase-apple-tesla-perpetual-futures-coin-tsla-aapl/cZtxEhbRBEs?.tsrc=rss"
+      "summary": "Oppenheimer's top internet analyst ran the numbers on Meta's AI subscription push and walked away skeptical, raising a pointed question about whether Muse can ever justify the valuation premium Wall S",
+      "title": "Analyst: Meta Needs Just 115 Million Users to Ignite a $28 Billion AI Gold Rush — But It’s Not Likely to Happen",
+      "url": "https://247wallst.com/investing/2026/09/20/analyst-meta-needs-just-115-million-users-to-ignite-a-28-billion-ai-gold-rush-but-its-not-likely-to-happen/?.tsrc=rss"
     },
     {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 12:50:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple stock just got a price target cut due to the memory processor crunch.",
-      "title": "John Ternus's First iPhone Launch Prompted a Bank of America Price Target Cut. Is Apple Stock a Buy?",
-      "url": "https://www.fool.com/investing/2026/09/19/john-ternuss-first-iphone-launch-prompted-a-bank-o/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 11:22:00 +0000",
+      "category": "earnings",
+      "date": "Sun, 20 Sep 2026 14:40:01 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The pride of Cupertino continues its winning ways, and investors are eager to jump on the bandwagon.",
-      "title": "History Says You Should Know These 3 Things Before Buying Apple Stock (AAPL)",
-      "url": "https://www.fool.com/investing/2026/09/19/history-says-3-things-before-buy-apple-stock-aapl/?.tsrc=rss"
+      "summary": "ChatGPT ads just passed $1 billion in annualized revenue.",
+      "title": "OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
+      "url": "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:10:00 +0000",
+      "date": "Sat, 19 Sep 2026 16:17:00 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Buffett bought more than $77 billion of this stock in the years leading up to his retirement.",
-      "title": "Greg Abel Recently Plowed $4.2 Billion Into Warren Buffett's Favorite Stock, and It Wasn't Apple",
-      "url": "https://www.fool.com/investing/2026/09/20/greg-abel-42-billion-warren-buffetts-stock-apple/?.tsrc=rss"
+      "summary": "Here’s the bull thesis Wall Street thinks investors are missing",
+      "title": "Meta stock delivers a bold case for a $900 target",
+      "url": "https://www.thestreet.com/investing/meta-stock-900-price-target-ai-ad-engine?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 19:13:00 +0000",
+      "date": "Sat, 19 Sep 2026 14:00:02 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Jim Cramer touts a former mobile phone king as an AI buy, though its Q2 cash flow raises questions.",
-      "title": "Cramer strongly recommends buying beaten-down 90s tech legend",
-      "url": "https://www.thestreet.com/investing/stocks/cramer-recommends-nokia-beaten-down-90s-ai-tech?.tsrc=rss"
+      "summary": "Meta Platforms is catching up with OpenAI and Claude, and its Muse Spark models are surprising analysts.",
+      "title": "JPMorgan Changed Its Mind on Meta Stock After This Major AI Breakthrough",
+      "url": "https://www.barchart.com/story/news/4695238/jpmorgan-changed-its-mind-on-meta-stock-after-this-major-ai-breakthrough?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 12:21:39 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Citi sees Meta rising 19% on its Connect event, but the real question is whether AI spending is finally boosting the ad business.",
+      "title": "Meta Stock Could Hit $800 This Year -- And It All Begins on Sept. 23",
+      "url": "https://www.barchart.com/story/news/4694310/meta-stock-could-hit-800-this-year-and-it-all-begins-on-sept-23?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 07:57:56 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Meta Platforms, Inc. (NASDAQ:META) is taking another step toward monetizing artificial intelligence beyond its core advertising business. On September 9, the company acquired AI startup Stilla.ai. The",
+      "title": "Meta (META)’s Stilla.ai Deal Could Turn Business Agent Into a New Monetization Engine",
+      "url": "https://finance.yahoo.com/technology/ai/articles/meta-meta-stilla-ai-deal-075756581.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 20:35:02 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Meta's New AI App Grew Almost as Fast as ChatGPT in Its First 5 Days. Is Meta Stock a Buy?",
+      "title": "Meta's Muse Just Had a Breakout Launch. Is It a Game Changer for the Stock?",
+      "url": "https://www.fool.com/investing/2026/09/18/meta-s-muse-just-had-a-breakout-launch-here-s-what-it-means-for-the-stock/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 19:47:06 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "The commerce company has made major inroads into embedded finance, a strategy that could get a boost from partnering with the social media giant's new AI agent.",
+      "title": "How Shopify and Meta are diving deeper into banking",
+      "url": "https://www.americanbanker.com/payments/news/shopify-adds-meta-muse-to-agentic-ai-strategy?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,51 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T16:20:16.463961+00:00",
+  "probed_at": "2026-09-20T16:37:58.247718+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.67s",
+      "note": "耗时 1.64s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.83s",
+      "note": "耗时 0.89s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.37s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.06s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.75s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.67s",
+      "note": "耗时 0.64s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 2.67s",
+      "note": "提前数天（预告）｜ 耗时 1.36s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 2.15s",
+      "note": "提前数天（预告）｜ 耗时 1.94s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.63s",
+      "note": "耗时 0.75s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 0.98s",
+      "note": "耗时 1.05s",
       "ok": true
     }
   }

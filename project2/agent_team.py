@@ -3605,6 +3605,21 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     #    取决于 basis，而 basis 是 time_basis 判出来的。
     decision["freshness"] = data_freshness(now_ms=now_ms,
                                            basis=(tb or {}).get("basis"))
+    # 💵 入场损益测算：给定金额，算**能算的**（摩擦 + 资金费 + 裸露腿期望），
+    #    并明确列出**算不出来的**（基差变动等）。纯派生 —— 不改任何输入，
+    #    所以它**不需要进复跑契约**（不是新的决策输入）。
+    try:
+        try:
+            from entry_math import entry_math as _entry
+        except ImportError:
+            from project2.entry_math import entry_math as _entry
+        decision["entry"] = _entry(base, qty_usd, cost=cost,
+                                   mode=(decision.get("trader") or {}).get("mode"))
+    except Exception as exc:  # noqa: BLE001
+        # 测算失败**不能静默**：如实记下，但不要让整条链挂掉
+        decision["entry"] = {"ok": False,
+                             "why": "入场测算不可用：%s: %s"
+                                    % (type(exc).__name__, exc)}
     return cost, items, debate, decision, book
 
 
@@ -4357,6 +4372,20 @@ def decision_selftest():
             % ((_dec_f.get("freshness") or {}).get("verdict"),))
     except Exception as exc:  # noqa: BLE001
         chk(False, "数据新鲜度官自检异常：%r" % (exc,))
+
+    # ---- ⑮ 💵 入场损益测算：模块自检（走同一条链，避免再加一步自检步骤）----
+    #    它的数字是**给用户拿去做决定**的，所以判定规则本身必须被验证：
+    #    换算只有一处公式、公式与项目一一致、负数/缺失时不硬算、
+    #    "算不出来的"（基差变动）必须被显式列出。
+    try:
+        try:
+            import entry_math as _em
+        except ImportError:
+            from project2 import entry_math as _em  # type: ignore
+        print("  ── 入场损益测算（模块自检）──")
+        chk(_em.selftest() == 0, "入场测算模块自检通过（换算 / 公式 / 不硬算）")
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "入场测算自检异常：%r" % (exc,))
 
     print("\n交易员/风控官自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1

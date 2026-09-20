@@ -1,25 +1,20 @@
 {
-  "base": "NVDA",
+  "base": "META",
   "categories": {
-    "earnings": 3,
+    "earnings": 4,
     "earnings_scheduled": 8,
-    "filing": 2,
-    "filing_material": 10,
+    "filing": 4,
+    "filing_material": 8,
     "macro": 8,
-    "other": 37
+    "other": 36
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 2,
+    "n_fresh": 0,
     "n_total": 68,
-    "should_call_llm": true
+    "should_call_llm": false
   },
-  "fresh_headlines": [
-    "[Sun, 20 Se] OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
-    "[Sun, 20 Se] The Bond Market Is Rattled, and History Says That Could Be a Warning Signal to Investors"
-  ],
   "headlines_for_gate": [
-    "[2026-09-03] NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -28,92 +23,67 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））",
-    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））",
-    "[2026-09-18] NVDA 申报：4（内部人交易（Form 4））"
+    "[2026-09-17] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-16] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-11] META 申报：4（内部人交易（Form 4））",
+    "[2026-09-10] META 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-17",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000124382126000007/xslF345X06/wk-form4_1789766132.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014140/xslF345X06/ownership.xml"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-16",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000128385426000010/xslF345X06/wk-form4_1789766082.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000169684126000012/xslF345X06/wk-form4_1789766007.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000158867026000014/xslF345X06/wk-form4_1789765959.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764926000012/xslF345X06/wk-form4_1789765856.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014061/xslF345X06/ownership.xml"
     },
     {
       "category": "filing",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-17",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-15",
       "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000195824426000615/xsl144X01/primary_doc.xml"
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001023/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-14",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001013/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
+      "company": "Meta Platforms, Inc.",
       "date": "2026-09-11",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -121,12 +91,38 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000005/xslF345X06/wk-form4_1789160684.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013860/xslF345X06/ownership.xml"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-10",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013794/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-09",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001004/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
       "date": "2026-09-08",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -134,60 +130,60 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119903926000014/xslF345X06/wk-form4_1788901755.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-04",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764726000009/xslF345X06/wk-form4_1788555631.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013672/xslF345X06/ownership.xml"
     },
     {
       "category": "filing",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-03",
-      "form": "3",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-08",
+      "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：3",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000003/xslF345X06/wk-form3_1788468666.xml"
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001000/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-03",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/nvda-20260902.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-02",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119903926000012/xslF345X06/wk-form4_1788387031.xml"
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012729/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012727/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012726/xslF345X06/ownership.xml"
     },
     {
       "category": "earnings_scheduled",
@@ -638,21 +634,10 @@
       "url": "https://www.bea.gov/news/2026/us-international-transactions-and-investment-position-1st-quarter-2026-and-annual-update"
     },
     {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 12:00:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "A charitable remainder trust can help if you're anxious to escape a concentrated stock position without a capital gains tax hit.",
-      "title": "Sitting on Large Capital Gains? Here Is the Overlooked Trust That Helps You Exit Concentrated Stock Tax-Free",
-      "url": "https://www.kiplinger.com/taxes/tax-planning/avoid-capital-gains-with-a-charitable-remainder-trust?.tsrc=rss"
-    },
-    {
       "category": "earnings",
       "date": "Sun, 20 Sep 2026 14:40:01 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
       "summary": "ChatGPT ads just passed $1 billion in annualized revenue.",
@@ -661,69 +646,80 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 14:35:00 +0000",
+      "date": "Sat, 19 Sep 2026 16:17:00 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Bond yields rose ahead of the Fed rate hike, and investors should be worried about Wall Street and Main Street.",
-      "title": "The Bond Market Is Rattled, and History Says That Could Be a Warning Signal to Investors",
-      "url": "https://www.fool.com/investing/2026/09/20/the-bond-market-is-rattled-and-history-says-that-c/?.tsrc=rss"
+      "summary": "Here’s the bull thesis Wall Street thinks investors are missing",
+      "title": "Meta stock delivers a bold case for a $900 target",
+      "url": "https://www.thestreet.com/investing/meta-stock-900-price-target-ai-ad-engine?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:23:00 +0000",
+      "date": "Sat, 19 Sep 2026 14:00:02 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A $5,000 investment if SpaceX would need to climb 200 times to reach $1 million.",
-      "title": "Could $5,000 Invested in SpaceX Help You Retire a Millionaire?",
-      "url": "https://www.fool.com/investing/2026/09/20/could-5000-invested-in-spacex-help-you-retire-a-mi/?.tsrc=rss"
+      "summary": "Meta Platforms is catching up with OpenAI and Claude, and its Muse Spark models are surprising analysts.",
+      "title": "JPMorgan Changed Its Mind on Meta Stock After This Major AI Breakthrough",
+      "url": "https://www.barchart.com/story/news/4695238/jpmorgan-changed-its-mind-on-meta-stock-after-this-major-ai-breakthrough?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:50:00 +0000",
+      "date": "Sat, 19 Sep 2026 12:21:39 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The company's strong pipeline and newer approved drugs should be enough to allay patent expiration concerns.",
-      "title": "Wall Street's Bull Case for Bristol Myers Squibb Is Getting Louder",
-      "url": "https://www.fool.com/investing/2026/09/20/wall-streets-bull-case-for-bristol-myers-squibb-is/?.tsrc=rss"
+      "summary": "Citi sees Meta rising 19% on its Connect event, but the real question is whether AI spending is finally boosting the ad business.",
+      "title": "Meta Stock Could Hit $800 This Year -- And It All Begins on Sept. 23",
+      "url": "https://www.barchart.com/story/news/4694310/meta-stock-could-hit-800-this-year-and-it-all-begins-on-sept-23?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:42:00 +0000",
+      "date": "Sat, 19 Sep 2026 07:57:56 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Palantir is in the AI defense spotlight, but a pair of hardware-focused rivals may offer a steadier way to play the same trend.",
-      "title": "Why You Should Avoid Palantir and Buy These 2 Defense Stocks Instead",
-      "url": "https://www.fool.com/investing/2026/09/20/why-you-should-avoid-palantir-and-buy-these-2-defe/?.tsrc=rss"
+      "summary": "Meta Platforms, Inc. (NASDAQ:META) is taking another step toward monetizing artificial intelligence beyond its core advertising business. On September 9, the company acquired AI startup Stilla.ai. The",
+      "title": "Meta (META)’s Stilla.ai Deal Could Turn Business Agent Into a New Monetization Engine",
+      "url": "https://finance.yahoo.com/technology/ai/articles/meta-meta-stilla-ai-deal-075756581.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:07:00 +0000",
+      "date": "Fri, 18 Sep 2026 20:35:02 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The eVTOL industry could be a generational investment opportunity, but that doesn't mean every eVTOL stock will be a winner.",
-      "title": "Archer Aviation Trades Near $5. Could a $5,000 Investment Set You Up for Life?",
-      "url": "https://www.fool.com/investing/2026/09/20/archer-aviation-trades-near-5-could-a-5000-investm/?.tsrc=rss"
+      "summary": "Meta's New AI App Grew Almost as Fast as ChatGPT in Its First 5 Days. Is Meta Stock a Buy?",
+      "title": "Meta's Muse Just Had a Breakout Launch. Is It a Game Changer for the Stock?",
+      "url": "https://www.fool.com/investing/2026/09/18/meta-s-muse-just-had-a-breakout-launch-here-s-what-it-means-for-the-stock/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:37:00 +0000",
+      "date": "Fri, 18 Sep 2026 19:47:06 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "You're shaking your head, aren't you? Hear me out.",
-      "title": "AMC Stock Is Up 73% This Year. Why Are You Still Laughing?",
-      "url": "https://www.fool.com/investing/2026/09/20/amc-stock-is-up-73-this-year-why-are-you-still-lau/?.tsrc=rss"
+      "summary": "The commerce company has made major inroads into embedded finance, a strategy that could get a boost from partnering with the social media giant's new AI agent.",
+      "title": "How Shopify and Meta are diving deeper into banking",
+      "url": "https://www.americanbanker.com/payments/news/shopify-adds-meta-muse-to-agentic-ai-strategy?.tsrc=rss"
+    },
+    {
+      "category": "earnings",
+      "date": "Fri, 18 Sep 2026 18:47:39 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Meta Platforms surged far past its mega-cap peers in a single month while the broader tech sector sat flat, and now shareholders face a decision that hinges entirely on how you read what the July earn",
+      "title": "Meta Platforms Just Ripped 23% in a Month: Take Profits, or Buy More?",
+      "url": "https://247wallst.com/investing/2026/09/18/meta-platforms-just-ripped-23-in-a-month-take-profits-or-buy-more/?.tsrc=rss"
     },
     {
       "category": "other",
@@ -815,51 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:00:05.526691+00:00",
+  "probed_at": "2026-09-20T15:02:21.421609+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.67s",
+      "note": "耗时 1.59s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 1.13s",
+      "note": "耗时 0.95s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.58s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.52s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.63s",
+      "note": "耗时 0.67s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.63s",
+      "note": "耗时 0.68s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 1.56s",
+      "note": "提前数天（预告）｜ 耗时 0.62s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 1.51s",
+      "note": "提前数天（预告）｜ 耗时 0.60s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.69s",
+      "note": "耗时 0.62s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.03s",
+      "note": "耗时 1.64s",
       "ok": true
     }
   }

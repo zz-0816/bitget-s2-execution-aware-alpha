@@ -79,7 +79,36 @@ def rel(p):
     return os.path.relpath(p, BASE).replace("\\", "/")
 
 
-def git_sets():
+def ignored_by_rule(refs):
+    """哪些引用路径**会被 .gitignore 规则排除** —— 不管它现在在不在磁盘上。
+
+    🔴 必须用 `git check-ignore`，**不能**用 `git ls-files -o -i`：
+    后者只列**磁盘上确实存在**的被忽略文件。在刚 clone 出来的仓库里
+    `data/derived/event_driven_state.json` 根本不存在（它是运行时产物），
+    于是它既不在 tracked 里、也不在 ignored 里，被当成"未声明失效" ->
+    **同一份文档在开发机通过、在 clone 里失败**。
+
+    ⚠️ 这是同一个坑的**第二次**：第一次是"用 os.path.exists 判在不在仓库"，
+    改成 git 之后仍然按"文件在不在"取被忽略集合。两次的共性都是
+    **把"磁盘状态"当成了"仓库状态"**。规则要按**规则**判，不按现象判。
+    """
+    import subprocess
+    refs = sorted(set(refs))
+    if not refs:
+        return set()
+    try:
+        r = subprocess.run(["git", "check-ignore", "--stdin"], cwd=BASE,
+                           input="\n".join(refs).encode("utf-8"),
+                           capture_output=True)
+    except OSError:
+        return set()
+    # check-ignore：有命中返回 0，无命中返回 1；其它返回码视为不可用
+    if r.returncode not in (0, 1):
+        return set()
+    return set(r.stdout.decode("utf-8", "replace").splitlines())
+
+
+def git_sets(extra_refs=()):
     """用 **git** 判定"这个路径算不算在本仓库里"，而不是 `os.path.exists()`。
 
     🔴 这一条是被新克隆打脸才补上的：初版用 `os.path.exists()`，于是
@@ -106,8 +135,10 @@ def git_sets():
     tracked = run(["ls-files"])
     if tracked is None:
         return None, None, "读不到 git（可能是 zip 下载）-> 退回按存在性判定"
-    ignored = run(["ls-files", "-o", "-i", "--exclude-standard"]) or []
-    return set(tracked), set(ignored), None
+    # 存在的被忽略文件 + **按规则**会被忽略的引用路径，两者并起来
+    ignored = set(run(["ls-files", "-o", "-i", "--exclude-standard"]) or [])
+    ignored |= ignored_by_rule(extra_refs)
+    return set(tracked), ignored, None
 
 
 def convention_paths():
@@ -187,14 +218,13 @@ def classify(ref, tracked, ignored):
     return False
 
 
-def check(project_one=None, verbose=True):
-    """返回 (ok, problems, notes, stats)。"""
-    conv = convention_paths()
-    p1 = find_project_one(project_one)
-    tracked, ignored, degrade = git_sets()
-    problems, notes = [], []
-    n_ref = n_local = n_cross = n_up = n_rt = 0
+def collect_refs():
+    """第一遍：把所有 (文件, 行号, 引用) 收集起来。
 
+    分两遍是必须的：`ignored_by_rule()` 要拿到**全部**引用路径才能一次批量问 git，
+    而"哪些路径被 .gitignore 规则排除"又必须在判定**之前**就位。
+    """
+    out = []
     for f in doc_files():
         full = f if os.path.isabs(f) else os.path.join(BASE, f)
         try:
@@ -206,26 +236,37 @@ def check(project_one=None, verbose=True):
             for ref in REF.findall(ln):
                 if ref.startswith(SKIP_PREFIX) or TEMPLATE.search(ref):
                     continue
-                n_ref += 1
-                in_repo = classify(ref, tracked, ignored)
-                if p1:
-                    up = os.path.exists(os.path.join(p1, ref))
-                else:
-                    up = None
-                kind, problem = judge(ref, lines, ln_no, conv, in_repo, up)
-                if kind == "local":
-                    n_local += 1
-                elif kind == "runtime":
-                    n_rt += 1
-                elif kind == "cross":
-                    n_cross += 1
-                    if up:
-                        n_up += 1
-                    else:
-                        notes.append("`%s` 仅凭声明通过（未提供项目一仓库，"
-                                     "未验证上游）" % ref)
-                else:
-                    problems.append("%s:%d %s" % (rel(full), ln_no, problem))
+                out.append((full, lines, ln_no, ref))
+    return out
+
+
+def check(project_one=None, verbose=True):
+    """返回 (ok, problems, notes, stats)。"""
+    conv = convention_paths()
+    p1 = find_project_one(project_one)
+    items = collect_refs()
+    tracked, ignored, degrade = git_sets(r[3] for r in items)
+    problems, notes = [], []
+    n_ref = n_local = n_cross = n_up = n_rt = 0
+
+    for full, lines, ln_no, ref in items:
+        n_ref += 1
+        in_repo = classify(ref, tracked, ignored)
+        up = os.path.exists(os.path.join(p1, ref)) if p1 else None
+        kind, problem = judge(ref, lines, ln_no, conv, in_repo, up)
+        if kind == "local":
+            n_local += 1
+        elif kind == "runtime":
+            n_rt += 1
+        elif kind == "cross":
+            n_cross += 1
+            if up:
+                n_up += 1
+            else:
+                notes.append("`%s` 仅凭声明通过（未提供项目一仓库，"
+                             "未验证上游）" % ref)
+        else:
+            problems.append("%s:%d %s" % (rel(full), ln_no, problem))
 
     if degrade:
         notes.insert(0, degrade)
@@ -312,6 +353,18 @@ def selftest():
     chk(classify("disk_only.py", set(), set()) == "untracked"
         or not os.path.exists(os.path.join(BASE, "disk_only.py")),
         "classify：磁盘上有但没入库 -> untracked（不是 True）")
+
+    # ④e 🔴 关键回归：被 .gitignore 规则排除、但**磁盘上不存在**的路径
+    #     也必须判为 runtime。这就是"开发机通过、clone 失败"那一处的根因 ——
+    #     断言它**不依赖文件是否存在**，所以在任何机器上都成立。
+    ig = ignored_by_rule(["data/derived/event_driven_state.json",
+                          "data/run/record.jsonl",
+                          "tools/agent_team.py"])
+    chk("data/derived/event_driven_state.json" in ig,
+        "被 .gitignore 规则排除的路径**即使磁盘上不存在**也判为 ignored"
+        "（不能按『文件在不在』取集合）")
+    chk("data/run/record.jsonl" in ig and "tools/agent_team.py" not in ig,
+        "ignored_by_rule：运行时目录命中、已入库文件不命中")
 
     # ⑤ 声明了但上游也没有 -> fail（真断链，不能被"声明"洗白）
     kind, prob = judge("tools/y.py", lines, 3, set(), False, False)

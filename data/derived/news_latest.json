@@ -1,12 +1,12 @@
 {
-  "base": "META",
+  "base": "TSLA",
   "categories": {
-    "earnings": 4,
+    "earnings": 2,
     "earnings_scheduled": 8,
-    "filing": 4,
-    "filing_material": 8,
+    "filing": 5,
+    "filing_material": 7,
     "macro": 8,
-    "other": 36
+    "other": 38
   },
   "event_driven": {
     "first_run": false,
@@ -15,6 +15,9 @@
     "should_call_llm": false
   },
   "headlines_for_gate": [
+    "[2026-07-23] TSLA 申报：10-Q（季报）",
+    "[2026-07-22] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-07-02] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -23,119 +26,25 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-17] META 申报：4（内部人交易（Form 4））",
-    "[2026-09-16] META 申报：4（内部人交易（Form 4））",
-    "[2026-09-11] META 申报：4（内部人交易（Form 4））",
-    "[2026-09-10] META 申报：4（内部人交易（Form 4））"
+    "[2026-09-09] TSLA 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014140/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014061/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-15",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001023/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-14",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001013/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-11",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013860/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-10",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013794/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Meta Platforms, Inc.",
+      "company": "Tesla, Inc.",
       "date": "2026-09-09",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "META 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001004/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-09-08",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013672/xslF345X06/ownership.xml"
+      "title": "TSLA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926106432/xslF345X06/tm2625055d1_4seq1.xml"
     },
     {
       "category": "filing",
-      "company": "Meta Platforms, Inc.",
+      "company": "Tesla, Inc.",
       "date": "2026-09-08",
       "form": "144",
       "form_meaning": "",
@@ -143,47 +52,138 @@
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "META 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001000/xsl144X01/primary_doc.xml"
+      "title": "TSLA 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726009212/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-08-20",
+      "company": "Tesla, Inc.",
+      "date": "2026-07-23",
+      "form": "10-Q",
+      "form_meaning": "季报",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "TSLA 申报：10-Q（季报）",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/tsla-20260630.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Tesla, Inc.",
+      "date": "2026-07-22",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049213/tsla-20260722.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Tesla, Inc.",
+      "date": "2026-07-02",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026046717/tsla-20260702.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Tesla, Inc.",
+      "date": "2026-06-17",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012729/xslF345X06/ownership.xml"
+      "title": "TSLA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075213/xslF345X06/tm2618092-2_4seq1.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Tesla, Inc.",
+      "date": "2026-06-17",
+      "form": "SCHEDULE 13G/A",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "TSLA 申报：SCHEDULE 13G/A",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075203/xslSCHEDULE_13G_X02/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-08-20",
+      "company": "Tesla, Inc.",
+      "date": "2026-06-09",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012727/xslF345X06/ownership.xml"
+      "title": "TSLA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926071970/xslF345X06/tm2617365-1_4seq1.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Tesla, Inc.",
+      "date": "2026-06-08",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "TSLA 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726005795/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Tesla, Inc.",
+      "date": "2026-05-29",
+      "form": "SD",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "TSLA 申报：SD",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926068275/tm2615395d1_sd.htm"
     },
     {
       "category": "filing_material",
-      "company": "Meta Platforms, Inc.",
-      "date": "2026-08-20",
+      "company": "Tesla, Inc.",
+      "date": "2026-05-15",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "META 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012726/xslF345X06/ownership.xml"
+      "title": "TSLA 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926062860/xslF345X06/tm2614845-1_4seq1.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Tesla, Inc.",
+      "date": "2026-05-13",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "TSLA 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726004463/xsl144X01/primary_doc.xml"
     },
     {
       "category": "earnings_scheduled",
@@ -634,92 +634,92 @@
       "url": "https://www.bea.gov/news/2026/us-international-transactions-and-investment-position-1st-quarter-2026-and-annual-update"
     },
     {
-      "category": "earnings",
-      "date": "Sun, 20 Sep 2026 14:40:01 +0000",
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 12:00:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "ChatGPT ads just passed $1 billion in annualized revenue.",
-      "title": "OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
-      "url": "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss"
+      "summary": "Inside the latest chatter from important business leaders.",
+      "title": "3 notable business takes that flew under the radar this week",
+      "url": "https://finance.yahoo.com/markets/article/3-notable-business-takes-that-flew-under-the-radar-this-week-120000112.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 16:17:00 +0000",
+      "date": "Sun, 20 Sep 2026 14:00:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Here’s the bull thesis Wall Street thinks investors are missing",
-      "title": "Meta stock delivers a bold case for a $900 target",
-      "url": "https://www.thestreet.com/investing/meta-stock-900-price-target-ai-ad-engine?.tsrc=rss"
+      "summary": "Would you get into a car that’s under federal investigation for having no visible controls?",
+      "title": "Tesla's new Cybercab has no steering wheel, pedals or sensors — and NHTSA wants answers by Sept. 30",
+      "url": "https://finance.yahoo.com/technology/ai/articles/teslas-cybercab-no-steering-wheel-140000210.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 14:00:02 +0000",
+      "date": "Sun, 20 Sep 2026 11:00:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta Platforms is catching up with OpenAI and Claude, and its Muse Spark models are surprising analysts.",
-      "title": "JPMorgan Changed Its Mind on Meta Stock After This Major AI Breakthrough",
-      "url": "https://www.barchart.com/story/news/4695238/jpmorgan-changed-its-mind-on-meta-stock-after-this-major-ai-breakthrough?.tsrc=rss"
+      "summary": "This week in Borderlands Mexico: Tesla plans massive distribution center near Austin and Danfoss launches new production line in Mexico for North American market. The post Borderlands Mexico: Tesla pl",
+      "title": "Borderlands Mexico: Tesla plans massive Texas distribution center",
+      "url": "https://finance.yahoo.com/economy/articles/borderlands-mexico-tesla-plans-massive-110000895.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 12:21:39 +0000",
+      "date": "Sun, 20 Sep 2026 09:10:43 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Citi sees Meta rising 19% on its Connect event, but the real question is whether AI spending is finally boosting the ad business.",
-      "title": "Meta Stock Could Hit $800 This Year -- And It All Begins on Sept. 23",
-      "url": "https://www.barchart.com/story/news/4694310/meta-stock-could-hit-800-this-year-and-it-all-begins-on-sept-23?.tsrc=rss"
+      "summary": "A Florida car dealer family just threw a $60 million Paris wedding, and the fortune behind it traces back to a legal structure most Americans have never heard of that quietly turns local car lots into",
+      "title": "A Florida Car Dealer Family Spent $60 Million on a Paris Wedding. Here’s How Dealerships Make That Kind of Money",
+      "url": "https://247wallst.com/investing/2026/09/20/a-florida-car-dealer-family-spent-60-million-on-a-paris-wedding-heres-how-dealerships-make-that-kind-of-money/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 07:57:56 +0000",
+      "date": "Sun, 20 Sep 2026 03:40:50 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta Platforms, Inc. (NASDAQ:META) is taking another step toward monetizing artificial intelligence beyond its core advertising business. On September 9, the company acquired AI startup Stilla.ai. The",
-      "title": "Meta (META)’s Stilla.ai Deal Could Turn Business Agent Into a New Monetization Engine",
-      "url": "https://finance.yahoo.com/technology/ai/articles/meta-meta-stilla-ai-deal-075756581.html?.tsrc=rss"
+      "summary": "Tesla has grown at a torrential rate in the past, but it has slowed down recently.",
+      "title": "Prediction: Here's What a $1,000 Investment in Tesla (TSLA) Stock Could Be Worth By 2036",
+      "url": "https://www.fool.com/investing/2026/09/19/prediction-what-1000-invested-in-tesla-tsla-stock/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 20:35:02 +0000",
+      "date": "Sun, 20 Sep 2026 02:11:06 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta's New AI App Grew Almost as Fast as ChatGPT in Its First 5 Days. Is Meta Stock a Buy?",
-      "title": "Meta's Muse Just Had a Breakout Launch. Is It a Game Changer for the Stock?",
-      "url": "https://www.fool.com/investing/2026/09/18/meta-s-muse-just-had-a-breakout-launch-here-s-what-it-means-for-the-stock/?.tsrc=rss"
+      "summary": "Tesla, Inc. (NASDAQ:TSLA) has once again set a deadline for its second-generation Roadster. This time, the automaker says October 1 is real, and it’s accompanied by rocket-launch visuals and a technol",
+      "title": "Nine Years, Eight Delays, and Now Rocket Thrusters: Tesla Finally Sets a Roadster Date",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/nine-years-eight-delays-now-021106695.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 19:47:06 +0000",
+      "date": "Sat, 19 Sep 2026 21:25:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The commerce company has made major inroads into embedded finance, a strategy that could get a boost from partnering with the social media giant's new AI agent.",
-      "title": "How Shopify and Meta are diving deeper into banking",
-      "url": "https://www.americanbanker.com/payments/news/shopify-adds-meta-muse-to-agentic-ai-strategy?.tsrc=rss"
+      "summary": "Cathie Wood remains very bullish on Tesla stock.",
+      "title": "Cathie Wood Never Sold Ark's Core Stake in Tesla Despite the Stock Trailing Every Other Magnificent Seven Name in 2026. Here's Why Her Multi-Year Conviction Has",
+      "url": "https://www.fool.com/investing/2026/09/19/cathie-wood-has-never-sold-arks-core-stake-in-tesl/?.tsrc=rss"
     },
     {
-      "category": "earnings",
-      "date": "Fri, 18 Sep 2026 18:47:39 +0000",
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 20:30:31 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta Platforms surged far past its mega-cap peers in a single month while the broader tech sector sat flat, and now shareholders face a decision that hinges entirely on how you read what the July earn",
-      "title": "Meta Platforms Just Ripped 23% in a Month: Take Profits, or Buy More?",
-      "url": "https://247wallst.com/investing/2026/09/18/meta-platforms-just-ripped-23-in-a-month-take-profits-or-buy-more/?.tsrc=rss"
+      "summary": "Tesla Inc’s solar strategy is getting a much bigger test in Texas. Just a day before Elon Musk declared that \"solar is so obviously the future,\" a Houston-area school board was preparing to vote on Te",
+      "title": "Tesla Killed Its Solar Roof. Now Elon Musk Wants 100 GW of Solar",
+      "url": "https://finance.yahoo.com/energy/articles/tesla-killed-solar-roof-now-203031022.html?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,21 +811,21 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:02:21.421609+00:00",
+  "probed_at": "2026-09-20T15:11:32.072484+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.59s",
+      "note": "耗时 1.63s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.95s",
+      "note": "耗时 0.68s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.52s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.38s",
       "ok": true
     },
     "fed_all": {
@@ -835,27 +835,27 @@
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.68s",
+      "note": "耗时 0.66s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.62s",
+      "note": "提前数天（预告）｜ 耗时 0.58s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.60s",
+      "note": "提前数天（预告）｜ 耗时 0.71s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.62s",
+      "note": "耗时 0.83s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.64s",
+      "note": "耗时 2.07s",
       "ok": true
     }
   }

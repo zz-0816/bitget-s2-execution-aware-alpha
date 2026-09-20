@@ -116,16 +116,7 @@ def keeper_state():
                 "keeper_alive": False}
 
 
-def code_fingerprint():
-    """**代码指纹** —— 决定这次记录属于哪一版实现。
-
-    ⚠️ 为什么必须有它：长跑记录是"稳定性/效率"的证据来源，而代码在跑的过程中
-       **会改**。没有指纹时，把改动前后的轮次混在一起算"成功率 100%"是
-       **无法归因**的 —— 读者没法知道这 100% 是哪一版跑出来的（本仓库实测
-       踩到：412 轮记录横跨了执行进度官接入前后的两版代码）。
-    指纹取关键源文件的 SHA-256 前 16 位 + git 短提交号；文件读不到就如实记 None。
-    """
-    h = hashlib.sha256()
+def _src_files():
     files = [os.path.join(P2, "run_p2.py")]
     for d in ("project2", "tools"):
         try:
@@ -134,8 +125,48 @@ def code_fingerprint():
                     files.append(os.path.join(P2, d, fn))
         except OSError:
             pass
+    return files
+
+
+def _src_signature():
+    """廉价签名（每个文件的 路径/大小/mtime），用来判断"代码有没有变过"。
+
+    为什么不每轮重算哈希：一轮要读 20+ 个文件，虽然不大，但记录器是**连续跑几天**
+    的；用 stat 判"没变就复用上次的哈希"既便宜又不会漏 —— mtime 变了就一定重算。
+    """
+    sig = []
+    for p in _src_files():
+        try:
+            st = os.stat(p)
+            sig.append((os.path.basename(p), st.st_size, int(st.st_mtime_ns)))
+        except OSError:
+            continue
+    return tuple(sorted(sig))
+
+
+def code_fingerprint():
+    """**代码指纹** —— 决定这次记录属于哪一版实现。
+
+    ⚠️ 为什么必须有它：长跑记录是"稳定性/效率"的证据来源，而代码在跑的过程中
+       **会改**。没有指纹时，把改动前后的轮次混在一起算"成功率 100%"是
+       **无法归因**的 —— 读者没法知道这 100% 是哪一版跑出来的（本仓库实测
+       踩到：412 轮记录横跨了执行进度官接入前后的两版代码）。
+    指纹取关键源文件的 SHA-256 前 16 位 + git 短提交号；文件读不到就如实记 None。
+
+    🔴 **必须每轮都能反映当前代码**（这条是被自己的记录打脸才改的）：
+       初版把指纹缓存在进程级（`_CODE_FP`，一次进程只算一次）。于是记录器跑了
+       几小时、中途代码改了 3 次，它给后面 123 轮**全都盖了启动那一刻的指纹** ——
+       这比没有指纹**更糟**：不是"没标注"，而是**自信地标错**。
+       现在按 `_src_signature()`（大小+mtime）判断，变了就重算。
+    """
+    global _CODE_FP, _CODE_SIG
+    sig = _src_signature()
+    if _CODE_FP is not None and sig == _CODE_SIG:
+        return _CODE_FP
+
+    h = hashlib.sha256()
     n = 0
-    for p in files:
+    for p in _src_files():
         try:
             with open(p, "rb") as fh:
                 h.update(fh.read())
@@ -164,15 +195,18 @@ def code_fingerprint():
             "git_dirty": dirty}
 
 
-# 一次进程内只算一次：一轮里所有标的属于同一版代码
+# 缓存"上一轮算指纹时源文件长什么样"：签名没变就复用，变了就重算。
+# ⚠️ 缓存的是**与签名绑定**的结果，不是"进程启动那一刻"的结果（见 code_fingerprint 的注释）。
 _CODE_FP = None
+_CODE_SIG = None
 
 
 def code_fp():
-    global _CODE_FP
-    if _CODE_FP is None:
-        _CODE_FP = code_fingerprint()
-    return _CODE_FP
+    """每轮都调；只有源文件真的变了才会重新算哈希。"""
+    global _CODE_FP, _CODE_SIG
+    fp = code_fingerprint()
+    _CODE_FP, _CODE_SIG = fp, _src_signature()
+    return fp
 
 
 # ---------------------------------------------------------------- 一轮
@@ -497,6 +531,27 @@ def selftest():
             os.remove(tmp)
         except OSError:
             pass
+
+    # 🔴 代码指纹必须**跟着代码变**，不能是"进程启动那一刻"的快照。
+    #    这条是拿自己的记录打脸换来的：初版缓存在进程级，记录器跑了 3 小时、
+    #    中途代码改了 3 次，它给后面 123 轮全盖了启动时的指纹 —— 比没有指纹更糟
+    #    （不是"没标注"，而是**自信地标错**）。这里用**打桩签名**验证缓存按签名失效。
+    _orig_sig, _orig_fp, _orig_s = _src_signature, _CODE_FP, _CODE_SIG
+    try:
+        globals()["_src_signature"] = lambda: (("a.py", 1, 1),)
+        globals()["_CODE_FP"] = globals()["_CODE_SIG"] = None
+        code_fp()
+        chk(_CODE_SIG == (("a.py", 1, 1),),
+            "指纹缓存记下了当时的源文件签名（而不是进程启动时间）")
+        globals()["_src_signature"] = lambda: (("a.py", 1, 2),)
+        code_fp()
+        chk(_CODE_SIG == (("a.py", 1, 2),),
+            "源文件签名一变就重算并更新缓存 -> 长跑中途改代码**不会**被盖上旧指纹")
+    finally:
+        # 复原（`selftest()` 是模块级函数，globals() 就是模块命名空间）
+        globals()["_src_signature"] = _orig_sig
+        globals()["_CODE_FP"] = _orig_fp
+        globals()["_CODE_SIG"] = _orig_s
 
     print("\n长跑记录器自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1

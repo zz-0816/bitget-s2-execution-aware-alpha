@@ -1,10 +1,10 @@
 {
-  "base": "TSLA",
+  "base": "AAPL",
   "categories": {
     "earnings": 2,
     "earnings_scheduled": 8,
-    "filing": 5,
-    "filing_material": 7,
+    "filing": 3,
+    "filing_material": 9,
     "macro": 8,
     "other": 38
   },
@@ -15,9 +15,8 @@
     "should_call_llm": false
   },
   "headlines_for_gate": [
-    "[2026-07-23] TSLA 申报：10-Q（季报）",
-    "[2026-07-22] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-    "[2026-07-02] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-07-31] AAPL 申报：10-Q（季报）",
+    "[2026-07-30] AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -26,164 +25,165 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-09] TSLA 申报：4（内部人交易（Form 4））"
+    "[2026-09-17] AAPL 申报：4（内部人交易（Form 4））",
+    "[2026-09-10] AAPL 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-09-09",
+      "company": "Apple Inc.",
+      "date": "2026-09-17",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
       "kind": "filing",
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926106432/xslF345X06/tm2625055d1_4seq1.xml"
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126037020/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-09-10",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126036226/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035636/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035362/xslF345X06/form4.xml"
     },
     {
       "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-09-08",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "3",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：3",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035359/xslF345X06/form3.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "8-K/A",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：8-K/A",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035325/ef20081427_8ka.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-27",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126034741/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126033928/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-13",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126032884/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Apple Inc.",
+      "date": "2026-08-11",
       "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726009212/xsl144X01/primary_doc.xml"
+      "title": "AAPL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000195004726007959/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-23",
+      "company": "Apple Inc.",
+      "date": "2026-07-31",
       "form": "10-Q",
       "form_meaning": "季报",
       "kind": "filing",
       "material": true,
       "relevance": 8,
       "source": "edgar",
-      "title": "TSLA 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/tsla-20260630.htm"
+      "title": "AAPL 申报：10-Q（季报）",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
     },
     {
       "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-22",
+      "company": "Apple Inc.",
+      "date": "2026-07-30",
       "form": "8-K",
       "form_meaning": "重大事项（含财报发布、并购、高管变动）",
       "kind": "filing",
       "material": true,
       "relevance": 8,
       "source": "edgar",
-      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049213/tsla-20260722.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-02",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026046717/tsla-20260702.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075213/xslF345X06/tm2618092-2_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-17",
-      "form": "SCHEDULE 13G/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：SCHEDULE 13G/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075203/xslSCHEDULE_13G_X02/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-09",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926071970/xslF345X06/tm2617365-1_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-08",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726005795/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-29",
-      "form": "SD",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：SD",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926068275/tm2615395d1_sd.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-15",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926062860/xslF345X06/tm2614845-1_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-13",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726004463/xsl144X01/primary_doc.xml"
+      "title": "AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm"
     },
     {
       "category": "earnings_scheduled",
@@ -635,91 +635,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:00:00 +0000",
+      "date": "Sun, 20 Sep 2026 13:00:22 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Inside the latest chatter from important business leaders.",
-      "title": "3 notable business takes that flew under the radar this week",
-      "url": "https://finance.yahoo.com/markets/article/3-notable-business-takes-that-flew-under-the-radar-this-week-120000112.html?.tsrc=rss"
+      "summary": "Most investors celebrate a stock that turns every dollar into eleven, but holding a massive winner inside a traditional IRA sets up a collision between the IRS and your retirement timeline that gets w",
+      "title": "Turning 73 Forces a Withdrawal From This Stock Whether the Owner Wants the Cash or Not",
+      "url": "https://247wallst.com/personal-finance/2026/09/20/turning-73-forces-a-withdrawal-from-this-stock-whether-the-owner-wants-the-cash-or-not/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 14:00:00 +0000",
+      "date": "Sat, 19 Sep 2026 22:07:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Would you get into a car that’s under federal investigation for having no visible controls?",
-      "title": "Tesla's new Cybercab has no steering wheel, pedals or sensors — and NHTSA wants answers by Sept. 30",
-      "url": "https://finance.yahoo.com/technology/ai/articles/teslas-cybercab-no-steering-wheel-140000210.html?.tsrc=rss"
+      "summary": "The credit is bigger this year. The bill at the register still isn’t zero.",
+      "title": "Bank of America does the math on Apple's $1,200 iPhone offer",
+      "url": "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:00:00 +0000",
+      "date": "Sat, 19 Sep 2026 16:03:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "This week in Borderlands Mexico: Tesla plans massive distribution center near Austin and Danfoss launches new production line in Mexico for North American market. The post Borderlands Mexico: Tesla pl",
-      "title": "Borderlands Mexico: Tesla plans massive Texas distribution center",
-      "url": "https://finance.yahoo.com/economy/articles/borderlands-mexico-tesla-plans-massive-110000895.html?.tsrc=rss"
+      "summary": "Apple’s price target hike comes on the heels of surprising consumer survey findings.",
+      "title": "Apple gets bullish Wall Street call as iPhone demand jumps",
+      "url": "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 09:10:43 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "A Florida car dealer family just threw a $60 million Paris wedding, and the fortune behind it traces back to a legal structure most Americans have never heard of that quietly turns local car lots into",
-      "title": "A Florida Car Dealer Family Spent $60 Million on a Paris Wedding. Here’s How Dealerships Make That Kind of Money",
-      "url": "https://247wallst.com/investing/2026/09/20/a-florida-car-dealer-family-spent-60-million-on-a-paris-wedding-heres-how-dealerships-make-that-kind-of-money/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 03:40:50 +0000",
+      "date": "Sat, 19 Sep 2026 15:11:11 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla has grown at a torrential rate in the past, but it has slowed down recently.",
-      "title": "Prediction: Here's What a $1,000 Investment in Tesla (TSLA) Stock Could Be Worth By 2036",
-      "url": "https://www.fool.com/investing/2026/09/19/prediction-what-1000-invested-in-tesla-tsla-stock/?.tsrc=rss"
+      "summary": "Coinbase’s filing used an Apple contract as its model, which is cash-settled, has no fixed expiration, and would trade from Sunday to Friday.",
+      "title": "Coinbase Files With CFTC To List US Single-Stock Perpetual Futures, Including AAPL And TSLA Contracts",
+      "url": "https://stocktwits.com/news-articles/markets/equity/coinbase-apple-tesla-perpetual-futures-coin-tsla-aapl/cZtxEhbRBEs?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 02:11:06 +0000",
+      "date": "Sat, 19 Sep 2026 12:50:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Apple stock just got a price target cut due to the memory processor crunch.",
+      "title": "John Ternus's First iPhone Launch Prompted a Bank of America Price Target Cut. Is Apple Stock a Buy?",
+      "url": "https://www.fool.com/investing/2026/09/19/john-ternuss-first-iphone-launch-prompted-a-bank-o/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 11:22:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla, Inc. (NASDAQ:TSLA) has once again set a deadline for its second-generation Roadster. This time, the automaker says October 1 is real, and it’s accompanied by rocket-launch visuals and a technol",
-      "title": "Nine Years, Eight Delays, and Now Rocket Thrusters: Tesla Finally Sets a Roadster Date",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/nine-years-eight-delays-now-021106695.html?.tsrc=rss"
+      "summary": "The pride of Cupertino continues its winning ways, and investors are eager to jump on the bandwagon.",
+      "title": "History Says You Should Know These 3 Things Before Buying Apple Stock (AAPL)",
+      "url": "https://www.fool.com/investing/2026/09/19/history-says-3-things-before-buy-apple-stock-aapl/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 21:25:00 +0000",
+      "date": "Sun, 20 Sep 2026 11:10:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Cathie Wood remains very bullish on Tesla stock.",
-      "title": "Cathie Wood Never Sold Ark's Core Stake in Tesla Despite the Stock Trailing Every Other Magnificent Seven Name in 2026. Here's Why Her Multi-Year Conviction Has",
-      "url": "https://www.fool.com/investing/2026/09/19/cathie-wood-has-never-sold-arks-core-stake-in-tesl/?.tsrc=rss"
+      "summary": "Buffett bought more than $77 billion of this stock in the years leading up to his retirement.",
+      "title": "Greg Abel Recently Plowed $4.2 Billion Into Warren Buffett's Favorite Stock, and It Wasn't Apple",
+      "url": "https://www.fool.com/investing/2026/09/20/greg-abel-42-billion-warren-buffetts-stock-apple/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 20:30:31 +0000",
+      "date": "Sat, 19 Sep 2026 19:13:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla Inc’s solar strategy is getting a much bigger test in Texas. Just a day before Elon Musk declared that \"solar is so obviously the future,\" a Houston-area school board was preparing to vote on Te",
-      "title": "Tesla Killed Its Solar Roof. Now Elon Musk Wants 100 GW of Solar",
-      "url": "https://finance.yahoo.com/energy/articles/tesla-killed-solar-roof-now-203031022.html?.tsrc=rss"
+      "summary": "Jim Cramer touts a former mobile phone king as an AI buy, though its Q2 cash flow raises questions.",
+      "title": "Cramer strongly recommends buying beaten-down 90s tech legend",
+      "url": "https://www.thestreet.com/investing/stocks/cramer-recommends-nokia-beaten-down-90s-ai-tech?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,51 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T15:11:32.072484+00:00",
+  "probed_at": "2026-09-20T15:13:43.910811+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.63s",
+      "note": "耗时 1.62s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.68s",
+      "note": "耗时 0.89s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.38s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 3.37s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.67s",
+      "note": "耗时 0.65s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.66s",
+      "note": "耗时 0.70s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.58s",
+      "note": "提前数天（预告）｜ 耗时 1.20s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.71s",
+      "note": "提前数天（预告）｜ 耗时 1.18s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.83s",
+      "note": "耗时 0.62s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 2.07s",
+      "note": "耗时 1.08s",
       "ok": true
     }
   }

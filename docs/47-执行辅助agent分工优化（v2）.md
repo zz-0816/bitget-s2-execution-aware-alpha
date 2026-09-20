@@ -206,7 +206,7 @@
 python project2\agent_team.py --selfcheck        # 四层自检（含 LLM 闸门闭环 8 条断言）
 python project2\agent_team.py --base NVDA --trader --log
 python project2\agent_team.py --replay data\reports\debate-NVDA-<ts>.json
-python run_p2.py --selftest                      # 全量 14 步
+python run_p2.py --selftest                      # 全量 16 步（+ --net 两步联网）
 ```
 
 > 建议每加一个角色，就在 `--selfcheck` 里加**两条**断言：

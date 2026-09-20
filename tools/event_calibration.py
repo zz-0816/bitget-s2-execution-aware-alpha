@@ -52,6 +52,7 @@ except Exception:  # noqa: BLE001
     pass
 
 CASES = os.path.join(P2, "data", "calibration", "event_judgments.json")
+BASELINE = os.path.join(P2, "data", "calibration", "baseline.json")
 RAG_INDEX = os.path.join(P2, "data", "derived", "rag_index.json")
 OUT = os.path.join(P2, "data", "derived", "event_calibration_result.json")
 
@@ -165,30 +166,34 @@ def selftest():
     return 0 if ok else 1
 
 
-def run_calibration(as_json=False):
-    """逐条跑 LLM（生产同一条路径），比对期望值。"""
+def run_calibration(as_json=False, return_result=False, quiet=False):
+    """逐条跑 LLM（生产同一条路径），比对期望值。
+
+    ``return_result=True`` 时返回结果 dict（没跑成返回 None），供回归门槛复用。
+    """
     meta, cases = load_cases()
     try:
         import event_gate as eg
         from common import config as cfg
     except Exception as exc:  # noqa: BLE001
         print("无法加载 event_gate / 配置：%r" % (exc,))
-        return 2
+        return None if return_result else 2
 
     c = cfg.load()
     key = (c.get("LLM_API_KEY") or "").strip()
     if not key:
-        print("=" * 74)
-        print("⚠️ **未配置 LLM key —— 校准未执行**（不是通过，也不是失败）")
-        print("   配置方式：复制 .env.example 为 .env 并填 LLM_API_KEY；")
-        print("   不配 key 时事件判断会退化为确定性日历，并在输出里如实标注。")
-        print("=" * 74)
+        if not quiet:
+            print("=" * 74)
+            print("⚠️ **未配置 LLM key —— 校准未执行**（不是通过，也不是失败）")
+            print("   配置方式：复制 .env.example 为 .env 并填 LLM_API_KEY；")
+            print("   不配 key 时事件判断会退化为确定性日历，并在输出里如实标注。")
+            print("=" * 74)
         if as_json:
             print(json.dumps({"executed": False,
                               "reason": "no_llm_key",
                               "n_cases": len(cases)},
                              ensure_ascii=False, indent=1))
-        return 0
+        return None if return_result else 0
 
     # 与生产一致：带上同一条 RAG 上下文路径（受字符预算约束）
     rag_ctx = None
@@ -202,7 +207,7 @@ def run_calibration(as_json=False):
         print("🔴 留出检查失败，**拒绝执行校准**（测出来的一致性没有意义）：")
         for p in hold:
             print("   - %s" % p)
-        return 2
+        return None if return_result else 2
 
     rows, danger = [], 0
     for cse in cases:
@@ -257,7 +262,110 @@ def run_calibration(as_json=False):
               % (agree, n, 100.0 * agree / n if n else 0, danger))
         print("结果已落盘：%s" % os.path.relpath(OUT, P2))
         print("⚠️ n=%d：这是回归证据，不是准确率结论。" % n)
+    if return_result:
+        return res
     return 1 if danger else 0
+
+
+# ---------------------------------------------------------------- 回归门槛
+
+def load_baseline():
+    try:
+        with open(BASELINE, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def cmd_gate(as_json=False, update=False):
+    """**回归门槛**：新 prompt / 新模型在同一套留出校准集上不得低于基线。
+
+    没有 key 时**如实跳过**（返回 0）—— 这不是通过，也不是失败，
+    输出里会写清楚"未执行"。这一点与项目里其它地方的一致原则相同：
+    不假装跑过。
+
+    ``--update-baseline``：只有**有意**更换 prompt/模型时才用，
+    它会把本次结果写进 baseline 并保留 history（谁在什么时候、为什么改的）。
+    """
+    base = load_baseline()
+    if base is None:
+        print("找不到基线文件：%s" % os.path.relpath(BASELINE, P2))
+        return 2
+
+    res = run_calibration(return_result=True, quiet=True)
+    if res is None:
+        print("=" * 74)
+        print("事件判定回归门槛：**未执行**（没有 LLM key）—— 既不算通过也不算失败")
+        print("  配好 key 后复跑：python tools/event_calibration.py --gate")
+        print("=" * 74)
+        if as_json:
+            print(json.dumps({"gate": "skipped", "reason": "no_llm_key"},
+                             ensure_ascii=False, indent=1))
+        return 0
+
+    min_agree = float(base.get("min_agreement", 0.9))
+    max_danger = int(base.get("max_dangerous_errors", 0))
+    b = base.get("baseline") or {}
+    agree = float(res.get("agreement") or 0.0)
+    danger = int(res.get("dangerous_errors") or 0)
+
+    problems = []
+    if danger > max_danger:
+        problems.append("危险方向错误 %d 条 > 门槛 %d（期望停手却判成 none）"
+                        % (danger, max_danger))
+    if agree < min_agree:
+        problems.append("一致率 %.0f%% < 门槛 %.0f%%" % (agree * 100,
+                                                        min_agree * 100))
+    if b.get("agreement") is not None and agree < float(b["agreement"]):
+        problems.append("一致率比基线退化：%.0f%% -> %.0f%%"
+                        % (float(b["agreement"]) * 100, agree * 100))
+
+    print("=" * 74)
+    print("事件判定回归门槛")
+    print("=" * 74)
+    print("  prompt      %s（基线 %s）"
+          % (res.get("prompt_version"), b.get("prompt_version")))
+    print("  模型        %s" % res.get("model"))
+    print("  一致率      %.0f%%（基线 %.0f%%，门槛 ≥%.0f%%）"
+          % (agree * 100, float(b.get("agreement") or 0) * 100, min_agree * 100))
+    print("  危险方向    %d 条（基线 %s，门槛 ≤%d）"
+          % (danger, b.get("dangerous_errors"), max_danger))
+    print("  样本        n=%d —— 回归证据，**不是准确率结论**" % res.get("n_cases"))
+
+    if update:
+        hist = list(b.get("history") or [])
+        hist.append({"prompt_version": res.get("prompt_version"),
+                     "model": res.get("model"),
+                     "agreement": agree, "dangerous_errors": danger,
+                     "measured_utc": res.get("executed_utc"),
+                     "note": "由 --update-baseline 写入"})
+        base["baseline"] = {"prompt_version": res.get("prompt_version"),
+                            "model": res.get("model"),
+                            "agreement": agree, "dangerous_errors": danger,
+                            "measured_utc": res.get("executed_utc"),
+                            "history": hist}
+        base["n_cases"] = res.get("n_cases")
+        with open(BASELINE, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(base, fh, ensure_ascii=False, indent=1)
+        print("\n  已更新基线：%s" % os.path.relpath(BASELINE, P2))
+        return 0
+
+    if problems:
+        print()
+        for p in problems:
+            print("  [!! ] %s" % p)
+        print("\n回归门槛**未通过** —— 这次 prompt/模型改动比基线差，别合并。")
+        if as_json:
+            print(json.dumps({"gate": "fail", "problems": problems, **res},
+                             ensure_ascii=False, indent=1))
+        return 1
+    print("\n  [OK ] 不低于基线")
+    print("\n回归门槛通过")
+    if as_json:
+        print(json.dumps({"gate": "pass", "agreement": agree,
+                          "dangerous_errors": danger, **res},
+                         ensure_ascii=False, indent=1))
+    return 0
 
 
 def main(argv=None):
@@ -265,6 +373,10 @@ def main(argv=None):
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--run", action="store_true", help="需要 LLM key")
+    ap.add_argument("--gate", action="store_true",
+                    help="回归门槛：不低于 data/calibration/baseline.json（无 key 时如实跳过）")
+    ap.add_argument("--update-baseline", action="store_true",
+                    help="有意更换 prompt/模型时才用：把本次结果写成新基线")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
@@ -273,6 +385,8 @@ def main(argv=None):
         print("事件判定校准集自检（schema + 覆盖 + **留出检查**）")
         print("=" * 74)
         return selftest()
+    if args.gate or args.update_baseline:
+        return cmd_gate(args.json, update=args.update_baseline)
     if args.run:
         return run_calibration(args.json)
     if args.list:

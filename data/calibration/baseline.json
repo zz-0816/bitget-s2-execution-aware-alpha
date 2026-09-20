@@ -1,0 +1,30 @@
+{
+  "_about": "事件判定校准的**回归门槛**：新的 prompt / 新的模型，必须在**同一套留出校准集**上不低于这个基线。",
+  "_why": "项目二里 LLM 在运行期的唯一职责就是事件判断。没有门槛的话，改一次 prompt 是好是坏只能靠感觉；有了门槛，'把危险方向的错误修掉'这件事才可验证、可防回退。",
+  "_how_to_run": "python tools/event_calibration.py --gate     # 无 key 时如实跳过（不判失败）",
+  "_update_rule": "只有在**有意**更换 prompt/模型时才更新基线：python tools/event_calibration.py --update-baseline，并在提交说明里写清为什么。",
+  "min_agreement": 0.9,
+  "max_dangerous_errors": 0,
+  "n_cases": 10,
+  "baseline": {
+    "prompt_version": "v4-2026-09-20",
+    "prompt_sha256_16": "f8ee78a9d652bba9",
+    "agreement": 1.0,
+    "dangerous_errors": 0,
+    "measured_utc": "2026-09-20T00:00:00+00:00",
+    "history": [
+      {
+        "prompt_version": "v3-2026-09-19",
+        "agreement": 0.8,
+        "dangerous_errors": 1,
+        "note": "peer-amd-rumor 期望 caution 判成 none（危险方向）；other-earnings-nb 期望 none 判成 block（过保守）。根因：v3 的判据写着『不看它对某个标的相不相关』，且没有同业/竞争格局这一类。"
+      },
+      {
+        "prompt_version": "v4-2026-09-20",
+        "agreement": 1.0,
+        "dangerous_errors": 0,
+        "note": "改为两步判断（先看与我方标的相关性，再看类别）+ 明确『同业竞争格局/产业链 -> caution』。few-shot 用**与校准集不同的合成例子**（校准集是留出集，写进 prompt 等于拿测试集训练）。"
+      }
+    ]
+  }
+}

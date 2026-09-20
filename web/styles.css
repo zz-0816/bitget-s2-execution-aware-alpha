@@ -297,6 +297,18 @@ input[type=number] {
 }
 input[type=number]:hover { border-color: var(--line-strong); }
 
+/* 下拉框与数字输入框统一观感（原生控件在深色下默认是白底，必须显式覆盖） */
+select {
+  background: var(--surface-2); border: 1px solid var(--line);
+  color: var(--text); border-radius: var(--r-sm);
+  padding: 5px var(--sp-2); font-size: var(--fs-13);
+  font-family: inherit; max-width: 34em;
+  transition: border-color var(--dur-2) var(--ease-out-2);
+}
+select:hover { border-color: var(--line-strong); }
+/* 原生 option 在 Windows/Chrome 下不继承上面的底色，得单独给 */
+select option { background: var(--surface-2); color: var(--text); }
+
 button {
   background: var(--accent); color: var(--on-accent);
   border: 0; border-radius: var(--r-sm);

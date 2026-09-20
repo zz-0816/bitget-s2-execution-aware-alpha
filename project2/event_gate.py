@@ -503,11 +503,28 @@ EMBEDDED_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一
 {"is_event_window": true|false, "severity": "block"|"caution"|"none",
  "reason": "一句话，必须引用标题里的具体内容", "confidence": 0.0-1.0}
 
-【severity 判据】按事件**类别**分，不看它对某个标的"相不相关"：
-- block：财报/业绩预告、重大合同、监管处罚、并购、退市风险、**监管新规**
-- caution：宏观数据（CPI/非农/利率决议/FOMC）、行业级重大新闻、
-  **指数成分或权重调整**、**分析师评级或目标价变动**
-- none：例行内部人交易（Form 4）、纯营销/科普内容、与市场无关的社会新闻
+【判断分两步，顺序不能颠倒】
+
+第一步 · 这条消息与我方标的有没有关系？
+  算"有关系"的三种情况（任一即可）：
+    A. 标题里点了我方标的（代码或公司名）；
+    B. 标题是**宏观**消息（CPI/非农/利率决议/FOMC/汇率/大宗商品）；
+    C. 标题是**行业级**消息：同业竞争格局、产业链上下游、针对该行业的监管新规、
+       指数成分或权重调整、同业公司的评级或目标价变动。
+  算"没关系"的情况：
+    D. 标题明确是**另一家具体公司**的自身事务（它自己的财报/并购/高管变动/代言/
+       产品发布/股价波动），而且没有行业级含义。
+       -> 这类给 "none"（它不是我方标的事件）。
+  ⚠️ 这一步**不是**"只要不是我的代码就丢掉"：B 与 C 就算没点我的标的，也仍然算有关系。
+
+第二步 · 有关系的话，是哪种事件？
+  - block：**我方标的**的公司行为 —— 财报/业绩预告、重大合同、监管处罚、并购、
+    退市风险、针对我方标的的监管新规。
+  - caution：宏观数据（CPI/非农/利率决议/FOMC）、行业级重大新闻、
+    **同业竞争格局或产业链消息**、**指数成分或权重调整**、
+    **分析师评级或目标价变动**。
+  - none：例行内部人交易（Form 4）、纯营销/科普内容、与市场无关的社会新闻、
+    以及第一步里 D 类（别的公司的自身事务）。
 
 【三条硬要求】
 1. 标题不足以判断时：severity 给 "caution"，并在 reason 里写明"信息不足"。
@@ -516,14 +533,18 @@ EMBEDDED_PROMPT = """你是交易系统的事件风险过滤器。你的**唯一
 3. reason 必须能被核对 —— 要引用标题里的词，不要写"可能存在风险"这种空话。
    （代码侧会检查 reason 能否回溯到标题；找不到标题里的片段即判不合格并重试。）
 
-【示例】（仅示范格式与判据边界，不要照抄）
-- 标题「NVDA 申报：8-K（重大事项：发布季度业绩）」-> block，reason 引用"8-K"与"季度业绩"
-- 标题「NVDA 申报：4（内部人交易：高管卖出 1,200 股）」-> none，reason 说明"例行内部人交易"
-- 标题「Nasdaq 调整纳斯达克 100 指数权重」-> caution，reason 引用"指数权重"
-- 标题「如何用 AI 工具提升工作效率的 10 个技巧」-> none，reason 说明"与市场无关"
+【示例】（仅示范格式与判据边界，不要照抄；例子是**合成的**，不含任何真实标的的额外事实）
+- 「NVDA 申报：8-K（重大事项：发布季度业绩）」-> block，reason 引用"8-K"与"季度业绩"
+- 「NVDA 申报：4（内部人交易：高管卖出 1,200 股）」-> none，reason 说明"例行内部人交易"
+- 「某生物科技公司 ZZ 预定于明日发布季度财报」-> none，
+  reason 说明"标题里是另一家公司的自身事务，与我方标的无关，也无行业级含义"
+- 「同业竞争者发布新一代产品，分析师称可能改变该细分市场的份额格局」-> caution，
+  reason 引用"同业竞争者"与"份额格局"（同业竞争格局，即使没点我方标的）
+- 「Nasdaq 调整纳斯达克 100 指数权重」-> caution，reason 引用"指数权重"
+- 「如何用 AI 工具提升工作效率的 10 个技巧」-> none，reason 说明"与市场无关"
 """
 
-EMBEDDED_PROMPT_VERSION = "v3-2026-09-19"    # 🔒 与 prompts/event_gate.v2.md 的 version 一致
+EMBEDDED_PROMPT_VERSION = "v4-2026-09-20"    # 🔒 与 prompts/event_gate.v4.md 的 version 一致
 
 PROMPTS_DIR = os.path.join(BASE, "prompts")
 PROMPT_GLOB = "event_gate.v*.md"
@@ -1101,7 +1122,7 @@ def _cache_detail(dec, now_ms):
 
 def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
            model=None, api_key=None, base_url=None, headlines=None,
-           rag_context=None):
+           rag_context=None, auto_headlines=None):
     """⭐ 风险与理由引擎 —— 大模型在运行期的核心职责。
 
     回答用户下单前最需要的三件事（**输出理由与条件，不是订单**）：
@@ -1114,9 +1135,29 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
 
     `cost` 可传 `execution_cost.analyse_two_leg()` 的结果，
     传入后 conditions 里会给出基于真实盘口的**条件点位与规模上限**。
+
+    🔴 `auto_headlines`（2026-09-20 修的一个**效率 bug**）：
+
+      · `headlines` 传了（哪怕是 `[]`）→ 就用它，不自动抓。
+      · `headlines is None` 且 `auto_headlines is not False` → **自己去抓最新候选标题**。
+      · `auto_headlines=False` → 明确不抓（自检/复跑要冻结外部输入时用）。
+
+      为什么必须补这一步：事件驱动降本（`gate_decision`）是靠"候选标题全是已见过的"
+      来判断"不用再调 LLM"的。**而调用方没传标题时，候选集就是空的**，
+      于是 `gate_decision` 只能报 `no_candidates` 并**照常调用 LLM** ——
+      降本机制形同虚设。实测：`/api/overview` 一次请求会给 10 个标的各打一次 LLM。
+      注意"显式传 `[]`"与"没传"必须区分开：前者是**冻结输入**（自检/复跑），
+      自动去抓会让确定性自检间歇性失败（这条坑之前踩过）。
     """
     now_ms = now_ms or int(dt.datetime.now(dt.UTC).timestamp() * 1000)
     mode = (mode or "auto").lower()
+    # ---- 候选标题：区分"没传"与"显式传空" ----
+    if headlines is None and auto_headlines is not False:
+        try:
+            headlines = _latest_headlines(base)
+        except Exception:  # noqa: BLE001
+            headlines = []
+
     if mode == "auto":
         # ⚠️ 必须把 `.env` 也算进来：初版只看 os.environ，
         #    于是"key 填在 .env 里"时 auto 判定为 static ——

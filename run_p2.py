@@ -223,18 +223,112 @@ def _prompt_info():
         return {"version": None, "source": None, "sha256": None, "path": None}
 
 
+def _read_json_bom(path):
+    """读 JSON，**容忍 UTF-8 BOM**（Windows 上 `Out-File`/`Set-Content` 默认带 BOM）。
+
+    这是本仓库第 4 次碰到同一个坑（前三次见 `docs/DATA_DICT.md` 陷阱 #13），
+    而持仓单偏偏是**用户手写**的，所以这里必须容忍。
+    """
+    last = None
+    for enc in ("utf-8-sig", "utf-8", "gbk"):
+        try:
+            with open(path, encoding=enc) as fh:
+                return json.load(fh), None
+        except json.JSONDecodeError as exc:
+            last = "JSON 解析失败（%s）：%s" % (enc, exc)
+        except OSError as exc:
+            return None, "读不到 %s：%s" % (path, exc)
+    return None, last or "无法解析"
+
+
+def open_position(base, demo=False):
+    """取**在途持仓单**里该标的的那一条 —— 执行进度官的输入。
+
+    两种来源，页面/接口要能分辨（返回 ``(order_state, note)``）：
+
+      · ``demo=False``：读 `data/positions/open.json`（**用户/上层提供**，
+        格式见 `tools/position_watch.py` 头注释）。本服务**只读不写**；
+        文件不存在 = 没有在途订单 -> 执行进度官不跑（**不猜**）。
+      · ``demo=True`` ：**不读文件**，造一张现货腿已成交、永续腿未成交的
+        **合成演示单**。它带 `synthetic: true`，一路进日志、进页面、进接口，
+        不可能被误当成真实下单记录。
+
+    为什么要 demo 这一路：执行进度官是本轮新增的能力，而"公开演示"时
+    手上通常没有真实在途订单 —— 没有它，这个功能在演示里**永远不出现**，
+    等于不可验证。合成单把"看得见"和"不撒谎"同时做到。
+    """
+    if demo:
+        return ({"id": "demo-naked-leg", "base": base, "qty_usd": 5000.0,
+                 "spot_filled": True, "perp_filled": False,
+                 "synthetic": True},
+                "**合成演示持仓**（?position=demo）：现货腿已成交、永续腿未成交，"
+                "用于展示「裸露敞口」判定；不是真实下单记录")
+    p = os.path.join(P2, "data", "positions", "open.json")
+    if not os.path.exists(p):
+        return None, "没有在途持仓单（data/positions/open.json 不存在）"
+    d, err = _read_json_bom(p)
+    if d is None:
+        return None, "持仓单不可用：%s" % err
+    for pos in (d.get("positions") or []):
+        if str(pos.get("base") or "").upper() == base.upper():
+            pos = dict(pos)
+            pos.setdefault("synthetic", False)
+            return pos, "来自 data/positions/open.json"
+    return None, "持仓单里没有 %s 这一单" % base
+
+
+def _project_execution_progress(ep):
+    """把执行进度官的产出投影成页面契约（只保留能核验的字段）。"""
+    if not isinstance(ep, dict):
+        return {"present": False}
+    rep = ep.get("report") or {}
+    return {
+        "present": True,
+        "order": ep.get("order_state"),
+        "synthetic": bool((ep.get("order_state") or {}).get("synthetic")),
+        "error": ep.get("error"),
+        "verdict": rep.get("verdict"),
+        "confidence": rep.get("confidence"),
+        "notes": rep.get("notes") or "",
+        "evidence": rep.get("evidence") or [],
+        "hypotheses": ep.get("hypotheses") or [],
+        "dropped": ep.get("dropped") or [],
+        "actions": ep.get("actions") or [],
+    }
+
+
 def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
-                      with_log=True, asof_ms=None, basis=None):
+                      with_log=True, asof_ms=None, basis=None,
+                      order_state=None, order_age_min=None):
     """跑完整决策链，并**投影成页面/接口契约**（只保留能核验的字段）。
 
     ``asof_ms`` / ``basis``：决策基准时间。默认交给 `time_basis()` **自动判定**
     （读冻结快照时按数据自带时刻，实时时按墙钟），并在返回里如实标注依据。
     见 `project2/agent_team.py::time_basis` 的注释。
+
+    ``order_state`` / ``order_age_min``：在途持仓单（执行进度官的输入）与
+    "它已经挂了多久"。给了 ``order_age_min`` 就按**本次决策基准时间**倒推
+    ``opened_ms`` —— 这是必须的：持仓单的 `opened_ms` 必须与决策用**同一个时钟**，
+    否则执行进度官会（正确地）拒绝判龄，页面上就什么都看不到（实测踩到）。
     """
-    from agent_team import build_log, run_decision
+    from agent_team import build_log, run_decision, time_basis
+    _os = dict(order_state) if isinstance(order_state, dict) else None
+    _tb_pin = None
+    if _os and order_age_min is not None:
+        # 先定"现在几点"，再把 opened_ms 钉在**同一个钟**上。
+        # 然后把解出来的时刻显式交给 run_decision —— 一次请求只有一个时钟判定，
+        # 不给"两次调用之间墙钟跳了一下"留下缝隙。
+        _tb_pin = time_basis(asof_ms, force=basis)
+        _os["opened_ms"] = int(_tb_pin["now_ms"] - float(order_age_min) * 60000)
     cost, items, debate, dec, book = run_decision(
         base, qty_usd=qty, miss_bp=miss_bp, urgent=urgent,
-        now_ms=asof_ms, time_basis_force=basis)
+        now_ms=(_tb_pin["now_ms"] if _tb_pin else asof_ms),
+        time_basis_force=basis, order_state=_os)
+    if _tb_pin:
+        # run_decision 里因为显式传了 now_ms，basis 会标成 "explicit"；
+        # 但**这次请求真正的依据**是上面那次 time_basis 判出来的（asof/wallclock）。
+        # 如实还原成那一个，避免同一页面上两种口径。
+        dec["time_basis"] = _tb_pin
 
     v = debate.get("verdict") or {}
     out = {
@@ -309,6 +403,11 @@ def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
         "monotonic": dec["monotonic"],
         "risk_hypotheses": dec.get("risk_hypotheses") or [],
         "risk_hypotheses_dropped": dec.get("risk_hypotheses_dropped") or [],
+        # ⏱️ 执行进度官（执行中闭环）：有没有在途订单、判成了什么、该处置什么。
+        #    没有在途订单时 present=False —— 页面据此**不显示**这一块，
+        #    而不是显示一个"一切正常"的假绿灯（没有数据 ≠ 没有风险）。
+        "execution_progress": _project_execution_progress(
+            dec.get("execution_progress")),
         "cost": {k: cost.get(k) for k in
                  ("best_mode", "best_cost", "cost_mm", "cost_mix", "cost_tk",
                   "spread_s", "spread_p", "half_s", "half_p",
@@ -516,11 +615,25 @@ def make_handler():
                     #   ?basis=asof | ?basis=wallclock | ?asof=1789802876375
                     _b = (q.get("basis") or [None])[0]
                     _a = (q.get("asof") or [None])[0]
+                    # ⏱️ 在途持仓单（执行进度官的输入）：
+                    #   ?position=auto（默认，读 data/positions/open.json）
+                    #   ?position=demo（合成演示单，带 synthetic 标记）
+                    #   ?position=none（显式关掉，用来看"没有在途订单"的样子）
+                    _pm = (q.get("position") or ["auto"])[0].lower()
+                    _osv, _onote, _oage = None, None, None
+                    if _pm == "demo":
+                        _osv, _onote = open_position(base, demo=True)
+                        _oage = 12.0        # 演示单：挂了 12 分钟（> 宽限 1 分钟）
+                    elif _pm != "none":
+                        _osv, _onote = open_position(base, demo=False)
                     d = _project_decision(base, qty,
                                           float(miss[0]) if miss else None,
                                           urgent,
                                           asof_ms=float(_a) if _a else None,
-                                          basis=_b)
+                                          basis=_b,
+                                          order_state=_osv,
+                                          order_age_min=_oage)
+                    d["position_source"] = _onote
                     return self._json({"ok": True, "decision": d})
                 return self._json({"ok": False, "err": "未知端点 %s" % path}, 404)
             except Exception as exc:  # noqa: BLE001
@@ -821,9 +934,22 @@ def selftest(with_net=False):
 
     rc |= ui_layout_check()
 
+    # ⑯ 长跑记录器自检：它是**稳定性与效率的实测证据源**，所以它自己也要被检
+    #    （成功率/分位/缓存计数的算法对不对、坏行会不会毁掉整份记录）。
+    #    与 ⑥⑨⑪ 一致：凡是材料里引用了其输出的工具，都进一键自检。
+    rc |= _run([py, os.path.join("tools", "run_record.py"), "--selftest"],
+               "⑯ 长跑记录器（汇总统计算法 / 记录格式 / 空与坏数据）")
+
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],
-                   "⑯ 消息面源可用性（联网）")
+                   "⑰ 消息面源可用性（联网）")
+
+        # 🔴 ⑱ 事件判定**回归门槛**：新 prompt / 新模型必须在同一套**留出**校准集上
+        #    不低于基线 —— 这是"改正了危险方向错误之后，不许再退回去"的回归锁。
+        #    ⚠️ 没有 LLM key 时它**如实报"未执行"并返回 0**：既不冒充通过，
+        #       也不算失败（这与仓库里其它地方"不假装跑过"的原则一致）。
+        rc |= _run([py, os.path.join("tools", "event_calibration.py"), "--gate"],
+                   "⑱ 事件判定回归门槛（留出校准集：危险方向错误必须为 0）")
 
     print("=" * 92)
     print("全量自检%s" % ("通过" if rc == 0 else "**失败**"))

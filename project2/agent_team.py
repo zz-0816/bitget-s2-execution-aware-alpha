@@ -70,7 +70,9 @@ DERIVED = os.path.join(BASE, "data", "derived")
 SPREAD = os.path.join(BASE, "data", "spread")
 
 VERDICTS = ("favorable", "unfavorable", "neutral")
-DIMENSIONS = ("basis", "sentiment", "news", "technical", "execution_risk")
+DIMENSIONS = ("basis", "sentiment", "news", "technical", "execution_risk",
+              # ⭐ 2026-09-20：第 6 路，**只在有在途订单时**才跑（执行中闭环）
+              "execution_progress")
 
 # 执行风险假设 -> 风控官动作（**agent 提议、风控官执行**）
 # agent 只说"该采取什么动作"，**最终立场与规模仍由风控官的规则决定**，
@@ -90,6 +92,16 @@ HYPOTHESIS_ACTIONS = {
     # 判据沿用 audit_samples.py 的口径：**价格跨度 == 0 = 报价完全冻结**。
     "quote_frozen": {"level": "veto", "action": "no_new_position",
                      "measure": "底层疑似停牌：现货中间价不动 **且** 窗口内零成交"},
+    # ⭐ 2026-09-20 新增（执行进度官）：把链路从"只在下单前说话"补成**执行中闭环**。
+    #    在此之前，挂单没成交、或者只成交了一条腿的时候，链路里**没有任何角色负责**
+    #    —— 而这恰恰是赛道三「执行辅助」手册点名的位置（拆单与滑点管理）。
+    #    两条判据都用**已实测的量**：成交状态（持仓单）+ 区间成交笔数（逐笔成交表）。
+    "partial_fill_naked": {
+        "level": "veto", "action": "no_new_position",
+        "measure": "一腿已成交、另一腿超过宽限仍未成交 = 裸露敞口"},
+    "progress_stalled": {
+        "level": "caution", "action": "require_review",
+        "measure": "挂单存活 >= 停滞阈值且期间该腿**零成交**（挂单不可能成交）"},
 }
 
 
@@ -352,8 +364,13 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
                 note += ("🔒 **复用冻结的事件判定**（复跑/复现用，本次**不调 LLM**）："
                          "severity=%s。" % (fe.get("severity") or "none"))
             else:
+                # ⚠️ `auto_headlines=False`：这一路的标题由**我们自己**管
+                #    （上面已经抓过并做过新鲜度判断）。不显式关掉的话，
+                #    `assess()` 会在"快照过期 -> 我们传 None"时**自己去抓一遍**，
+                #    于是"冻结输入"的自检会间歇性失败（这条坑踩过）。
                 a = _eg.assess(base, now_ms=now_ms, mode=mode,
-                               headlines=headlines if headlines else None)
+                               headlines=headlines if headlines else None,
+                               auto_headlines=False)
             sev = a["event"]["severity"]
             src = a["event"].get("source", "static")
             reason = a["event"].get("reason", "") or ""
@@ -511,6 +528,16 @@ STALE_TRADE_MIN = 30.0      # 分钟
 MAX_HYPOTHESES = 3          # 最多带进辩论/风控的假设条数（防止刷屏式围堵）
 FROZEN_LOOKBACK = 20        # 停牌判定：最近 N 轮快照（20 轮 ≈ 10 分钟）
 FROZEN_MAX_DISTINCT = 1     # 不同中间价个数 <= 它 = 报价不动（与 audit_samples.py 同口径）
+
+# ---- 执行进度官（2026-09-20 新增）----
+# 一腿成交后，给另一腿的**宽限**（分钟）。为什么是 1.0：
+#   · 盘口采样节奏是 30 秒/轮 -> 2 轮 = 1 分钟，这是本判据的**分辨率下限**；
+#   · 不是"统计最优值"，也不是从损益反推的 —— 本项目没有持有期损益口径，
+#     所以这个数是**明说的策略选择**，不是实测值。要在材料里引用时请照此说明。
+# ⚠️ 它与 STALE_TRADE_MIN 是**两个不同的问题**：
+#     NAKED_GRACE_MIN 问"一腿成交后另一腿有没有及时跟上"，
+#     STALE_TRADE_MIN 问"这条腿的市场还有没有成交"。
+NAKED_GRACE_MIN = 1.0
 
 # 决策基准时间：数据最新时刻比墙钟旧超过这么多分钟，就判定为"读冻结快照"，
 # 决策改按**数据自带时刻**判定（并在输出里显式标注）。见 `time_basis()`。
@@ -739,6 +766,33 @@ def frozen_quote(base, lookback=FROZEN_LOOKBACK):
     return frozen, detail, mids
 
 
+def _trades_between_venue(venue, base, lo_ms, hi_ms):
+    """统计 [lo, hi] 区间内**某个 venue** 该标的的成交笔数。
+
+    ⚠️ 与上面那个 `_trades_between(base, lo, hi)`（**两个 venue 合计**，
+    用于停牌判据）是**两个不同的问题**：执行进度官要问的是
+    "**我挂单的那条腿**在这段时间里有没有成交"，所以必须按腿分开数。
+    两个函数都在，别混用。
+    """
+    files = sorted(glob.glob(os.path.join(SPREAD, "trades-*.csv")))
+    n = 0
+    for p in reversed(files):          # 从最新一天往回找
+        try:
+            with open(p, newline="", encoding="utf-8") as fh:
+                for r in csv.DictReader(fh):
+                    if r.get("venue") != venue or r.get("base") != base:
+                        continue
+                    try:
+                        t = int(r["ts_ms"])
+                    except (KeyError, ValueError, TypeError):
+                        continue
+                    if lo_ms <= t <= hi_ms:
+                        n += 1
+        except OSError:
+            continue
+    return n
+
+
 def _last_trade_ts(venue, base):
     """该 venue 下该标的**最后一笔**成交的时间戳（毫秒）。读不到返回 None。"""
     files = sorted(glob.glob(os.path.join(SPREAD, "trades-*.csv")))
@@ -941,6 +995,278 @@ def analyst_execution_risk(base, cost=None, now_ms=None, size_usd=None):
     if dropped:
         note += "；另有 %d 条未过阈值（留痕不删）" % len(dropped)
     return report("execution_risk", verdict, conf, e, note), hyps, dropped
+
+
+# ------------------------------------------------- ⑥ 执行进度（执行中闭环）
+
+# ⏱️ 执行进度官读的**恰好**是这几个字段 —— 复跑契约里也只记这几个。
+#    为什么不把整个持仓单塞进日志：单子里可能有点位、备注、券商单号之类的
+#    **不影响本决策**的字段，它们一变，复跑就会误报"不一致"，而真正的原因只是
+#    多存了无关信息。契约应当**只包含决策真正依赖的输入**。
+ORDER_STATE_FIELDS = ("base", "qty_usd", "spot_filled", "perp_filled",
+                      "opened_ms", "id", "synthetic")
+
+
+def norm_order_state(order_state):
+    """把持仓单规范化成**契约字段**（只留决策真正读的那几个）。
+
+    返回 `None` 表示"没有在途订单"，与空 dict 等价 —— 两者都走"零假设"分支。
+    """
+    if not isinstance(order_state, dict) or not order_state:
+        return None
+    out = {}
+    for k in ORDER_STATE_FIELDS:
+        if k in order_state:
+            out[k] = order_state[k]
+    if not str(out.get("base") or "").strip():
+        return None
+    for k in ("spot_filled", "perp_filled"):
+        out[k] = bool(out.get(k))
+    for k, cast in (("opened_ms", int), ("qty_usd", float)):
+        try:
+            out[k] = cast(out.get(k) or 0)
+        except (TypeError, ValueError):
+            out[k] = cast(0)
+    return out
+
+
+def analyst_execution_progress(base, order_state, cost=None, now_ms=None):
+    """⏱️ **执行进度官** —— 回答"下单之后怎么办"（2026-09-20 新增）。
+
+    ━━ 为什么必须有它 ━━
+
+    v1 的链路只在**开仓前**跑一次（`docs/33` 原文：「只在开仓前的少数时点触发」）。
+    于是**挂单没成交、或者只成交了一条腿的时候，链路里没有任何角色负责** ——
+    而这恰恰是赛道三「执行辅助」手册点名的位置：trader 决策后，AI 如何负责
+    **拆单与滑点管理**。没有这一段，「执行辅助」就只是「决策辅助」。
+
+    ━━ 它只回答两个问题（都必须可证伪）━━
+
+      ① **裸露敞口**：一腿已成交、另一腿超过 `NAKED_GRACE_MIN` 仍未成交
+         -> veto 级。依据不是猜的，是**实测联合成交分布**（本次快照）：
+             · `joint_fill_all_in_house.csv`（in_house 路线）：
+               `P(只成交一腿)=23.6%` vs `P(两腿都成交)=3.60%` ≈ **6.6 倍**
+             · `joint_fill_all.csv`（不分 venue）：`35.5%` vs `2.39%` ≈ **14.9 倍**
+            也就是说"一腿成交后另一腿不跟"是**常态**，不是意外。
+            ⚠️ 数值随窗口/路线变，所以**不在代码里写死**：报告 evidence 与
+               `--decision-selftest` 都直接读实测表并打印当期值。
+               （早先注释里写的是 24.9%/0.70%/35 倍 —— 那是**旧窗口**的数，
+                 换窗口后就不成立了，属于已修正的过期数字。）
+      ② **挂单停滞**：挂单存活已 >= `STALE_TRADE_MIN`，且这期间**该腿零成交**
+         -> caution 级（提示复核：改价 / 撤单 / 转吃单）。
+            依据：挂单的收益完全来自成交；市场没有成交时，挂单不可能成交。
+
+    ━━ 红线 ━━
+
+    **它不产出任何数字**（不给新价位、不给新规模、不给损益估计）——
+    那是确定性交易员与成本模型的职责。它只给"该复核什么"的**触发条件**。
+    给出 `order_state` 时，`run_decision` 会另外调用 `execution_actions()`
+    用**成本模型**算出唯一的实测数字（补腿成本）。
+
+    ``order_state`` 形状（与 `tools/position_watch.py` 的持仓单一致）::
+
+        {"id": "p1", "base": "NVDA", "qty_usd": 5000,
+         "spot_filled": true, "perp_filled": false,
+         "opened_ms": 1789720000000}
+
+    ⚠️ **`opened_ms` 必须与本次决策的 `now_ms` 用同一个时钟**：实时模式下两个都是
+    墙钟，天然一致；读冻结快照时 `now_ms` 由 `time_basis()` 按**数据自带时刻**给出，
+    这时 `opened_ms` 也必须落在数据时钟上。两者不一致时本函数**显式拒绝判断**
+    （返回中性 + 写清理由），不会钳成 0 假装算过 —— 那会让裸露敞口**静默消失**。
+    """
+    e, hyps, dropped = [], [], []
+    if not isinstance(order_state, dict):
+        return report("execution_progress", "neutral", 0.0, [],
+                      "无在途订单"), hyps, dropped
+    if (order_state.get("base") or "").upper() != base.upper():
+        return report("execution_progress", "neutral", 0.0, [],
+                      "该订单不属于本标的（%s）" % order_state.get("base")), \
+            hyps, dropped
+    # 🔴 合成演示单必须**一路带着标记**：证据来源、结论备注都要能看出
+    #    "这不是真实下单记录"。否则演示截图会被当成实测结论引用。
+    synthetic = bool(order_state.get("synthetic"))
+    prov = ("**合成演示持仓**（synthetic=true，非真实下单）" if synthetic
+            else "持仓单（用户/上层提供）")
+    if synthetic:
+        e.append(ev("持仓来源", "合成演示单 —— 仅用于展示判据，"
+                                "**不得**当成真实下单结论引用", "order_state.synthetic"))
+
+    now_ms = now_ms or int(dt.datetime.now(dt.UTC).timestamp() * 1000)
+    try:
+        opened = int(order_state.get("opened_ms") or 0)
+    except (TypeError, ValueError):
+        opened = 0
+    if opened <= 0:
+        return report("execution_progress", "neutral", 0.0, [],
+                      "订单缺少 opened_ms，无法判断进度（不猜）"), hyps, dropped
+
+    raw_min = (now_ms - opened) / 60000.0
+    # 🔴 时钟一致性：`opened_ms` 是"我这单什么时候下的"（墙钟），
+    #    而 `now_ms` 可能是 **time_basis 判出来的决策基准时间**（读冻结快照时
+    #    按数据自带时刻）。两者不是一个钟时，`now - opened` 是**没有意义的数**。
+    #    ⚠️ 初版这里写的是 `elapsed = max(0.0, raw_min)` —— 后果实测到了：
+    #       订单被算成"存活 0 分钟"，于是**宽限期内**，裸露敞口假设**静默消失**，
+    #       决策里一条 agent 规则都不产生，而页面上还显示"执行进度：正常"。
+    #       这是最危险的一类失败（判据说"没事"），所以必须**显式拒绝判断**，
+    #       而不是钳成 0 假装算过了。
+    if raw_min < 0:
+        why = ("持仓单 opened_ms 晚于本次决策基准时间（差 %.1f 分钟）—— "
+               "两者不是同一个时钟，**不硬判**" % -raw_min)
+        return report("execution_progress", "neutral", 0.0,
+                      [ev("挂单存活", "%.1f 分钟（负值）" % raw_min,
+                          "持仓单 opened_ms 与决策基准时间之差"),
+                       ev("决策基准时间", str(now_ms), "time_basis().now_ms"),
+                       ev("订单开仓时间", str(opened), "持仓单 opened_ms")],
+                      why), hyps, [
+            {"id": "partial_fill_naked", "reason": "时钟不一致，无法判龄",
+             "metric": "挂单存活", "value": "%.1f 分钟" % raw_min},
+            {"id": "progress_stalled", "reason": "时钟不一致，无法判龄",
+             "metric": "挂单存活", "value": "%.1f 分钟" % raw_min}]
+    elapsed = raw_min
+    s_fill = bool(order_state.get("spot_filled"))
+    p_fill = bool(order_state.get("perp_filled"))
+    qty = float(order_state.get("qty_usd") or 0.0)
+
+    e.append(ev("挂单存活", "%.1f 分钟" % elapsed,
+                "opened_ms（%s）" % prov))
+    if qty > 0:
+        e.append(ev("在途订单规模", "%.0f USD" % qty, "qty_usd（%s）" % prov))
+    e.append(ev("两腿成交状态",
+                "现货=%s ｜ 永续=%s" % ("已成交" if s_fill else "未成交",
+                                        "已成交" if p_fill else "未成交"),
+                "spot_filled/perp_filled（%s）" % prov))
+
+    # 未成交的那条腿，在"挂单期间"到底有没有成交（逐笔实测，不靠猜）
+    missing = None
+    if s_fill != p_fill:
+        missing = "perp" if s_fill else "spot"
+    n_tr = None
+    if not (s_fill and p_fill):
+        legs = [v for v, f in (("spot", s_fill), ("perp", p_fill)) if not f]
+        n_tr = {}
+        for v in legs:
+            n_tr[v] = _trades_between_venue(v, base, opened, now_ms)
+            e.append(ev("%s 腿在挂单期间成交笔数" % v, "%d 笔" % n_tr[v],
+                        "data/spread/trades-*.csv"))
+
+    # ---- ① 裸露敞口（veto）----
+    if s_fill != p_fill and elapsed >= NAKED_GRACE_MIN:
+        got = "现货腿" if s_fill else "永续腿"
+        lack = "永续腿" if s_fill else "现货腿"
+        hyps.append({
+            "id": "partial_fill_naked",
+            "hypothesis": "只成交了%s —— **裸露的方向性敞口**（另一腿 %s 超过宽限"
+                          "%.0f 分钟仍未成交）" % (got, lack, NAKED_GRACE_MIN),
+            "metric": "挂单存活", "value": "%.1f 分钟" % elapsed,
+            "threshold": ">=%.0f 分钟" % NAKED_GRACE_MIN,
+            "falsifier": "若%s也成交（两腿齐平），本条不成立" % lack,
+            "action": "二选一：① 立刻吃单补上%s ② 平掉已成交的%s"
+                      "（两者都付一次往返成本）；在此之前**不得开新仓**"
+                      % (lack, got)})
+    elif s_fill != p_fill:
+        dropped.append({"id": "partial_fill_naked", "reason": "在宽限期内，先观察",
+                        "metric": "挂单存活", "value": "%.1f 分钟" % elapsed})
+
+    # ---- ② 挂单停滞（caution）----
+    if not (s_fill and p_fill) and elapsed >= STALE_TRADE_MIN:
+        tr = (n_tr or {}).get(missing if missing else "spot")
+        if tr == 0:
+            hyps.append({
+                "id": "progress_stalled",
+                "hypothesis": "挂单已存活 %.0f 分钟，而这期间该腿**零成交** —— "
+                              "市场没有成交时，挂单不可能成交（收益完全来自成交）"
+                              % elapsed,
+                "metric": "挂单期间该腿成交笔数", "value": "0 笔",
+                "threshold": ">=%d 分钟仍为 0" % int(STALE_TRADE_MIN),
+                "falsifier": "若该腿在挂单期间重新出现成交（笔数 > 0），本条不成立",
+                "action": "复核执行方式：改价 / 撤单 / 转双腿全吃单"})
+        elif tr is not None:
+            dropped.append({"id": "progress_stalled",
+                            "reason": "期间有成交（只是没成交到我的单）",
+                            "metric": "挂单期间该腿成交笔数", "value": "%d 笔" % tr})
+    elif not (s_fill and p_fill):
+        dropped.append({"id": "progress_stalled", "reason": "未到停滞阈值",
+                        "metric": "挂单存活", "value": "%.1f 分钟" % elapsed})
+
+    if missing:
+        # 实测联合分布：用来解释"为什么一腿不跟是常态"，不是用来算命的
+        try:
+            try:
+                from execution_cost import load_joint_fill
+            except ImportError:
+                from project2.execution_cost import load_joint_fill
+            j = (load_joint_fill((cost or {}).get("route")).get(base)
+                 or load_joint_fill(None).get(base))
+            if j:
+                e.append(ev("实测 P(只成交一腿)", "%.1f%%" % (100 * j["p_part"]),
+                            j["prov"]))
+                e.append(ev("实测 P(两腿都成交)", "%.2f%%" % (100 * j["p_both"]),
+                            j["prov"]))
+        except Exception:  # noqa: BLE001
+            pass
+
+    if not e:
+        return report("execution_progress", "neutral", 0.0, [],
+                      "无执行进度数据"), hyps, dropped
+    verdict = "unfavorable" if any(h["id"] == "partial_fill_naked" for h in hyps) \
+        else ("neutral" if hyps else "neutral")
+    conf = 0.8 if verdict == "unfavorable" else (0.6 if hyps else 0.5)
+    note = ("提出 %d 条执行中假设：%s" % (len(hyps), "、".join(h["id"] for h in hyps))
+            if hyps else "执行中未触发假设（阈值见 evidence）")
+    if dropped:
+        note += "；另有 %d 条未过阈值（留痕不删）" % len(dropped)
+    if synthetic:
+        note = "⚠️ **合成演示持仓**（非真实下单记录）：" + note
+    note += "｜⚠️ 本路**不产出数字**（新价位/新规模由确定性交易员给）"
+    return (report("execution_progress", verdict, conf, e, note), hyps, dropped)
+
+
+def execution_actions(base, order_state, cost=None):
+    """裸露/停滞时**确定性**给出的处置口径（数字全部来自成本模型）。
+
+    与 `analyst_execution_progress` 的分工（红线 1 的落地）：
+      · agent 说"**该处置了**"（触发条件、可证伪）；
+      · 这个函数说"**处置要付多少**"（数字来自实测成本模型，可复跑）。
+
+    ⚠️ 刻意**不给损益估计**：本项目不下单、没有持有期损益口径，
+       所以"不处置会亏多少"这种数字我们**算不出来也不编**。
+    """
+    out = []
+    if not isinstance(order_state, dict):
+        return out
+    s_fill = bool(order_state.get("spot_filled"))
+    p_fill = bool(order_state.get("perp_filled"))
+    if s_fill == p_fill:
+        return out
+    got = "现货腿" if s_fill else "永续腿"
+    lack = "永续腿" if s_fill else "现货腿"
+    c = cost or {}
+    tk = c.get("cost_tk")
+    out.append({
+        "id": "complete_leg",
+        "title": "立刻吃单补上%s" % lack,
+        "cost_bp": tk,
+        "cost_note": ("双腿全吃单口径的往返成本（来自实测成本模型 "
+                      "execution_cost.analyse_two_leg）" if tk is not None
+                      else "成本模型不可用 —— 不给数字"),
+        "immediate": True,
+    })
+    out.append({
+        "id": "flatten_leg",
+        "title": "平掉已成交的%s" % got,
+        "cost_bp": None,
+        "cost_note": ("需要该腿当时的点差与费率才能算 —— 本页不编数字；"
+                      "口径见 docs/09 与 docs/14"),
+        "immediate": False,
+    })
+    out.append({
+        "id": "no_new_position",
+        "title": "处置完成前不要开新仓",
+        "cost_bp": None,
+        "cost_note": "风控官已按 agent 假设给出 veto 级规则",
+        "immediate": True,
+    })
+    return out
 
 
 # ---------------------------------------------------------------- 汇总
@@ -2269,7 +2595,12 @@ PARAM_FIELDS = ("base", "qty_usd", "miss_bp", "urgent", "slice_usd",
                 # ⭐ LLM 事件判定进契约：硬闸门依赖它，复跑必须拿同一份。
                 #    （旧日志里没有这个字段 -> 复跑时会真调一次 LLM，
                 #      结果不一致是**如实暴露**，不是 bug；见 docs/46）
-                "llm_event")
+                "llm_event",
+                # ⏱️ 在途订单**同样是决策输入**（2026-09-20）：执行进度官据此
+                #    提出裸露敞口假设 -> 风控一票否决 -> 规则表/否决清单都变。
+                #    不记进契约，`--replay` 就会漏掉那条 `agent:` 规则，
+                #    复跑报"不一致"而真正原因是输入根本没被记下来。
+                "order_state")
 
 
 def sha256_file(path):
@@ -2315,6 +2646,9 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
     le = (decision or {}).get("llm_gate_used")
     if isinstance(le, dict):
         le = {k: v for k, v in le.items() if k != "frozen"}
+    # ⏱️ 在途订单（执行进度官的输入）：**规范化后**记录，只留决策真正读的字段。
+    _ep = (decision or {}).get("execution_progress")
+    os_param = _ep.get("order_state") if isinstance(_ep, dict) else None
     return {
         "log_format": LOG_FORMAT, "base": base, "qty_usd": qty_usd,
         "miss_bp": miss_bp, "urgent": bool(urgent),
@@ -2339,6 +2673,11 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
         #    会让 `--replay` 的契约字段（最终立场/规模）偶发不一致。
         #    它也可能是 None（无 key / 未启用）——那表示这次没有 LLM 判定参与。
         "llm_event": le,
+        # ⏱️ 在途订单（执行进度官的输入）：与 llm_event 同理 —— 它是**决策契约的
+        #    一部分**。存的是 `norm_order_state()` 规范化后的最小字段集，复跑读回来
+        #    当冻结输入，否则 `agent:partial_fill_naked` 那条规则会凭空消失。
+        #    None = 这次没有在途订单（不是"记丢了"）。
+        "order_state": os_param,
         "data_used": {
             "analysts": sorted({e["source"] for i in items if i.get("valid")
                                 for e in i["report"]["evidence"]}),
@@ -2861,8 +3200,16 @@ def selftest():
     base = "NVDA"
     items, _hyps, _dropped = run_team(base)
 
-    chk(len(items) == len(DIMENSIONS),
-        "%d 路分析师都返回了结果（%d 个）" % (len(DIMENSIONS), len(items)))
+    # ⚠️ 这里**不能**写 `len(items) == len(DIMENSIONS)`：DIMENSIONS 是"全部可能
+    #    的路"（6 路），而 `run_team` 只跑**事前**那 5 路 —— 第 6 路（执行进度官）
+    #    要有在途订单才跑，由 `run_decision(order_state=...)` 挂上去。
+    #    写死相等会在新增第 6 路的那一刻变成假失败（实测踩到）。
+    _PRE = [d for d in DIMENSIONS if d != "execution_progress"]
+    chk(len(items) == len(_PRE)
+        and {i["report"]["dimension"] for i in items} == set(_PRE),
+        "事前 %d 路分析师都返回了结果（%d 个：%s）；第 6 路 execution_progress "
+        "要有在途订单才跑" % (len(_PRE), len(items),
+                        "、".join(sorted(i["report"]["dimension"] for i in items))))
     chk(all(i["report"]["dimension"] in DIMENSIONS for i in items),
         "dimension 取值合法")
     chk(all(i["report"]["verdict"] in VERDICTS for i in items),
@@ -2993,7 +3340,8 @@ def apply_gate_to_cost(cost, gate):
 
 def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                  now_ms=None, gate=True, scenario=None, fresh=True,
-                 freeze_news=False, time_basis_force=None, llm_event=None):
+                 freeze_news=False, time_basis_force=None, llm_event=None,
+                 order_state=None):
     """端到端跑一次：分析师 -> 辩论 -> 闸门 -> 交易员 -> 风控官 -> 最终决策。
 
     返回 ``(cost, items, debate, decision, book)``。
@@ -3039,6 +3387,39 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                                     headlines=([] if freeze_news else None),
                                     news_mode=("static" if freeze_news else "auto"),
                                     news_assess=llm_event)
+
+    # ---- ⏱️ 执行进度官（执行中闭环）：**只在有在途订单时**才跑 ----
+    # 为什么放在这里：它看的是"我已经下的那一单"，与上面 5 路（看市场）不是一回事。
+    # 它的假设会**并进** hyps 一起交给风控官 —— 裸露敞口因此真的能触发一票否决。
+    exec_prog = None
+    os_norm = norm_order_state(order_state)
+    if os_norm:
+        try:
+            prep, phyps, pdropped = analyst_execution_progress(
+                base, os_norm, cost=cost, now_ms=now_ms)
+            ok_r, why_r = validate(prep)
+            items = items + [{"report": prep, "valid": ok_r,
+                              "invalid_reason": why_r}]
+            # ⭐ 优先级：**执行中的真实敞口** 排在事前风险假设之前 ——
+            #    否则 MAX_HYPOTHESES 的截断可能把"一腿裸着"这条 veto 挤掉。
+            hyps = list(phyps) + list(hyps)
+            dropped = list(dropped) + list(pdropped)
+            if len(hyps) > MAX_HYPOTHESES:
+                dropped = dropped + [
+                    {"id": h["id"], "reason": "超出假设条数上限（%d）"
+                     % MAX_HYPOTHESES, "metric": h.get("metric"),
+                     "value": h.get("value")}
+                    for h in hyps[MAX_HYPOTHESES:]]
+                hyps = hyps[:MAX_HYPOTHESES]
+            exec_prog = {"order_state": os_norm,
+                         "report": prep, "hypotheses": phyps,
+                         "dropped": pdropped,
+                         "actions": execution_actions(base, os_norm,
+                                                      cost=cost)}
+        except Exception as exc:  # noqa: BLE001
+            # 执行中判断失败**不能静默**：如实记下来，但不要让整条链挂掉
+            exec_prog = {"order_state": os_norm,
+                         "error": "%s: %s" % (type(exc).__name__, exc)}
     try:
         g = _cg(base, now_ms)
     except Exception as exc:  # noqa: BLE001
@@ -3070,6 +3451,9 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     #    同时把**实际用到的** LLM 判定（实时调用的 / 冻结复用的）记下来 ——
     #    复跑靠它冻结输入（否则 LLM 是活输入，硬闸门依赖它就没法复跑）。
     decision["llm_gate_used"] = news_ev
+    # ⏱️ 执行进度（有在途订单时才有）：报告 + 假设 + **确定性**处置口径
+    if exec_prog is not None:
+        decision["execution_progress"] = exec_prog
     decision["gate_merge"] = {
         "static": {"severity": static_gate[0], "reason": static_gate[1],
                    "source": static_gate[2]},
@@ -3555,6 +3939,232 @@ def decision_selftest():
     except Exception as exc:  # noqa: BLE001
         chk(False, "LLM 闸门闭环自检异常：%r" % (exc,))
 
+    # ---- ⑬ 🔴 执行进度官：把链路从"只在下单前说话"补成**执行中闭环** ----
+    #    2026-09-20 新增（P0）。修之前：挂单一直不成交、或**只成交一条腿**的时候，
+    #    整条链路里**没有任何角色负责** —— 而这正是赛道三「执行辅助」手册点名的
+    #    位置（trader 决策后的拆单与滑点管理）。没有它，"执行辅助"就只是"决策辅助"。
+    NOW = int(dt.datetime.now(dt.UTC).timestamp() * 1000)
+    MI = 60_000
+
+    def _os(**kw):
+        d = {"id": "selftest-order", "base": "NVDA", "qty_usd": 5000.0,
+             "opened_ms": NOW - 10 * MI}
+        d.update(kw)
+        return d
+
+    # (a) 只成交一腿 -> 裸露敞口，**否决级**，且必须带证伪条件与处置口径
+    rep_nk, h_nk, _d_nk = analyst_execution_progress(
+        "NVDA", _os(spot_filled=True, perp_filled=False))
+    nk = [h for h in h_nk if h["id"] == "partial_fill_naked"]
+    chk(bool(nk), "只成交一腿（已挂 10 分钟）-> 提出 partial_fill_naked（%s）"
+        % ("、".join(h["id"] for h in h_nk) or "无"))
+    chk(bool(nk) and nk[0].get("falsifier") and nk[0].get("action"),
+        "裸露敞口带**证伪条件**（另一腿也成交即撤销）与处置口径")
+    #    ⚠️ 这里**不写死** P 值：它随窗口/路线变化（同一份代码实测到过
+    #       in_house 6.6 倍、不分 venue 14.9 倍，以及旧窗口的 35 倍）。
+    #       改成**断言关系**：只要"一腿不跟"仍显著多于"两腿都成交"，
+    #       这条 veto 的依据就成立；数字由实测表给。
+    try:
+        try:
+            from execution_cost import load_joint_fill as _ljf
+        except ImportError:
+            from project2.execution_cost import load_joint_fill as _ljf
+        _j = (_ljf(_synthetic_cost().get("route")).get("NVDA")
+              or _ljf(None).get("NVDA"))
+        _ratio = (_j["p_part"] / max(_j["p_both"], 1e-9)) if _j else 0.0
+        chk(bool(_j) and _ratio >= 5.0,
+            "实测联合分布支撑该判据：P(只成交一腿)=%.1f%% vs "
+            "P(两腿都成交)=%.2f%% -> **%.1f 倍**（%s）"
+            % (100 * _j["p_part"], 100 * _j["p_both"], _ratio, _j["prov"])
+            if _j else "读不到实测联合分布 -> 这条 veto 的依据无法核验")
+    except Exception as _exc:  # noqa: BLE001
+        chk(False, "联合分布读取异常：%r" % (_exc,))
+    chk(HYPOTHESIS_ACTIONS.get("partial_fill_naked", {}).get("level") == "veto",
+        "裸露敞口在风控里是**否决级**（一腿不跟是常态，且方向性敞口无对冲）")
+    chk(rep_nk["verdict"] == "unfavorable",
+        "裸露敞口时本路判定 unfavorable（%s）" % rep_nk["verdict"])
+    # 🔴 红线 1 现场验证：本路**不产出任何数字**（价位/规模只能由确定性交易员给）
+    _keys = set()
+    for h in h_nk:
+        _keys |= set(h)
+    chk(not (_keys & {"size_usd", "price", "qty_usd", "limit_price", "target"}),
+        "本路假设里**没有任何价位/规模字段**（键只有：%s）"
+        % "、".join(sorted(_keys)))
+
+    # 处置口径：agent 说"该处置了"，**数字由成本模型给**（算不出来的不编）
+    _c_syn = _synthetic_cost()
+    acts = execution_actions("NVDA", _os(spot_filled=True, perp_filled=False),
+                             cost=_c_syn)
+    chk([a["id"] for a in acts] == ["complete_leg", "flatten_leg",
+                                    "no_new_position"],
+        "裸露敞口给出三条处置口径（%s）" % "、".join(a["id"] for a in acts))
+    _cl = acts[0]
+    chk(_c_syn.get("cost_tk") is not None and _cl["cost_bp"] == _c_syn["cost_tk"],
+        "补腿成本 = 实测成本模型的双腿全吃单往返成本（%s bp），不是编的"
+        % _cl["cost_bp"])
+    chk(all(a.get("cost_note") for a in acts),
+        "每条处置都写明**数字从哪来**（算不出来的直说算不出来）")
+    chk(execution_actions("NVDA", _os(spot_filled=True, perp_filled=True)) == [],
+        "两腿齐平时**不给处置建议**（没有裸露敞口就不该有动作）")
+
+    # (b) 两腿齐平 -> **零假设**（防"执行层变成万能借口"）
+    _rep_ok, h_ok, _d_ok = analyst_execution_progress(
+        "NVDA", _os(spot_filled=True, perp_filled=True))
+    chk(not h_ok, "两腿都成交时**不产生任何假设**（%s）"
+        % ("、".join(h["id"] for h in h_ok) or "零假设 ✓"))
+
+    # (c) 宽限期内 -> 只留痕、不报警（否则每次下单那一瞬间都会误报裸露）
+    _rep_g, h_g, d_g = analyst_execution_progress(
+        "NVDA", _os(spot_filled=True, perp_filled=False, opened_ms=NOW - 20_000))
+    chk(not h_g and any(x["id"] == "partial_fill_naked" for x in d_g),
+        "宽限期（%.0f 分钟）内只留痕不报警：%s"
+        % (NAKED_GRACE_MIN,
+           "；".join(x["reason"] for x in d_g if x["id"] == "partial_fill_naked")))
+
+    # (d) 挂单停滞：判据是"**这条腿**在挂单期间零成交"（逐笔实测），正反都测。
+    #     ⚠️ 打桩的是**数据源**（成交表），不是被判定的逻辑本身 —— 与上面
+    #       `frozen_quote` 的打桩同理：把"数据说什么"固定住，才能问
+    #       "给定零成交 / 给定有成交，判据分别怎么响"。
+    _orig_tbv = globals()["_trades_between_venue"]
+    try:
+        globals()["_trades_between_venue"] = lambda v, b, lo, hi: 0
+        _r0, _h0, _d0 = analyst_execution_progress(
+            "NVDA", _os(spot_filled=False, perp_filled=False,
+                        opened_ms=NOW - 40 * MI))
+        globals()["_trades_between_venue"] = lambda v, b, lo, hi: 7
+        _r7, _h7, _d7 = analyst_execution_progress(
+            "NVDA", _os(spot_filled=False, perp_filled=False,
+                        opened_ms=NOW - 40 * MI))
+    finally:
+        globals()["_trades_between_venue"] = _orig_tbv
+    st0 = [h for h in _h0 if h["id"] == "progress_stalled"]
+    chk(bool(st0), "挂 40 分钟且该腿**零成交** -> progress_stalled（%s）"
+        % ("、".join(h["id"] for h in _h0) or "无"))
+    chk(bool(st0) and st0[0].get("falsifier"),
+        "停滞假设带**证伪条件**（该腿重新出现成交即撤销）")
+    chk(not [h for h in _h7 if h["id"] == "progress_stalled"]
+        and any(x["id"] == "progress_stalled" for x in _d7),
+        "同样挂 40 分钟但期间**有 7 笔成交** -> **不**触发（如实留痕：%s）"
+        % "；".join(x["reason"] for x in _d7 if x["id"] == "progress_stalled"))
+    chk(HYPOTHESIS_ACTIONS.get("progress_stalled", {}).get("level") == "caution",
+        "停滞在风控里是**警示级**（只缩规模不否决 —— 挂单本身不是错）")
+    # 真实数据只**如实汇报**、不作断言（现货腿 09-14~09-18 零成交、09-19 已恢复，
+    # 把"当时的数据"写死进自检，数据一变自检就误报 —— 这个坑上面已经踩过一次）
+    # ⚠️ 窗口必须锚在**决策基准时间**上：用墙钟去截数据时钟的成交表，
+    #    窗口整个落在数据范围之外，"0 笔"会被误读成"市场没成交"（实测踩到）。
+    _tb_live = time_basis()
+    _win = _tb_live["now_ms"] - 40 * MI
+    _rr, _rh, _rd = analyst_execution_progress(
+        "NVDA", _os(spot_filled=False, perp_filled=False, opened_ms=_win),
+        now_ms=_tb_live["now_ms"])
+    print("  [ ~ ] live 实测（只汇报、不断言）：以决策基准时间 %d 截最近 40 分钟"
+          "窗口，真实成交 %s" % (_tb_live["now_ms"],
+                              "、".join(e["value"] for e in _rr["evidence"]
+                                        if "成交笔数" in e["metric"]) or "无数据"))
+
+    # (e) 🔴 接线验证：执行中的假设必须**真的进风控**，不能只是报告里的一段话
+    rep_no, h_no, _ = analyst_execution_progress("NVDA", _os(spot_filled=True))
+    chk(rep_no["dimension"] == "execution_progress" and rep_no["evidence"],
+        "报告进 DIMENSIONS 且带 %d 条可核验证据" % len(rep_no["evidence"]))
+    chk("execution_progress" in DIMENSIONS,
+        "execution_progress 已在 DIMENSIONS 里（%d 路）" % len(DIMENSIONS))
+    chk(norm_order_state(None) is None and norm_order_state({}) is None
+        and norm_order_state({"base": ""}) is None,
+        "空/无标的的持仓单一律规范化成 None（不猜）")
+    _n1 = norm_order_state({"base": "nvda", "spot_filled": 1, "perp_filled": 0,
+                            "opened_ms": "1789720000000", "qty_usd": "5000",
+                            "备注": "无关字段", "avg_price": 222.5})
+    chk(_n1 is not None and set(_n1) <= set(ORDER_STATE_FIELDS)
+        and _n1["opened_ms"] == 1789720000000 and _n1["qty_usd"] == 5000.0
+        and _n1["perp_filled"] is False,
+        "规范化只留决策真正读的字段（丢掉 avg_price/备注 等无关项，"
+        "否则复跑会因无关字段漂移而误报）：%s" % sorted(_n1))
+    chk("order_state" in PARAM_FIELDS,
+        "order_state 进了复跑契约（PARAM_FIELDS 共 %d 项）" % len(PARAM_FIELDS))
+    # 🔴 时钟不一致必须**显式拒绝判断**，不能钳成 0 假装算过。
+    #    这条是上面那次真实翻车换来的回归：钳成 0 -> 落在宽限期内 ->
+    #    裸露敞口假设**静默消失** -> 页面还显示"执行进度：正常"。
+    _rep_sk, h_sk, d_sk = analyst_execution_progress(
+        "NVDA", _os(spot_filled=True, perp_filled=False, opened_ms=NOW + 10 * MI))
+    chk(not h_sk and len(d_sk) == 2,
+        "订单时间**晚于**决策基准时间（时钟不一致）-> 零假设且如实留痕"
+        "（%s）" % "；".join(x["reason"] for x in d_sk))
+    chk(_rep_sk["verdict"] == "neutral" and "不硬判" in _rep_sk["notes"],
+        "时钟不一致时报告**写清「不硬判」**，而不是给一个假结论：%s"
+        % _rep_sk["notes"][:48])
+
+    try:
+        # ⚠️ 必须用**决策基准时间**造 opened_ms，不能用墙钟 —— 读冻结快照时
+        #    `time_basis()` 给的是数据自带时刻，用墙钟会造出"开在未来的订单"。
+        #    （第一次写这条自检时就是这么翻车的，也正因为翻车才补了上面那个
+        #      "时钟不一致就不硬判" 的分支 —— 这个自检本身成了一次真实回归。）
+        _tb_t = time_basis()
+        _os_live = _os(spot_filled=True, perp_filled=False,
+                       opened_ms=_tb_t["now_ms"] - 10 * MI)
+        _c_e, _i_e, _d_e, _dec_e, _b_e = run_decision(
+            "NVDA", qty_usd=5000.0, llm_event=NONE_EV, now_ms=_tb_t["now_ms"],
+            order_state=_os_live)
+        _ep = _dec_e.get("execution_progress") or {}
+        chk((_ep.get("report") or {}).get("dimension") == "execution_progress",
+            "有在途订单时决策里带出执行进度报告（verdict=%s，%d 条假设）"
+            % ((_ep.get("report") or {}).get("verdict"),
+               len(_ep.get("hypotheses") or [])))
+        _ids = [h["id"] for h in (_dec_e.get("risk_hypotheses") or [])]
+        chk(_ids[:1] == ["partial_fill_naked"],
+            "执行中的假设**排在事前风险假设之前**并入风控输入（顺序=%s）"
+            % "、".join(_ids))
+        chk("agent:partial_fill_naked" in (_dec_e["risk"]["vetoes"] or []),
+            "裸露敞口已转成风控规则并**触发一票否决**（vetoes=%s）"
+            % "、".join(_dec_e["risk"]["vetoes"] or []))
+        chk(_dec_e["final"]["stance"] == "stand_down"
+            and not _dec_e["final"].get("order"),
+            "裸露敞口 -> 最终不做单（stance=%s，规模=%.0f）"
+            % (_dec_e["final"]["stance"], _dec_e["final"]["qty_usd"]))
+        chk(bool(_ep.get("actions")), "决策里同时带出**确定性**处置口径（%d 条）"
+            % len(_ep.get("actions") or []))
+        # 反向：不给在途订单 -> 不得凭空产生执行层规则
+        _dec_no = run_decision("NVDA", qty_usd=5000.0, llm_event=NONE_EV)[3]
+        chk("execution_progress" not in _dec_no
+            and (not _dec_no.get("execution_progress")),
+            "无在途订单时决策里**没有**执行进度块（不凭空产生）")
+        chk(not any(str(x).startswith("agent:partial_fill_naked")
+                    for x in (_dec_no["risk"]["hits"] or [])),
+            "无在途订单时不产生 agent:partial_fill_naked 规则（不凭空否决）")
+        # 🔴 契约闭环：带在途订单的决策，写日志 -> 用日志参数复跑 -> 必须一致
+        _lg = build_log(base="NVDA", items=_i_e, debate=_d_e, cost=_c_e,
+                        decision=_dec_e, qty_usd=5000.0, miss_bp=3.0,
+                        urgent=False, now_ms=None, book=_b_e)
+        chk((_lg["parameters"].get("order_state") or {}).get("spot_filled") is True,
+            "日志把**规范化后的在途订单**存进了 parameters.order_state（%s）"
+            % _lg["parameters"].get("order_state"))
+        _pr2 = _lg["parameters"]
+        _c2, _i2, _d2, _dec2, _b2 = run_decision(
+            "NVDA", qty_usd=float(_pr2["qty_usd"]),
+            miss_bp=float(_pr2["miss_bp"]), urgent=bool(_pr2["urgent"]),
+            now_ms=_pr2.get("now_ms"), llm_event=_pr2.get("llm_event"),
+            order_state=_pr2.get("order_state"))
+        _lg2 = build_log(base="NVDA", items=_i2, debate=_d2, cost=_c2,
+                         decision=_dec2, qty_usd=5000.0, miss_bp=3.0,
+                         urgent=False, now_ms=_pr2.get("now_ms"), book=_b2)
+        _ok_os, _rep_os = replay_check(_lg, _lg2)
+        chk(_ok_os, "带在途订单的决策复跑一致（否则 agent:partial_fill_naked "
+                    "会在复跑里凭空消失%s）"
+            % ("" if _ok_os else "；差异：%s"
+               % str(_rep_os.get("must_match_failed") or _rep_os)[:120]))
+        # 反向：复跑时**丢掉**在途订单 -> 必须报不一致（证明它真的是契约的一部分）
+        _ok_drop, _ = replay_check(
+            _lg, build_log(base="NVDA", items=_i2, debate=_d2, cost=_c2,
+                           decision=run_decision(
+                               "NVDA", qty_usd=5000.0, miss_bp=3.0,
+                               now_ms=_pr2.get("now_ms"),
+                               llm_event=_pr2.get("llm_event"))[3],
+                           qty_usd=5000.0, miss_bp=3.0, urgent=False,
+                           now_ms=_pr2.get("now_ms"), book=_b2))
+        chk(not _ok_drop,
+            "复跑时丢掉在途订单 -> replay 报不一致（它确实是契约的一部分）")
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "执行进度官接线自检异常：%r" % (exc,))
+
     print("\n交易员/风控官自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
 
@@ -3728,6 +4338,9 @@ def main(argv=None):
         #    而 LLM 有随机性 -> 最终立场/规模可能不一致 -> 复跑误报失败。
         #    旧日志没有这个字段时 llm_event=None（如实走一遍实时路径）。
         llm_ev = pr.get("llm_event")
+        # ⏱️ 在途订单同理：它是执行进度官（-> agent 一票否决）的输入。
+        #    旧日志没有这个字段时 order_state=None（如实走"无在途订单"路径）。
+        os_frozen = pr.get("order_state")
         if llm_ev is None and pr.get("gate", {}).get("source", "").startswith("llm"):
             print("⚠️ 这份日志记录了 LLM 判定来源，但没有存下判定本体"
                   "（旧版本日志）。本次复跑会**重新调用一次 LLM**，"
@@ -3736,7 +4349,8 @@ def main(argv=None):
             base, qty_usd=float(pr.get("qty_usd") or 5000.0),
             miss_bp=float(pr.get("miss_bp") or 3.0),
             urgent=bool(pr.get("urgent")), now_ms=pr.get("now_ms"),
-            scenario=pr.get("scenario"), llm_event=llm_ev)
+            scenario=pr.get("scenario"), llm_event=llm_ev,
+            order_state=os_frozen)
         new = build_log(base=base, items=items, debate=debate, cost=cost,
                         decision=decision, qty_usd=float(pr.get("qty_usd") or 5000.0),
                         miss_bp=float(pr.get("miss_bp") or 3.0),

@@ -80,20 +80,35 @@
     </section>
   </div>
 
+  <!-- ══════════ 4b. 执行进度官（执行中闭环） ══════════ -->
+  <section class="panel" style="--i:6">
+    <h2>⑥ 执行进度官 <span class="hint">下单<strong>之后</strong>怎么办 —— 裸露敞口 / 挂单停滞。这是赛道三「执行辅助」点名要的那一段</span></h2>
+    <div class="controls">
+      <label for="pos-mode">在途持仓</label>
+      <select id="pos-mode" title="持仓单由用户/上层提供；本服务只读不写。没有在途订单时这一块不显示结论 —— 没有数据 ≠ 没有风险">
+        <option value="demo">合成演示单：现货腿已成交 / 永续腿未成交</option>
+        <option value="auto">自动读 data/positions/open.json</option>
+        <option value="none">不带上在途订单（看"没有持仓"的样子）</option>
+      </select>
+      <span class="loading" id="pos-state" role="status" aria-live="polite"></span>
+    </div>
+    <div id="execprog"><div class="loading">尚未运行</div></div>
+  </section>
+
   <!-- ══════════ 5. 成本 + 溯源 ══════════ -->
   <div class="grid2">
-    <section class="panel" style="--i:6">
+    <section class="panel" style="--i:7">
       <h2>成本与联合成交分布 <span class="hint">实测取代独立假设</span></h2>
       <div id="cost"><div class="loading">尚未运行</div></div>
     </section>
-    <section class="panel" style="--i:7">
+    <section class="panel" style="--i:8">
       <h2>可复跑溯源 <span class="hint">参数 + 阈值 + 输入 SHA256 + decision_hash</span></h2>
       <div id="prov"><div class="loading">尚未运行</div></div>
     </section>
   </div>
 
   <!-- ══════════ 6. 全标的概览 ══════════ -->
-  <section class="panel" style="--i:8">
+  <section class="panel" style="--i:9">
     <h2>全标的概览 <span class="hint">风险与理由（<strong>不代下单</strong>，只给理由与条件）</span></h2>
     <div class="table-wrap">
       <table id="ov-table">
@@ -109,7 +124,7 @@
   </section>
 
   <!-- ══════════ 7. 阈值透明化 ══════════ -->
-  <section class="panel" style="--i:9">
+  <section class="panel" style="--i:10">
     <h2>生效阈值与来源 <span class="hint">页面上每个判断都由这些常量决定；它们全部来自实测</span></h2>
     <div class="table-wrap">
       <table id="params-table">
@@ -120,7 +135,7 @@
   </section>
 
   <!-- ══════════ 8. 数据边界 ══════════ -->
-  <section class="panel" style="--i:10">
+  <section class="panel" style="--i:11">
     <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可用 <code>--verify</code> 就地核验</span></h2>
     <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
   </section>

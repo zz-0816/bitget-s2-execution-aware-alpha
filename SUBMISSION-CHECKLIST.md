@@ -201,8 +201,10 @@ Select-String -Path docs\40-*.md -Pattern "无风险套利|risk-free|稳赚|保�
 跑下面这几条，材料第 3 段的数字就能逐条对上：
 
 ```powershell
-python run_p2.py --selftest                           # 12 步全部 [OK] / 0 失败，退出码 0（无需网络与 key；项数会随自检增加，**以现场输出为准**）
+python run_p2.py --selftest                           # 16 步全部 [OK]，退出码 0（无需网络与 key；实测 305 项 [OK] / 0 项 [!!] / 2 项 [skip]；项数会随自检增加，**以现场输出为准**）
+python run_p2.py --selftest --net                     # 再加 ⑰ 消息面源 + ⑱ **事件判定回归门槛**
 python project2\agent_team.py --selfcheck             # agent 层单独跑：全部 [OK] / 0 失败
+python project2\agent_team.py --decision-selftest     # 交易员/风控官/复跑契约 + **执行进度官**（⑬ 段）
 python run_p2.py --demo NVDA                          # 完整决策链（本次实测：最终不参与、0 USD）
 python run_p2.py --demo META                          # 可复算的 agent 闭环：agent:stale_quotes -> reject
 python project2\execution_cost.py --base NVDA --two-leg   # 三方案并排 + 腿风险期望
@@ -210,11 +212,21 @@ python project2\event_gate.py --assess --base NVDA --mode static   # 风险与�
 python tools\joint_fill_check.py                      # 只读；新旧口径对照（GOOGL 17.67x / META 12.32x / 3-of-9）
 python tools\snapshot_manifest.py --verify            # 冻结快照逐字节核验（当前 26 项 / 39.6 MB，冻结 16 项）
 python tools\event_calibration.py --selftest          # 校准集 schema + 覆盖 + **留出检查**（离线）
+python tools\event_calibration.py --gate              # **回归门槛**：危险方向错误必须为 0（需 key；无 key 如实报"未执行"）
+python tools\run_record.py --report                   # 长跑记录汇总（稳定性/效率；按 `src_sha16` 代码指纹分组）
+python tools\run_record.py --selftest                 # 长跑记录器自检（离线）
 python tools\retruncate_orderbook.py --selftest       # 盘口"保留最后 N 轮"的自检（合成样本）
 ```
 
 - [ ] 上述命令**全部**跑过，输出与 `docs/40` 第 3 段表格一致
 - [ ] 材料里的每个数字都能在 `docs/40` 里点回一个路径或命令
+- [ ] **执行进度官**演示过：页面上把「在途持仓」切到合成演示单（或
+      `/api/decision?base=NVDA&position=demo`），确认出现 `partial_fill_naked` 与
+      **"合成演示持仓"**标注；再切到「不带上在途订单」，确认页面说的是
+      **"无在途订单"**而不是绿灯
+- [ ] 长跑记录**仍在跑**（`python tools\run_record.py --interval 120 --poll-news --replay-every 3`），
+      提交前用 `--report` 取一次最新数字；⚠️ 记录里 412 轮是**改动前**的代码跑的，
+      **不要**拿它给当前代码背书（报告已按代码指纹分组）
 
 > ⚠️ **不要跑** `python tools\threshold_calibration.py` —— 它会把结果**覆盖写入** `data/derived/threshold_calibration.json`（见该脚本的 `OUT` 常量）。
 > 要核对阈值敏感性，直接读该 JSON。

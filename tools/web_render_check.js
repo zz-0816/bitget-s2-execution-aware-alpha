@@ -92,13 +92,40 @@ function norm(u) {
   const q = s.indexOf('?');
   return q < 0 ? s : s.slice(0, q);
 }
-// 先按**完整 URL**匹配（这样可以同时喂 NVDA 与 META 两份决策数据，
-// 用于分别验证"可执行"与"被一票否决"两条渲染路径），再退回按路径匹配。
+/* 夹具匹配：精确 URL -> **参数子集**匹配 -> 路径匹配。
+   ⚠️ 为什么需要"子集"这一层：页面会给同一个端点加可选参数
+   （例如 `&position=demo`，用来喂在途持仓单）。只做精确匹配时，
+   夹具表里没有带新参数的 URL，shim 直接 404，`runDecision` 抛异常 ->
+   **整页九个区块全部渲染不出来**，而真实浏览器里其实是好的。
+   实测踩到：新增执行进度面板后 web_smoke 报"全都没渲染"，
+   真正的原因只是夹具没覆盖新 URL。子集匹配让夹具对未来新增的可选参数免疫。 */
+function matchFixture(full) {
+  if (full in fixtures) return full;
+  const q = full.indexOf('?');
+  const path = q < 0 ? full : full.slice(0, q);
+  const cands = Object.keys(fixtures).filter(
+    (k) => k === path || k.startsWith(path + '?'));
+  if (!cands.length) return null;
+  if (q < 0) return cands.includes(path) ? path : null;
+  const req = new URLSearchParams(full.slice(q + 1));
+  // 夹具里的每个参数都必须在请求里出现且值相同（请求可以多带参数）
+  for (const k of cands) {
+    const kq = k.indexOf('?');
+    if (kq < 0) continue;
+    let ok = true;
+    for (const [a, b] of new URLSearchParams(k.slice(kq + 1))) {
+      if (req.get(a) !== b) { ok = false; break; }
+    }
+    if (ok) return k;
+  }
+  return null;
+}
+
 const fetchShim = async (url) => {
   const full = String(url);
-  const key = (full in fixtures) ? full : norm(full);
-  if (!(key in fixtures)) {
-    return { ok: false, status: 404, json: async () => ({ ok: false, err: 'no fixture ' + key }) };
+  const key = matchFixture(full);
+  if (key === null) {
+    return { ok: false, status: 404, json: async () => ({ ok: false, err: 'no fixture ' + full }) };
   }
   return { ok: true, status: 200, json: async () => fixtures[key] };
 };
@@ -152,6 +179,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     gate: '事件闸门',
     trader: '交易员',
     risk: '风控官（含规则表）',
+    execprog: '执行进度官',
     cost: '成本与联合分布',
     prov: '可复跑溯源',
     'sel:#ov-table tbody': '全标的概览表',
@@ -188,6 +216,55 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   if (/不可用|暂不可用/.test(rendered.get('verdict') || '')) {
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
+  }
+
+  // ---- ⏱️ 执行进度官：三条硬规矩都要在页面上看得见 ----
+  //   ⚠️ 加了面板却只检查"有没有渲染出东西"是不够的 —— 这一块最容易出的错
+  //      是**把"没有在途订单"画成绿灯**（没有数据 ≠ 没有风险）。
+  const ep = rendered.get('execprog') || '';
+  const epData = (fixtures[Object.keys(fixtures).find(
+    (k) => k.startsWith('/api/decision') && k.includes('position=demo'))] || {}).decision;
+  if (!epData) {
+    problems.push('夹具里没有带 position=demo 的决策 —— 页面默认走的就是这条路径');
+  } else {
+    const ed = epData.execution_progress || {};
+    if (!ed.present) {
+      problems.push('position=demo 的决策里 execution_progress 缺失（执行进度官没接线）');
+    } else {
+      if (!/合成演示持仓/.test(ep)) {
+        problems.push('合成演示单没有在页面上**显眼标注**（截图会被当成真实下单记录）');
+      }
+      (ed.hypotheses || []).forEach((h) => {
+        if (!ep.includes(h.id)) problems.push('执行中假设没有渲染出来：' + h.id);
+      });
+      (ed.actions || []).forEach((a) => {
+        if (!ep.includes(a.title)) problems.push('确定性处置口径没有渲染出来：' + a.title);
+      });
+      if ((ed.dropped || []).length && !/未过阈值/.test(ep)) {
+        problems.push('"未过阈值"的留痕没有渲染（读者无法判断判据有没有在工作）');
+      }
+      notes.push('执行进度官 ✓（' + ed.verdict + '，' + (ed.hypotheses || []).length +
+                 ' 条假设 / ' + (ed.dropped || []).length + ' 条留痕 / ' +
+                 (ed.actions || []).length + ' 条处置）');
+    }
+  }
+  // 反向：**没有**在途订单时，必须明确说"没有"，不许画绿灯
+  if (typeof sandbox.renderExecProg === 'function') {
+    const noPos = { execution_progress: { present: false },
+                    position_source: '没有在途持仓单（data/positions/open.json 不存在）' };
+    try {
+      sandbox.renderExecProg(noPos);
+      const e0 = rendered.get('execprog') || '';
+      if (!/无在途订单/.test(e0)) {
+        problems.push('没有在途订单时页面没有明确说"无在途订单"');
+      } else if (/正常|通过|✓/.test(e0)) {
+        problems.push('没有在途订单时页面画了绿灯 —— 没有数据 ≠ 没有风险');
+      } else {
+        notes.push('无在途订单分支 ✓（如实说明，不画绿灯）');
+      }
+    } catch (e) {
+      problems.push('渲染"无在途订单"时抛异常：' + e.message);
+    }
   }
 
   // ---- 第二条路径：**被一票否决**（stand_down + order=null）----

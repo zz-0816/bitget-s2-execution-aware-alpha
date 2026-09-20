@@ -368,6 +368,81 @@ function renderRisk(d) {
     '引用什么 · 触发做什么 · <b>什么条件下撤销</b>。</p>';
 }
 
+/* ⏱️ ⑥ 执行进度官 —— 下单**之后**这一段。
+   三条硬规矩（与后端一致，前端不得美化）：
+     1. 没有在途订单 -> 明确显示"没有在途订单"，**不显示绿灯**
+        （没有数据 ≠ 没有风险，这是本项目最容易犯的错）；
+     2. 合成演示单必须**显眼标注**，不能被截图当成真实下单记录；
+     3. 处置口径里的数字只能来自成本模型；算不出来的直说算不出来。 */
+function renderExecProg(d) {
+  const e = d.execution_progress || {};
+  const src = d.position_source ? '<p class="hint">持仓来源：' + mdInline(d.position_source) + '</p>' : '';
+  if (!e.present) {
+    $('execprog').innerHTML =
+      '<div class="verdict-bar"><div><div class="stance mono-dim">无在途订单</div>' +
+      '<div class="mono-dim">执行进度官未运行</div></div>' +
+      '<div class="why">没有在途持仓单时不产出任何执行中结论 —— ' +
+      '<b>没有数据 ≠ 没有风险</b>，所以这里不显示绿灯。' +
+      '要演示请把上面的「在途持仓」切到合成演示单，或用 ' +
+      '<code>data/positions/open.json</code> 提供真实在途订单。</div></div>' + src;
+    return;
+  }
+  if (e.error) {
+    $('execprog').innerHTML =
+      '<div class="verdict-bar stand_down"><div><div class="stance">执行中判断失败</div></div>' +
+      '<div class="why">' + esc(e.error) + '<br>失败<b>不静默</b>：如实记录，但不会让整条链挂掉。</div></div>' + src;
+    return;
+  }
+  const o = e.order || {};
+  const syn = e.synthetic
+    ? '<div class="verdict-bar caution"><div><div class="stance">合成演示持仓</div>' +
+      '<div class="mono-dim">synthetic = true</div></div>' +
+      '<div class="why">这不是真实下单记录，仅用于展示判据。它带着 <code>synthetic</code> ' +
+      '标记一路进日志、接口与页面，<b>不得</b>被当成实测结论引用。</div></div>'
+    : '';
+  const ev = (e.evidence || []).map((x) =>
+    '<tr><td>' + mdInline(x.metric) + '</td><td class="mono-dim">' + esc(x.value) + '</td>' +
+    '<td class="sep mono-dim">' + esc(x.source) + '</td></tr>').join('');
+  /* 假设已并入风控；这里同时显示"触发了几条 / 有哪几条没过阈值"，
+     后者是**留痕不删**：未触发也要能看见，否则读者无法判断判据有没有在工作。 */
+  const hy = (e.hypotheses || []).map((h) =>
+    '<div class="arg"><div class="cl">' + esc(h.id) + '：' + mdInline(h.hypothesis || '') + '</div>' +
+    '<div class="fa">实测量 <b>' + esc(h.metric) + ' = ' + esc(h.value) + '</b> ｜ 阈值 ' + esc(h.threshold) + '</div>' +
+    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + esc(h.action) + '</div></div>').join('');
+  const dr = (e.dropped || []).map((x) =>
+    '<div class="arg"><div class="cl mono-dim">' + esc(x.id) + '：' + esc(x.reason) + '</div>' +
+    '<div class="fa mono-dim">' + esc(x.metric || '') + ' = ' + esc(x.value || '') + '</div></div>').join('');
+  const ac = (e.actions || []).map((a) =>
+    '<tr><td>' + esc(a.title) + '</td>' +
+    '<td>' + (a.cost_bp === null || a.cost_bp === undefined
+      ? '<span class="mono-dim">—</span>' : '<b>' + fmt(a.cost_bp) + ' bp</b>') + '</td>' +
+    '<td class="sep mono-dim">' + mdInline(a.cost_note || '') + '</td></tr>').join('');
+  const filled = (o.spot_filled ? '现货=已成交' : '现货=未成交') + ' ｜ ' +
+                 (o.perp_filled ? '永续=已成交' : '永续=未成交');
+  $('execprog').innerHTML = syn +
+    '<div class="verdict-bar ' + (e.verdict === 'unfavorable' ? 'stand_down' : 'caution') + '">' +
+      '<div><div class="stance">' + esc(e.verdict || '—') + '</div>' +
+      '<div class="mono-dim">' + (e.hypotheses || []).length + ' 条执行中假设</div></div>' +
+      '<div class="why">' + mdInline(e.notes || '') + '</div></div>' +
+    '<table><tbody>' +
+      '<tr><th>在途订单</th><td>' + esc(o.id || '—') + '　' + fmt(o.qty_usd, 0) + ' USD</td>' +
+          '<th>两腿成交</th><td>' + esc(filled) + '</td></tr>' +
+    '</tbody></table>' +
+    '<div class="table-wrap"><table><thead><tr><th>实测量</th><th>值</th><th class="sep">来源</th></tr></thead>' +
+    '<tbody>' + ev + '</tbody></table></div>' +
+    (hy ? '<div class="side"><div class="sd-head"><span>⏱️ 执行中假设（已并入风控官）</span>' +
+      '<span class="mono-dim">触发即按 agent 规则收紧，最多不允许放松</span></div>' + hy + '</div>' : '') +
+    (ac ? '<div class="side"><div class="sd-head"><span>确定性处置口径</span>' +
+      '<span class="mono-dim">agent 说"该处置了"，数字由成本模型给</span></div>' +
+      '<table><thead><tr><th>动作</th><th>成本</th><th class="sep">数字从哪来</th></tr></thead><tbody>' +
+      ac + '</tbody></table></div>' : '') +
+    (dr ? '<div class="side"><div class="sd-head"><span>未过阈值（留痕不删）</span>' +
+      '<span class="mono-dim">判据有没有在工作，看这里</span></div>' + dr + '</div>' : '') +
+    '<p class="hint">执行进度官<b>不产出任何数字</b>（不给新价位、不给新规模）—— ' +
+    '那是确定性交易员的职责。它只给"该复核什么"的触发条件，且每条都能证伪。</p>' +
+    src;
+}
+
 function renderCost(d) {
   const c = d.cost || {};
   // 条形只写 data-w（目标宽度），由 animateBars 在下一帧设 style.width —— 这样
@@ -429,12 +504,22 @@ async function runDecision(base, qty) {
   if (STATE.busy) return;
   STATE.busy = true;
   $('run').disabled = true;
-  $('run-state').textContent = '正在跑决策链（读快照 + 5 路分析 + 辩论 + 闸门 + 交易员 + 风控官）…';
+  const pm = ($('pos-mode') && $('pos-mode').value) || 'demo';
+  $('run-state').textContent = '正在跑决策链（读快照 + 5 路分析 + 辩论 + 闸门 + 交易员 + 风控官 + 执行进度）…';
+  if ($('pos-state')) $('pos-state').textContent = '在途持仓模式：' + pm;
   try {
-    const d = (await api(API.decision + '?base=' + encodeURIComponent(base) + '&qty=' + qty)).decision;
+    const d = (await api(API.decision + '?base=' + encodeURIComponent(base) +
+      '&qty=' + qty + '&position=' + encodeURIComponent(pm))).decision;
     renderVerdict(d); renderAnalysts(d); renderDebate(d); renderGate(d);
-    renderTrader(d); renderRisk(d); renderCost(d); renderProv(d);
+    renderTrader(d); renderRisk(d); renderExecProg(d); renderCost(d); renderProv(d);
     $('run-state').textContent = '完成 ｜ ' + d.base + ' ｜ ' + d.generated_utc;
+    if ($('pos-state')) {
+      const e = d.execution_progress || {};
+      $('pos-state').textContent = e.present
+        ? ('在途持仓：' + ((e.hypotheses || []).length ? '触发 ' + e.hypotheses.length + ' 条执行中假设'
+                                                       : '未触发假设') + (e.synthetic ? '（合成演示单）' : ''))
+        : '无在途持仓单';
+    }
   } catch (e) {
     $('run-state').innerHTML = '<span class="neg">失败：' + esc(e.message) + '</span>';
     $('live-dot').className = 'dot err';
@@ -644,6 +729,11 @@ async function boot() {
   $('run').onclick = () => runDecision(STATE.base, Number($('qty').value) || 5000);
   $('run-overview').onclick = loadOverview;
   $('qty').onchange = () => runDecision(STATE.base, Number($('qty').value) || 5000);
+  // 切换在途持仓模式要**立刻重跑**：执行进度官的结论完全取决于这个输入，
+  // 不重跑就会出现"下拉框显示 demo、面板还是上一次的结果"这种自相矛盾的页面。
+  if ($('pos-mode')) {
+    $('pos-mode').onchange = () => runDecision(STATE.base, Number($('qty').value) || 5000);
+  }
 
   loadParams();
   loadSnapshot();

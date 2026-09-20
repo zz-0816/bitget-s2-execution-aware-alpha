@@ -211,7 +211,7 @@
 | 执行门槛 | **11.34 bp**（往返手续费 13.70 − 资金费收入 2.36） | `docs/14` §4 |
 | 联合分布改变结论的幅度 | **3/9 个标的最优执行方式改变** | `tools/joint_fill_check.py` |
 | agent 闭环 | `agent:stale_quotes` **真的驱动了一票否决** | `python run_p2.py --demo META`（实跑：META 现货腿 182~192 分钟无成交 ≥ 30 分钟阈值 → `reject`） |
-| 自检 | `python run_p2.py --selftest` **全部通过 / 0 失败**（16 步离线 + 2 步联网，含 HTTP 冒烟、页面渲染冒烟与事件判定回归门槛） | `run_p2.py` |
+| 自检 | `python run_p2.py --selftest` **全部通过 / 0 失败**（17 步离线 + 2 步联网，含 HTTP 冒烟、页面渲染冒烟与事件判定回归门槛） | `run_p2.py` |
 
 > ⚠️ 本表原来写的"全仓库 **87 项通过 / 0 失败**、`tools/reproduce_check.py`"
 > 是**项目一**的口径 —— 那个脚本不在本仓库里。项目二的自检入口是

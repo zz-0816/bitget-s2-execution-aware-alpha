@@ -3,6 +3,12 @@
 > 目标：任何人在读本项目任何一张 CSV / 任何一个 API 时，**不必猜单位、时区、口径**。
 > 历史教训：`session_of()` 曾在 3 个文件各写一份；基差符号曾有两套约定（互为相反数）。
 > **本文件是唯一口径来源**，代码实现见 `common/market_calendar.py`。
+> 更细的按天文件在本文里写作 `YYYY-MM-DD`。
+>
+> ⚠️ 本文沿用了隔离前的写法，因此会提到 `tools/check_samplers.py`、
+> `tools/precheck_window.py`、`data/manifest.json`、`data/research/*.txt`
+> 这类**不在本仓库**的路径（它们在**项目一仓库**）。逐条核对见
+> `README.md` §3「跨仓库引用约定」。
 
 ---
 

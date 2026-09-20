@@ -97,5 +97,6 @@ python -c "import sys;sys.path.insert(0,'tools');import news_sources as N;b,d=N.
 python tools\news_sources.py --json | Select-String -Pattern "Innovation"
 ```
 
-**跟踪建议**：把它加进每日运维三件事（`docs/TASKS.md` 附录 C）——
+**跟踪建议**：把它加进每日运维三件事（项目一仓库的 `docs/TASKS.md` 附录 C；
+本仓库的任务清单是 `TASKS-P2.md`）——
 SEC 新闻稿 RSS + EDGAR 申报，一条命令，几秒钟。

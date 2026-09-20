@@ -14,13 +14,13 @@
 | 数据快照 | ✅ 已生成，**盘口改为"最后 400 轮"***39.6 MB / 26 项，与 trades 尾部对齐） |
 | 快照可核验 | ✅ `python tools/snapshot_manifest.py --verify`*冻结项逐字节） |
 | 独立启动入口 | ✅ `python run_p2.py`*默认 8788 端口） |
-| 自检 | ✅ `python run_p2.py --selftest`（**16 步离线 + 2 步联网**，含 HTTP 冒烟 + 页面渲染冒烟 + 事件判定回归门槛） |
+| 自检 | ✅ `python run_p2.py --selftest`（**17 步离线 + 2 步联网**，含 HTTP 冒烟 + 页面渲染冒烟 + 事件判定回归门槛） |
 | 命令行演示 | ✅ `python run_p2.py --demo NVDA` |
 | **独立页面** | ✅ 已重写为项目二自己的页面*原来那个是项目一的，独立跑是**空白页**） |
 | **公网可访问** | ✅ 三条路都可跑：临时隧道***已从公网侧实测回打**）/ Render / Fly / Docker —— 见 `docs/43` |
 | prompt 版本化 | ✅ `prompts/event_gate.v4.md`*两步判断：先相关性再类别；可回溯到版本 + SHA256） |
 | 事件驱动降本 | ✅ 真正接进决策链**且实测命中***长跑复用率 **70.9%**；原来只是配置里写着，没代码读它） |
-| **事件判定回归门槛** | ✅ `--selftest --net` 第 ⑱ 步：留出集 n=10，**危险方向错误必须为 0**、一致率 ≥90%、不得比基线退化*`data/calibration/baseline.json`） |
+| **事件判定回归门槛** | ✅ `--selftest --net` 第 ⑲ 步：留出集 n=10，**危险方向错误必须为 0**、一致率 ≥90%、不得比基线退化*`data/calibration/baseline.json`） |
 | 事件判定校准集 | ✅ `data/calibration/event_judgments.json`*n=10，**对 RAG 留出**） |
 | **执行进度官***P0） | ✅ 第 6 路 agent：裸露敞口 → veto、挂单停滞 → caution；`/api/decision?position=demo` + 前端 ⑥ 面板 —— 见 `docs/48` |
 | **长跑记录** | ✅ `tools/run_record.py`*稳定性/效率的实测证据源；已加 `src_sha16` **代码指纹**按版本分组，避免混版本算成功率） |
@@ -99,7 +99,7 @@ python run_p2.py --demo NVDA       # 命令行版，写进材料
 
 - [ ] 录屏*`docs/43` §2 列了"截图里必须出现哪四样"）
 - [x] 事件判定校准：`python tools/event_calibration.py --gate` —— v4 实测
-      **10/10、危险方向错误 0 条***基线已落盘，且接成自检第 ⑱ 步防回退）
+      **10/10、危险方向错误 0 条***基线已落盘，且接成自检第 ⑲ 步防回退）
 - [ ] 让长跑记录**继续累积带代码指纹的轮次***`python tools/run_record.py --interval 120
       --poll-news --replay-every 3`）：旧 412 轮是改动前的代码跑的，
       **不能**给当前代码背书；`python tools/run_record.py --report` 可随时看

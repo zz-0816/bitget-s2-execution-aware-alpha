@@ -1,7 +1,9 @@
 # 多 Agent 协作方案（赛道一 · 开放主题）
 
 > 可行性评估 + 架构说明 ｜ 负责人 **A** ｜ 2026-09-16
-> 架构图：`docs/multi_agent_architecture.svg` / `.png`
+> 架构图：当时那张 `docs/multi_agent_architecture.svg` / `.png` **在项目一仓库**（本文是隔离前写的）。
+> 本仓库现用的分工图是 **`docs/执行辅助-agent分工图-v2.svg` / `.png`**，配套说明见 `docs/47`；
+> 逐 agent 规格见 `docs/33`。跨仓库引用约定见 `README.md` §3。
 
 ---
 
@@ -199,7 +201,7 @@ python project2\agent_team.py --selfcheck     # 四层全部自检，无需网�
 | 交易员 + 风控官 + 可复现日志 | `project2/agent_team.py` | `python project2\agent_team.py --selfcheck` |
 | 一次真实决策日志（机器读） | `data/reports/debate-NVDA-<ts>.json` | `python project2\agent_team.py --replay <json>` |
 | 同一次决策日志（人读） | `data/reports/debate-NVDA-<ts>.md` | 直接看：四层结论 + 每条证据来源 + 证伪条件 |
-| 设计说明 + 复跑命令 | `project2/README.md` §5、§6 | — |
+| 设计说明 + 复跑命令 | 本仓库 `README.md` §4（一键自检）／§6（页面与接口）；逐 agent 规格见 `docs/33` | — |
 
 **自检覆盖的失败模式**（不是"跑通了"，是"跑错了会被抓住"）：
 无证据的结论作废 / 无证伪条件的论点作废 / 同一证伪条件重复计分被折叠 /

@@ -1,18 +1,23 @@
 {
-  "base": "SPY",
+  "base": "MRVL",
   "categories": {
-    "earnings": 2,
+    "earnings": 3,
     "earnings_scheduled": 8,
+    "filing": 3,
+    "filing_material": 9,
     "macro": 8,
-    "other": 38
+    "other": 37
   },
   "event_driven": {
     "first_run": false,
     "n_fresh": 0,
-    "n_total": 56,
+    "n_total": 68,
     "should_call_llm": false
   },
   "headlines_for_gate": [
+    "[2026-08-28] MRVL 申报：10-Q（季报）",
+    "[2026-08-27] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-08-19] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -21,12 +26,165 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
-    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
-    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
+    "[2026-09-16] MRVL 申报：4（内部人交易（Form 4））"
   ],
   "items": [
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-16",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062334/xslF345X06/wk-form4_1789598794.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-15",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062124/xslF345X06/wk-form4_1789522603.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-02",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026060112/xslF345X06/wk-form4_1788380464.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-01",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195004726008892/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-28",
+      "form": "10-Q",
+      "form_meaning": "季报",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "MRVL 申报：10-Q（季报）",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000025/mrvl-20260801.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-27",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000022/mrvl-20260827.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-19",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057525/xslF345X06/wk-form4_1787014784.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195824426000520/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057399/xslF345X06/wk-form4_1786999519.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-06",
+      "form": "SCHEDULE 13G/A",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：SCHEDULE 13G/A",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000031506626002090/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026051905/xslF345X06/wk-form4_1785789180.xml"
+    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -477,91 +635,91 @@
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:15:15 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most covered call ETFs hand you a fat monthly check while quietly draining your principal, but a small group of actively managed funds has cracked the formula to deliver both. The catch is that each o",
-      "title": "After Comparing Every Covered Call ETF With Over $1 Billion in Assets, These 3 Pay Up to 8 Percent and Still Grew Your Principal",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/after-comparing-every-covered-call-etf-with-over-1-billion-in-assets-these-3-pay-up-to-8-percent-and-still-grew-your-principal/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 21:05:57 +0000",
+      "date": "Sun, 20 Sep 2026 06:13:22 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A single ETF purchase made before most investors had ever heard the term changed what passive investing looks like today, but the original is no longer the obvious choice for everyone holding it.",
-      "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/a-10000-investment-in-spy-at-its-1993-launch-is-worth-this-much-today-without-you-adding-a-dime/?.tsrc=rss"
+      "summary": "Earlier this month, GlobalFoundries and Marvell Technology expanded a multi-year agreement to boost silicon germanium chip capacity at GlobalFoundries’ Vermont fab, targeting next-generation optical t",
+      "title": "How Expanded GlobalFoundries SiGe Capacity for AI Optics Will Impact Marvell Technology (MRVL) Investors",
+      "url": "https://finance.yahoo.com/technology/ai/articles/expanded-globalfoundries-sige-capacity-ai-061322931.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 08:35:00 +0000",
+      "date": "Sat, 19 Sep 2026 17:05:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Earlier this year, Nvidia invested $2 billion in semiconductor company Marvell Technology.",
+      "title": "Prediction: This Nvidia-Backed Artificial Intelligence (AI) Stock Could 10X by 2033",
+      "url": "https://www.fool.com/investing/2026/09/19/prediction-this-nvidia-backed-artificial-intellige/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 15:57:24 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "These two S&amp;P 500 ETFs seem interchangeable. They're not.",
-      "title": "VOO vs. SPY: Is There Actually a Difference?",
-      "url": "https://www.fool.com/investing/2026/09/19/voo-vs-spy-is-there-actually-a-difference/?.tsrc=rss"
+      "summary": "On September 17, shares of Marvell Technology, Inc. (NASDAQ:MRVL) and GLOBALFOUNDRIES Inc. (NASDAQ:GFS) moved sharply higher, with Marvell Technology, Inc. (NASDAQ:MRVL) gaining more than 4% and GLOBA",
+      "title": "Marvell (MRVL) and GlobalFoundries (GFS) Rise on Expanded Deal: What Investors Should Know",
+      "url": "https://finance.yahoo.com/technology/articles/marvell-mrvl-globalfoundries-gfs-rise-155724895.html?.tsrc=rss"
+    },
+    {
+      "category": "earnings",
+      "date": "Sat, 19 Sep 2026 15:24:19 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Key TakeawaysMarvell Technology (MRVL) closed at $244. 25 on September 18, a fresh high that fully erases the more than 8% drop the stock took the day after its August 27 earnings call, even though no",
+      "title": "Inside the 200-Basis-Point Margin Gap Marvell Isn’t Talking About on Earnings Calls",
+      "url": "https://www.tikr.com/blog/inside-the-200-basis-point-margin-gap-marvell-isnt-talking-about-on-earnings-calls?ref=yahoofinance&amp;.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:45:11 +0000",
+      "date": "Sat, 19 Sep 2026 10:01:33 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A seven-figure VOO balance sounds like a retirement paycheck until you do the actual math on what it deposits each month, then realize covering the rest means a tax bill your fund prospectus quietly i",
-      "title": "$1 Million in VOO Pays $871 a Month, and Covering the Gap Means Selling Shares the IRS Taxes",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/1-million-in-voo-pays-871-a-month-and-covering-the-gap-means-selling-shares-the-irs-taxes/?.tsrc=rss"
+      "summary": "A chipmaker and two power producers are raising forecasts and signing hyperscaler contracts while their stocks sit well off their peaks. That gap between fundamentals and price action may not last pas",
+      "title": "3 Stocks to Buy Before Wall Street Catches On Before September Ends",
+      "url": "https://247wallst.com/investing/2026/09/19/3-stocks-to-buy-before-wall-street-catches-on-before-september-ends/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:06:20 +0000",
+      "date": "Fri, 18 Sep 2026 19:16:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Replacing a married couple's Social Security income with dividends sounds straightforward until you see how brutally the math punishes the wrong yield tier at the wrong time in retirement.",
-      "title": "How to Build $3,250 a Month in Dividend Income to Cover a Married Couple’s Social Security Checks, Starting From Zero",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/how-to-build-3250-a-month-in-dividend-income-to-cover-a-married-couples-social-security-checks-starting-from-zero/?.tsrc=rss"
+      "summary": "Photonics is emerging as a key AI infrastructure technology, with surging investments and growth projections fueling interest in ETFs.",
+      "title": "Bet on These Photonics ETFs to Exploit the Next Wave of AI Revolution",
+      "url": "https://finance.yahoo.com/technology/ai/articles/bet-photonics-etfs-exploit-next-191600293.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 09:59:02 +0000",
+      "date": "Fri, 18 Sep 2026 16:43:15 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Fifteen years of automatic S&amp;P 500 investing through crashes, pandemics, and AI euphoria reveals something surprising: the fund you pick matters far less than one overlooked detail that quietly de",
-      "title": "If You Had Invested $500 a Month in VOO Since Its 2010 Launch, You Would Have About $330,000 Today",
-      "url": "https://247wallst.com/investing/etf/2026/09/20/if-you-had-invested-500-a-month-in-voo-since-its-2010-launch-you-would-have-about-330000-today/?.tsrc=rss"
+      "summary": "The multi-year agreement covers silicon germanium production in Burlington",
+      "title": "GlobalFoundries Jumps 7% on an Expanded Marvell Agreement",
+      "url": "https://finance.yahoo.com/technology/articles/globalfoundries-jumps-7-expanded-marvell-164315855.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 16:05:00 +0000",
+      "date": "Fri, 18 Sep 2026 15:19:00 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Both options are rooted in the same basic buy-and-hold philosophy, but one differs from the other in one way that's very important for the foreseeable future.",
-      "title": "Is Berkshire Hathaway Stock a Better Buy Than an S&amp;P 500 Index Fund?",
-      "url": "https://www.fool.com/investing/2026/09/19/is-berkshire-hathaway-stock-a-better-buy-than-an/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 23:52:05 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "A simple momentum screen applied to S&amp;P 500 stocks has quietly built a performance gap that turns identical starting portfolios into dramatically different ending balances, and the strategy costs ",
-      "title": "SPMO Owns the S&amp;P 500’s 100 Fastest-Rising Stocks. Its Momentum Screen Has Beaten the Index by 67-Points Over the Last Five Years",
-      "url": "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss"
+      "summary": "GlobalFoundries is boosting SiGe capacity for MRVL as AI and cloud data centers drive demand for high-speed optical connectivity.",
+      "title": "Can GFS' Marvell Deal for SiGe Capacity Expansion Accelerate Growth?",
+      "url": "https://finance.yahoo.com/technology/articles/gfs-marvell-deal-sige-capacity-151900054.html?.tsrc=rss"
     },
     {
       "category": "other",
@@ -653,51 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T14:49:01.980767+00:00",
+  "probed_at": "2026-09-20T14:57:50.619442+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.58s",
+      "note": "耗时 1.61s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 1.14s",
+      "note": "耗时 0.83s",
       "ok": true
     },
     "edgar": {
-      "n": 0,
-      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
+      "n": 12,
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 3.75s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.65s",
+      "note": "耗时 0.75s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.72s",
+      "note": "耗时 0.77s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.61s",
+      "note": "提前数天（预告）｜ 耗时 0.85s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.78s",
+      "note": "提前数天（预告）｜ 耗时 0.61s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.84s",
+      "note": "耗时 0.87s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.47s",
+      "note": "耗时 1.81s",
       "ok": true
     }
   }

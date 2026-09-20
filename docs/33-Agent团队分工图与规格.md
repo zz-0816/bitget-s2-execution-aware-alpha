@@ -2,7 +2,9 @@
 
 > 生成 **2026-09-18** ｜ 状态：**v1 草案**，等你补充 prompt / RAG / 工具细节
 > 对应实现：`project2/agent_team.py`（可跑、可自检、可复跑）
-> 相关：`docs/25` §3.1.1（agent 与代码的分工）、`project2/README.md` §5
+> 相关：`docs/25` §3.1.1（agent 与代码的分工）、本仓库 `README.md` §6（页面与接口）
+> ⚠️ 原来写的 `project2/README.md` §5 **在项目一仓库**（本仓库的 `project2/` 里只有代码，
+> 没有 README）；跨仓库引用约定见 `README.md` §3。
 
 ---
 

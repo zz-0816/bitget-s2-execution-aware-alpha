@@ -1,0 +1,130 @@
+{
+ "fetched_utc": "2026-09-20T18:10:29Z",
+ "mcp": "https://agent.bitget.com/mcp",
+ "session": "closed",
+ "compare_label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+ "same_instant": false,
+ "source": "mcp:bitget-mcp-server（第三方数据，不是本项目的实测量）",
+ "bases": {
+  "NVDA": {
+   "stock_mid": 222.515,
+   "rtoken_mid": 221.195,
+   "deviation_bp": -59.32184347122635,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:59Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "TSLA": {
+   "stock_mid": 364.185,
+   "rtoken_mid": 364.085,
+   "deviation_bp": -2.7458571879682783,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:58Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "AAPL": {
+   "stock_mid": 334.815,
+   "rtoken_mid": 334.535,
+   "deviation_bp": -8.362827232948725,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:49Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "META": {
+   "stock_mid": 668.485,
+   "rtoken_mid": 670.805,
+   "deviation_bp": 34.70534118192534,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:50Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "GOOGL": {
+   "stock_mid": 350.84000000000003,
+   "rtoken_mid": 349.675,
+   "deviation_bp": -33.20601983810342,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:59Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "SPY": {
+   "stock_mid": 762.965,
+   "rtoken_mid": 762.825,
+   "deviation_bp": -1.8349465571813433,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-19T00:00:00Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "QQQ": {
+   "stock_mid": 722.065,
+   "rtoken_mid": 721.105,
+   "deviation_bp": -13.295201955503122,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:59Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "SOXL": {
+   "stock_mid": 123.14,
+   "rtoken_mid": 123.095,
+   "deviation_bp": -3.654377131720132,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-19T00:00:00Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "HOOD": {
+   "stock_mid": 119.91999999999999,
+   "rtoken_mid": 118.695,
+   "deviation_bp": -102.15143428952588,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:58Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  },
+  "MRVL": {
+   "stock_mid": 243.33499999999998,
+   "rtoken_mid": 243.11,
+   "deviation_bp": -9.24651201019031,
+   "field": "drift_and_premium_bp",
+   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
+   "same_instant": false,
+   "session": "closed",
+   "quote_utc": "2026-09-18T23:59:55Z",
+   "provider": null,
+   "rtoken_source": "market_feed.live"
+  }
+ }
+}

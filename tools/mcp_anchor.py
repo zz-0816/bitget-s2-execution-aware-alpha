@@ -70,6 +70,8 @@ MCP_URL = os.environ.get("P2_MCP_EQUITY", "https://agent.bitget.com/mcp")
 PROXY = os.environ.get("P2_PROXY", "http://127.0.0.1:7890")
 ENTRY_QUOTE = "equity_price_quote"
 ENTRY_EARNINGS = "equity_calendar_earnings"
+# 🗄️ 决策链只读这个缓存（取数与消费分开，见 cache_payload 的说明）
+CACHE = os.path.join(BASE, "data", "derived", "anchor.json")
 DEFAULT_BASES = ["NVDA", "TSLA", "AAPL", "META", "GOOGL",
                  "SPY", "QQQ", "SOXL", "HOOD", "MRVL"]
 TIMEOUT = 40
@@ -288,7 +290,12 @@ def fetch(bases, rtoken="live", use_proxy=True, now_ms=None):
                 row["error"] = err2
             else:
                 row["stock"] = st
-                row[field] = deviation_bp((rt.get(base) or {}).get("mid"), st["mid"])
+                v = deviation_bp((rt.get(base) or {}).get("mid"), st["mid"])
+                row[field] = v
+                # ⭐ 同时存一个**稳定的键名**：决策链只读缓存，而字段名会随
+                #    "开市/休市"在 premium_bp / drift_and_premium_bp 之间变 ——
+                #    下游不该为了取值去猜今天用哪个名字。
+                row["deviation_bp"] = v
         out["rows"].append(row)
     ok_rows = [r for r in out["rows"] if r.get("stock") and r.get("rtoken")]
     out["ok"] = bool(ok_rows)
@@ -319,6 +326,57 @@ def earnings(base, use_proxy=True):
     return {"symbol": r.get("symbol"), "report_date": r.get("report_date"),
             "eps_consensus": r.get("eps_consensus"),
             "provider": j.get("provider")}, None
+
+
+def cache_payload(out):
+    """把一次取数压成**决策链可直读**的缓存（只留能核验的字段）。
+
+    ⚠️ 为什么缓存要由这个工具写、而不是让决策链自己取：
+       取数是**外部活数据 + 网络**，决策链必须能离线跑。所以取数与消费分开 ——
+       本工具 `--refresh` 负责取并落盘，`agent_team` 只读盘。
+       这样**只有一份实现**，不会出现"两套口径"。
+    """
+    bases = {}
+    for r in out.get("rows") or []:
+        if not r.get("stock") or not r.get("rtoken"):
+            continue
+        bases[r["base"]] = {
+            "stock_mid": r["stock"]["mid"],
+            "rtoken_mid": r["rtoken"]["mid"],
+            "deviation_bp": r.get("deviation_bp"),
+            # 口径：开市 = premium_bp（同一时刻可比）；休市 = drift_and_premium_bp
+            # （含休市漂移、**不可分离**）。字段名与说明一起存，下游照抄即可。
+            "field": r.get("field"), "label": r.get("label"),
+            "same_instant": out.get("same_instant"),
+            "session": out.get("session"),
+            "quote_utc": r["stock"].get("quote_utc"),
+            "provider": r["stock"].get("provider"),
+            "rtoken_source": (r.get("rtoken") or {}).get("source"),
+        }
+    return {"fetched_utc": out.get("fetched_utc"), "mcp": out.get("mcp"),
+            "session": out.get("session"), "compare_label": out.get("compare_label"),
+            "same_instant": out.get("same_instant"),
+            "source": "mcp:bitget-mcp-server（第三方数据，不是本项目的实测量）",
+            "bases": bases}
+
+
+def save_cache(out, path=None):
+    path = path or CACHE
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(cache_payload(out), fh, ensure_ascii=False, indent=1)
+    return path
+
+
+def load_cache(path=None):
+    """读缓存。**读不到返回 None**（不返回空字典 —— 那会被当成"没有偏离"）。"""
+    path = path or CACHE
+    try:
+        with io.open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
+        return d if isinstance(d, dict) and d.get("bases") else None
+    except (OSError, ValueError):
+        return None
 
 
 # ---------------------------------------------------------------- 渲染
@@ -358,12 +416,25 @@ def main(argv=None):
     ap.add_argument("--bases", default=None)
     ap.add_argument("--rtoken", choices=("live", "snapshot"), default="live")
     ap.add_argument("--earnings", default=None, help="查某标的下一次财报日")
+    ap.add_argument("--refresh", action="store_true",
+                    help="取一次并落盘到 data/derived/anchor.json（决策链读它）")
+    ap.add_argument("--show-cache", action="store_true", help="只看缓存")
     ap.add_argument("--no-proxy", action="store_true")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+    if a.show_cache:
+        d = load_cache()
+        if d is None:
+            print("⚓ 没有缓存（先跑 --refresh）—— **不当作『没有偏离』**")
+            return 1
+        print(json.dumps(d, ensure_ascii=False, indent=1) if a.json else
+              "⚓ 缓存 %s ｜ %s ｜ 口径 %s ｜ %d 个标的"
+              % (d.get("fetched_utc"), d.get("session"),
+                 d.get("compare_label"), len(d.get("bases") or {})))
+        return 0
     if a.earnings:
         d, err = earnings(a.earnings, use_proxy=not a.no_proxy)
         if err:
@@ -375,8 +446,16 @@ def main(argv=None):
     bases = ([x.strip().upper() for x in a.bases.split(",") if x.strip()]
              if a.bases else DEFAULT_BASES)
     out = fetch(bases, rtoken=a.rtoken, use_proxy=not a.no_proxy)
+    if a.refresh and out.get("ok"):
+        try:
+            p = save_cache(out)
+            out["cached_to"] = os.path.relpath(p, BASE)
+        except OSError as exc:
+            out["errors"] = (out.get("errors") or []) + ["缓存写入失败：%s" % exc]
     print(json.dumps(out, ensure_ascii=False, indent=1, default=str) if a.json
           else render(out))
+    if a.refresh and out.get("cached_to") and not a.json:
+        print("   ↳ 已落盘 %s（决策链读它）" % out["cached_to"])
     return 0 if out.get("ok") else 1
 
 

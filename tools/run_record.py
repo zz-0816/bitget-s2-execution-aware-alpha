@@ -277,7 +277,8 @@ def one_round(base, *, replay=False, poll_news=False, qty=5000.0):
                     miss_bp=float(pr["miss_bp"]), urgent=bool(pr["urgent"]),
                     now_ms=pr.get("now_ms"), llm_event=pr.get("llm_event"),
                     order_state=pr.get("order_state"),
-                    ext_event=pr.get("ext_event"))
+                    ext_event=pr.get("ext_event"),
+                    anchor=pr.get("anchor"))
                 log2 = at.build_log(base=base, items=i2, debate=d2, cost=c2,
                                     decision=dec2, qty_usd=float(pr["qty_usd"]),
                                     miss_bp=float(pr["miss_bp"]),

@@ -180,3 +180,68 @@ python run_p2.py --selftest                   -> 18 步全过、退出码 0
 tools/web_smoke.py                            -> 通过（含"闸门三源""LLM 参与标记一致"）
 实拍 docs/ui-v3/16-gate-three-sources.png     -> META：三源摊开，生效 caution（来源 mcp+llm）
 ```
+
+
+---
+
+## 7. 追加：外部价格锚**接进决策链**（第 6 路分析师）
+
+§3 里写着"`equity_price_quote` 只做了独立工具、还没接进决策链"。现在接上了。
+
+### 7.1 为什么是**分析师**而不是风控规则
+
+它带来的是"rToken 相对真实股票是否脱节"，这是一个**可观测的市场结构量**，
+与其它 5 路同级；做成分析师就能进辩论、被证据强度加权，而不是只当一条硬规则。
+
+### 7.2 🔴 两条纪律（写在函数 docstring 第一段，改它要连带改自检）
+
+**① 只报偏离幅度，不报方向。**
+刻意**不判**"折价 = 看多 / 溢价 = 看空" —— 那需要一个"偏离会收敛"的价格假设，
+而本项目有红线：**不做价格预测**。所以：
+
+```
+|偏离| ≤ 20 bp  ->  neutral      （贴合；**不构成有利证据**）
+|偏离| > 20 bp  ->  unfavorable  （脱节 = **风险**，不是机会）
+```
+
+**② 美股休市时两个价不同时刻，置信度必须压低。**
+美股有开闭市、rToken 7×24。休市时量到的是"折溢价 + 休市漂移"、**无法分离**，
+所以 `same_instant=False` 时置信度从 0.7 压到 **0.4**，并在 notes 里写明口径。
+
+⚠️ `ANCHOR_DIVERGENCE_BP = 20.0` 是**约定，不是标定值** —— 只有一份偏离快照
+（10 个标的，−117 ~ +34 bp），样本不足以标定。写成常量是为了"改它要留痕"。
+
+### 7.3 取数与消费分开（避免"两份真相"）
+
+```
+tools/mcp_anchor.py --refresh   ->  取数 + 算偏离 + 判口径  ->  data/derived/anchor.json
+project2/agent_team.py          ->  只读缓存，照抄口径，不说自己的话
+```
+
+缓存里同时存 `deviation_bp`（**稳定键名**）与 `field`/`label`（当日口径）。
+下游不该为了取值去猜"今天用 premium_bp 还是 drift_and_premium_bp"。
+
+### 7.4 进复跑契约
+
+`anchor` 入 `PARAM_FIELDS`（现共 **14** 项）；`--replay` 与 `tools/run_record.py`
+的复跑都把它读回来当冻结输入。自检有闭环：写日志 → 用日志参数复跑 → 契约全一致。
+
+### 7.5 实测（十个标的，走同一份缓存）
+
+```
+NVDA  真实股 222.515 ｜ rToken 221.195 ｜ 偏离 **−59.3 bp** -> unfavorable + agent:anchor_divergence
+META  真实股 668.485 ｜ rToken 670.805 ｜ 偏离 **+34.7 bp** -> unfavorable + agent:anchor_divergence
+SPY   真实股 762.965 ｜ rToken 762.825 ｜ 偏离  **−1.8 bp** -> neutral（阈值内，**零假设**）
+```
+
+### 7.6 顺带修掉两处"写死路数"的旧断言
+
+`DIMENSIONS` 现在有 **7** 项：**5 路常跑** + **2 路条件跑**
+（`external_anchor` 要有外部锚数据、`execution_progress` 要有在途订单）。
+两处旧断言写死了"5 路"，于是新增一路时变成假失败：
+
+* `agent_team --selfcheck`：`len(items) == len(DIMENSIONS)` → 改成排除**条件路**；
+* `run_p2 --selftest` 的 HTTP 冒烟：`len(dec["analysts"]) == 5` →
+  改成断言"**5 路常跑的全在**"，不再写死总数。
+
+同一个坑本轮踩了两次，所以两处都加了注释说明为什么不能写死。

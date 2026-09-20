@@ -854,7 +854,14 @@ def http_smoke(verbose=True):
 
         st, d = get("/api/decision?base=NVDA&qty=5000")
         dec = d["decision"]
-        chk(len(dec["analysts"]) == 5, "决策链返回 5 路分析师")
+        # ⚠️ **不要写死路数**：`DIMENSIONS` 里有常跑的路，也有**条件跑**的路
+        #    （`external_anchor` 要有外部锚数据才跑；`execution_progress` 要有在途订单）。
+        #    写死数量会在新增一路的那一刻变成假失败 —— 实测已经被咬过一次。
+        _PRE = {"basis", "sentiment", "news", "technical", "execution_risk"}
+        _got = {a.get("dimension") for a in dec["analysts"]}
+        chk(_PRE <= _got,
+            "决策链含全部 %d 路常跑分析（实际 %d 路：%s）"
+            % (len(_PRE), len(_got), "、".join(sorted(str(x) for x in _got))))
         chk(dec.get("decision_hash") and len(dec["decision_hash"]) == 64,
             "带 decision_hash（%s…）" % (dec.get("decision_hash") or "")[:12])
         chk(dec["monotonic"]["stance_non_increasing"]

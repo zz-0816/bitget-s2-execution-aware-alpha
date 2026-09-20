@@ -1,21 +1,17 @@
 {
-  "base": "GOOGL",
+  "base": "SPY",
   "categories": {
-    "earnings": 3,
+    "earnings": 2,
     "earnings_scheduled": 8,
-    "filing_material": 12,
-    "macro": 8,
-    "other": 37
+    "macro": 7,
+    "other": 39
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 1,
-    "n_total": 68,
-    "should_call_llm": true
+    "n_fresh": 0,
+    "n_total": 56,
+    "should_call_llm": false
   },
-  "fresh_headlines": [
-    "[Sun, 20 Se] Fed&apos;s Kashkari reportedly says inflation is still too high across the U.S. economy"
-  ],
   "headlines_for_gate": [
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -25,168 +21,12 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-16] GOOGL 申报：4（内部人交易（Form 4））",
-    "[2026-09-16] GOOGL 申报：4（内部人交易（Form 4））",
-    "[2026-09-16] GOOGL 申报：4（内部人交易（Form 4））",
-    "[2026-09-16] GOOGL 申报：4（内部人交易（Form 4））"
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
+    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
+    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
   ],
   "items": [
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393517/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393515/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393513/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393511/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393509/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393506/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393503/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393500/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393497/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393494/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393491/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393485/xslF345X06/ownership.xml"
-    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -637,113 +477,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 16:14:57 +0000",
+      "date": "Fri, 18 Sep 2026 21:15:15 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Most covered call ETFs hand you a fat monthly check while quietly draining your principal, but a small group of actively managed funds has cracked the formula to deliver both. The catch is that each o",
+      "title": "After Comparing Every Covered Call ETF With Over $1 Billion in Assets, These 3 Pay Up to 8 Percent and Still Grew Your Principal",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/after-comparing-every-covered-call-etf-with-over-1-billion-in-assets-these-3-pay-up-to-8-percent-and-still-grew-your-principal/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Fri, 18 Sep 2026 21:05:57 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Google and Meta just launched competing AI agents that actually take actions in your digital life, not just answer questions, and a retirement investor writing one check today faces a choice where the",
-      "title": "The AI Agent Wars Just Got Personal: Google’s CC vs. Meta’s Muse",
-      "url": "https://247wallst.com/investing/2026/09/20/the-ai-agent-wars-just-got-personal-googles-cc-vs-metas-muse/?.tsrc=rss"
+      "summary": "A single ETF purchase made before most investors had ever heard the term changed what passive investing looks like today, but the original is no longer the obvious choice for everyone holding it.",
+      "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/a-10000-investment-in-spy-at-its-1993-launch-is-worth-this-much-today-without-you-adding-a-dime/?.tsrc=rss"
     },
     {
-      "category": "earnings",
-      "date": "Sun, 20 Sep 2026 14:40:01 +0000",
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 08:35:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "ChatGPT ads just passed $1 billion in annualized revenue.",
-      "title": "OpenAI Just Beat Google, Meta, and Amazon To This Key Milestone. Is It Bullish for AI Stocks.",
-      "url": "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss"
+      "summary": "These two S&amp;P 500 ETFs seem interchangeable. They're not.",
+      "title": "VOO vs. SPY: Is There Actually a Difference?",
+      "url": "https://www.fool.com/investing/2026/09/19/voo-vs-spy-is-there-actually-a-difference/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:11:00 +0000",
+      "date": "Fri, 18 Sep 2026 21:45:11 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Warren Buffett started adding Alphabet to Berkshire Hathaway's stock portfolio before his long tenure as CEO ended.",
-      "title": "Berkshire Hathaway's Favorite Artificial Intelligence (AI) Stock Looks Like a Genius Buy Now",
-      "url": "https://www.fool.com/investing/2026/09/20/berkshire-hathaways-favorite-artificial-intelligen/?.tsrc=rss"
+      "summary": "A seven-figure VOO balance sounds like a retirement paycheck until you do the actual math on what it deposits each month, then realize covering the rest means a tax bill your fund prospectus quietly i",
+      "title": "$1 Million in VOO Pays $871 a Month, and Covering the Gap Means Selling Shares the IRS Taxes",
+      "url": "https://247wallst.com/investing/etf/2026/09/18/1-million-in-voo-pays-871-a-month-and-covering-the-gap-means-selling-shares-the-irs-taxes/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:00:00 +0000",
+      "date": "Sun, 20 Sep 2026 13:06:20 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Contrarian Thinking founder and CEO Codie Sanchez highlights the most direct way that small business owners should be utilizing AI to expand their customer base.",
-      "title": "How small businesses should be deploying AI, according to Codie Sanchez",
-      "url": "https://finance.yahoo.com/video/small-businesses-deploying-ai-according-120000799.html?.tsrc=rss"
+      "summary": "Replacing a married couple's Social Security income with dividends sounds straightforward until you see how brutally the math punishes the wrong yield tier at the wrong time in retirement.",
+      "title": "How to Build $3,250 a Month in Dividend Income to Cover a Married Couple’s Social Security Checks, Starting From Zero",
+      "url": "https://247wallst.com/personal-finance/2026/09/20/how-to-build-3250-a-month-in-dividend-income-to-cover-a-married-couples-social-security-checks-starting-from-zero/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 10:45:08 +0000",
+      "date": "Sun, 20 Sep 2026 09:59:02 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Editor’s Note: This story has been updated with additional details on Berkshire Hathaway’s succession plan. Berkshire Hathaway Inc. said Friday that Warren Buffett has stepped down as chairman and wil",
-      "title": "Warren Buffett Steps Down as Berkshire's Chair — Son Howard Takes to Succeed: 'Father Time Always Wins' (UPDATED)",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/warren-buffett-steps-down-berkshires-104508734.html?.tsrc=rss"
+      "summary": "Fifteen years of automatic S&amp;P 500 investing through crashes, pandemics, and AI euphoria reveals something surprising: the fund you pick matters far less than one overlooked detail that quietly de",
+      "title": "If You Had Invested $500 a Month in VOO Since Its 2010 Launch, You Would Have About $330,000 Today",
+      "url": "https://247wallst.com/investing/etf/2026/09/20/if-you-had-invested-500-a-month-in-voo-since-its-2010-launch-you-would-have-about-330000-today/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 09:45:09 +0000",
+      "date": "Sat, 19 Sep 2026 16:05:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Investor Ross Gerber says he may have found a \"secret\" lot containing hundreds of Waymo‘s autonomous vehicles in California, suggesting the Alphabet Inc.-backed robotaxi company could be preparing to ",
-      "title": "Ross Gerber Says He Found ‘Secret’ Lot With Hundreds of Waymo Robotaxis: ‘Something Crazy Is About to Happen’",
-      "url": "https://finance.yahoo.com/technology/ai/articles/ross-gerber-says-found-secret-094509032.html?.tsrc=rss"
+      "summary": "Both options are rooted in the same basic buy-and-hold philosophy, but one differs from the other in one way that's very important for the foreseeable future.",
+      "title": "Is Berkshire Hathaway Stock a Better Buy Than an S&amp;P 500 Index Fund?",
+      "url": "https://www.fool.com/investing/2026/09/19/is-berkshire-hathaway-stock-a-better-buy-than-an/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 09:35:00 +0000",
+      "date": "Fri, 18 Sep 2026 23:52:05 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Amazon and Alphabet will benefit in two big ways from Anthropic's IPO.",
-      "title": "Prediction: Anthropic's IPO Will Be a Big Winner for Alphabet and Amazon Investors",
-      "url": "https://www.fool.com/investing/2026/09/20/prediction-anthropics-ipo-will-be-a-big-winner-for/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 09:28:04 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "On September 18, 2026, four paid subscribers to major AI platforms filed a class-action lawsuit, Buist et al. v. Anthropic PBC et al., in the Northern District of California. The plaintiffs—Charles Bu",
-      "title": "Four Paid Subscribers Are Suing the Biggest AI Labs for Coordinating a Slowdown",
-      "url": "https://finance.yahoo.com/technology/ai/articles/four-paid-subscribers-suing-biggest-092804842.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 11:25:08 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Jensen Huang's position as the leader of the world's most valuable company, has earned him Trump's ear on the most important topics in AI.",
-      "title": "Nvidia CEO Jensen Huang emerges as Trump&apos;s top ally in AI safety debate",
-      "url": "https://www.cnbc.com/2026/09/20/nvidia-ceo-jensen-huang-emerges-as-trumps-top-ally-in-ai-debate.html"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 16:56:14 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Scott Bessent and China’s He Lifeng are holding talks on trade, AI and critical minerals ahead of Trump and Xi’s Sept. 24 summit.",
-      "title": "Bessent meets China Vice Premier He Lifeng ahead of Trump-Xi summit",
-      "url": "https://www.cnbc.com/2026/09/20/bessent-he-lifeng-trump-xi-summit.html"
+      "summary": "A simple momentum screen applied to S&amp;P 500 stocks has quietly built a performance gap that turns identical starting portfolios into dramatically different ending balances, and the strategy costs ",
+      "title": "SPMO Owns the S&amp;P 500’s 100 Fastest-Rising Stocks. Its Momentum Screen Has Beaten the Index by 67-Points Over the Last Five Years",
+      "url": "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss"
     },
     {
       "category": "macro",
@@ -757,15 +575,26 @@
       "url": "https://www.cnbc.com/2026/09/20/tariffs-fuel-prices-and-interest-rates-squeeze-us-companies.html"
     },
     {
-      "category": "macro",
-      "date": "Sun, 20 Sep 2026 17:04:54 GMT",
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 16:56:14 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "\"So even if we strip out energy, ​which is really ​volatile, and strip out food ... inflation is still too high,\" Kashkari told Fox News.",
-      "title": "Fed&apos;s Kashkari reportedly says inflation is still too high across the U.S. economy",
-      "url": "https://www.cnbc.com/2026/09/20/feds-kashkari-economy-inflation.html"
+      "summary": "Scott Bessent and China’s He Lifeng are holding talks on trade, AI and critical minerals ahead of Trump and Xi’s Sept. 24 summit.",
+      "title": "Bessent meets China Vice Premier He Lifeng ahead of Trump-Xi summit",
+      "url": "https://www.cnbc.com/2026/09/20/bessent-he-lifeng-trump-xi-summit.html"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 11:25:08 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Jensen Huang's position as the leader of the world's most valuable company, has earned him Trump's ear on the most important topics in AI.",
+      "title": "Nvidia CEO Jensen Huang emerges as Trump&apos;s top ally in AI safety debate",
+      "url": "https://www.cnbc.com/2026/09/20/nvidia-ceo-jensen-huang-emerges-as-trumps-top-ally-in-ai-debate.html"
     },
     {
       "category": "earnings",
@@ -780,17 +609,6 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:10:13 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Morgan Stanley said this week that stocks including SpaceX, SiTime and EchoStar are attractive.",
-      "title": "Morgan Stanley says stocks like Warner Music are a table-pounding buy right now",
-      "url": "https://www.cnbc.com/2026/09/20/buy-stocks-such-as-warner-music-morgan-stanley-says-.html"
-    },
-    {
-      "category": "other",
       "date": "Sun, 20 Sep 2026 14:23:53 GMT",
       "kind": "news",
       "relevance": 0,
@@ -802,6 +620,17 @@
     },
     {
       "category": "other",
+      "date": "Sun, 20 Sep 2026 12:10:13 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Morgan Stanley said this week that stocks including SpaceX, SiTime and EchoStar are attractive.",
+      "title": "Morgan Stanley says stocks like Warner Music are a table-pounding buy right now",
+      "url": "https://www.cnbc.com/2026/09/20/buy-stocks-such-as-warner-music-morgan-stanley-says-.html"
+    },
+    {
+      "category": "other",
       "date": "Sun, 20 Sep 2026 11:59:45 GMT",
       "kind": "news",
       "relevance": 0,
@@ -810,29 +639,40 @@
       "summary": "As measured by the iShares Latin America 40 ETF (ILF), the region is handily beating the S&P 500 year to date, up 15% compared to the S&P's 11% move",
       "title": "Caruso-Cabrera: The investing tailwinds for Latin America are the best in decades",
       "url": "https://www.cnbc.com/2026/09/20/caruso-cabrera-the-investing-tailwinds-for-latin-america-are-the-best-in-decades.html"
+    },
+    {
+      "category": "other",
+      "date": "Sun, 20 Sep 2026 12:00:01 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Serial airline investor Bill Franke is embracing more upmarket changes like first-class seats.",
+      "title": "Budget airline king Bill Franke warms to first-class seats and premium upgrades",
+      "url": "https://www.cnbc.com/2026/09/20/bill-franke-frontier-spirit-budget-airlines.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T17:06:47.003909+00:00",
+  "probed_at": "2026-09-20T18:14:53.002303+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.67s",
+      "note": "耗时 1.64s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.90s",
+      "note": "耗时 0.83s",
       "ok": true
     },
     "edgar": {
-      "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.44s",
+      "n": 0,
+      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.64s",
+      "note": "耗时 0.62s",
       "ok": true
     },
     "fed_monetary": {
@@ -842,22 +682,22 @@
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.67s",
+      "note": "提前数天（预告）｜ 耗时 0.66s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.62s",
+      "note": "提前数天（预告）｜ 耗时 0.59s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.72s",
+      "note": "耗时 0.61s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 0.97s",
+      "note": "耗时 1.26s",
       "ok": true
     }
   }

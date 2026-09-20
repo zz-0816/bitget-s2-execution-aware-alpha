@@ -71,7 +71,9 @@ SPREAD = os.path.join(BASE, "data", "spread")
 
 VERDICTS = ("favorable", "unfavorable", "neutral")
 DIMENSIONS = ("basis", "sentiment", "news", "technical", "execution_risk",
-              # ⭐ 2026-09-20：第 6 路，**只在有在途订单时**才跑（执行中闭环）
+              # ⚓ 2026-09-20：**只在接了外部锚时**才跑（第三方真实美股报价）
+              "external_anchor",
+              # ⭐ 2026-09-20：**只在有在途订单时**才跑（执行中闭环）
               "execution_progress")
 
 # 执行风险假设 -> 风控官动作（**agent 提议、风控官执行**）
@@ -102,6 +104,12 @@ HYPOTHESIS_ACTIONS = {
     "progress_stalled": {
         "level": "caution", "action": "require_review",
         "measure": "挂单存活 >= 停滞阈值且期间该腿**零成交**（挂单不可能成交）"},
+    # ⚓ 2026-09-20 新增（外部锚定分析师）：rToken 定价与真实美股脱节。
+    #    判据只用**两个价**的偏离幅度，不含任何"偏离会怎么走"的假设
+    #    —— 那会变成价格预测，触犯红线。
+    "anchor_divergence": {
+        "level": "caution", "action": "require_review",
+        "measure": "|rToken 中价 − 真实美股中价| / 真实美股中价 > 阈值（第三方数据）"},
 }
 
 
@@ -1132,6 +1140,100 @@ def analyst_execution_risk(base, cost=None, now_ms=None, size_usd=None):
     if dropped:
         note += "；另有 %d 条未过阈值（留痕不删）" % len(dropped)
     return report("execution_risk", verdict, conf, e, note), hyps, dropped
+
+
+# ------------------------------------------------- ⚓ 外部锚定（第三方价格参照）
+
+# 定价偏离的告警阈值（bp）。
+# ⚠️ **这是一个约定，不是标定值** —— 我们只有一份偏离快照（10 个标的，
+#    −117 ~ +34 bp），样本不足以标定。写成常量是为了"改它要留痕"，
+#    将来攒够样本再用实测分布替换它（见 docs/53 的"没做什么"）。
+ANCHOR_DIVERGENCE_BP = 20.0
+
+
+def analyst_external_anchor(base, anchor, cost=None):
+    """⚓ **外部锚定分析师** —— 拿真实美股报价给 rToken 定价做参照。
+
+    ━━ 为什么需要它 ━━
+
+    在此之前本项目**完全没有外部参照价**：所有数字都来自 Bitget 自己的盘口与成交，
+    是"自我参照"的。于是有一个问题一直答不了：
+
+        rToken 现在这个价，相对**真实股票**是贵了还是便宜了？
+
+    数据来自官方 `bitget-mcp-server`（**无需账号**），
+    由 `tools/mcp_anchor.py --refresh` 取并落盘，本函数**只读缓存**
+    （取数与消费分开：决策链必须能离线跑）。
+
+    ━━ 🔴 它只报**偏离幅度**，不报方向 ━━
+
+    刻意**不判**"折价 = 看多 / 溢价 = 看空"：那需要一个"偏离会收敛"的价格假设，
+    而本项目有红线 —— **不做价格预测**。所以：
+
+      · ``|偏离| ≤ 阈值`` -> ``neutral``（贴合；**不构成有利证据**）
+      · ``|偏离| > 阈值`` -> ``unfavorable``（定价与外部锚脱节 = **风险**，不是机会）
+
+    ━━ 🔴 口径必须说清（否则这个数会骗人）━━
+
+    美股有开闭市、rToken 7×24：
+
+      · 美股**开市** -> 同一时刻两个价 -> 叫**折溢价**（字段 ``premium_bp``）
+      · 美股**休市** -> 量到的是**折溢价 + 休市漂移**，**两者无法分离**
+        （休市期间根本没有真实股价可比）-> 字段 ``drift_and_premium_bp``
+
+    这个口径由 `mcp_anchor` 在取数时判好并写进缓存，本函数**照抄不自作主张**。
+
+    ━━ 数据来源类别 ━━
+
+    真实美股报价是**第三方数据**（provider 见缓存），
+    **不是本项目的实测量** —— evidence 的 source 里必须写明这一点。
+    """
+    e, hyps, dropped = [], [], []
+    if not isinstance(anchor, dict) or anchor.get("deviation_bp") is None:
+        return report("external_anchor", "neutral", 0.0, [],
+                      "未接外部锚（没有缓存或该标的取不到）—— "
+                      "**这不等于『定价没有偏离』**"), hyps, dropped
+
+    dev = float(anchor["deviation_bp"])
+    field = anchor.get("field") or "deviation_bp"
+    label = anchor.get("label") or "偏离"
+    same = anchor.get("same_instant")
+    src = ("第三方：mcp:bitget-mcp-server（%s）｜ 美股报价 %s"
+           % (anchor.get("provider") or "provider 未标明",
+              anchor.get("quote_utc") or "时刻未知"))
+
+    e.append(ev("真实美股中价", "%.4f" % anchor["stock_mid"], src))
+    e.append(ev("rToken 中价", "%.4f（来源 %s）"
+                % (anchor["rtoken_mid"], anchor.get("rtoken_source") or "?"),
+                "data/spread（本项目侧）"))
+    e.append(ev(label, "%+.1f bp" % dev, src))
+    e.append(ev("两个价是否同一时刻", "是" if same else "**否**（口径含不可分离的漂移）",
+                "美股时段 %s" % (anchor.get("session") or "未知")))
+
+    if abs(dev) > ANCHOR_DIVERGENCE_BP:
+        hyps.append({
+            "id": "anchor_divergence",
+            "hypothesis": "rToken 定价与**外部锚（真实美股）**脱节 %+.1f bp，"
+                          "超过阈值 %.0f —— 定价偏离意味着挂单可能被"
+                          "**收敛**吃掉（不是机会）" % (dev, ANCHOR_DIVERGENCE_BP),
+            "metric": label, "value": "%+.1f bp" % dev,
+            "threshold": "|偏离| > %.0f bp" % ANCHOR_DIVERGENCE_BP,
+            "falsifier": "若偏离回到阈值以内（|偏离| ≤ %.0f bp），本条不成立"
+                         % ANCHOR_DIVERGENCE_BP,
+            "action": "复核执行方式：缩小规模 / 改吃单 / 避开该腿挂单",
+        })
+    else:
+        dropped.append({"id": "anchor_divergence", "reason": "偏离在阈值内",
+                        "metric": label, "value": "%+.1f bp" % dev})
+
+    conf = 0.7 if same else 0.4     # 休市时两个价不同时刻 -> 置信度按规矩压低
+    verdict = "unfavorable" if hyps else "neutral"
+    note = ("与外部锚偏离 %+.1f bp（%s）%s"
+            % (dev, label,
+               "；**两个价不同时刻**，所以这个数含不可分离的漂移，置信度已压低"
+               if not same else "；两个价同一时刻，可比"))
+    note += "｜⚠️ 真实美股报价是**第三方数据**，不是本项目的实测量"
+    return report("external_anchor", verdict, conf, e, note), hyps, dropped
 
 
 # ------------------------------------------------- ⑥ 执行进度（执行中闭环）
@@ -2742,7 +2844,11 @@ PARAM_FIELDS = ("base", "qty_usd", "miss_bp", "urgent", "slice_usd",
                 #    它会进硬闸门、能改 severity、能作废挂单类方案。
                 #    它是**外部活数据**（靠 `ext_events.py --refresh` 更新），
                 #    不冻进契约的话，隔一天复跑就会读到另一份事件表 -> 必然不一致。
-                "ext_event")
+                "ext_event",
+                # ⚓ **外部锚**（第三方真实美股报价）同理：它进第 6 路分析师的
+                #    evidence 与假设、能改风控规则，且是**活数据**
+                #    （靠 `mcp_anchor.py --refresh` 更新）—— 不冻就复跑不一致。
+                "anchor")
 
 
 def sha256_file(path):
@@ -2794,6 +2900,8 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
     # 📅 外部确定性事件：**只记实际用到的那份**（没有就是 None）。
     #    它进契约的理由与 llm_event 完全相同：外部活数据不冻结，复跑必然不一致。
     ext_param = (decision or {}).get("ext_gate_used")
+    # ⚓ 外部锚：同理，只记实际用到的那份
+    anchor_param = (decision or {}).get("anchor_used")
     return {
         "log_format": LOG_FORMAT, "base": base, "qty_usd": qty_usd,
         "miss_bp": miss_bp, "urgent": bool(urgent),
@@ -2826,6 +2934,9 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
         # 📅 外部确定性事件（财报/除息）。与 llm_event 同理：它是**决策输入的
         #    一部分**，复跑读回来当冻结输入；None = 这次窗口内没有事件。
         "ext_event": ext_param,
+        # ⚓ 外部锚（第三方美股报价）。它是第 6 路分析师的输入，**是决策输入**，
+        #    所以必须进契约；None = 这次没接外部锚。
+        "anchor": anchor_param,
         "data_used": {
             "analysts": sorted({e["source"] for i in items if i.get("valid")
                                 for e in i["report"]["evidence"]}),
@@ -3348,16 +3459,20 @@ def selftest():
     base = "NVDA"
     items, _hyps, _dropped = run_team(base)
 
-    # ⚠️ 这里**不能**写 `len(items) == len(DIMENSIONS)`：DIMENSIONS 是"全部可能
-    #    的路"（6 路），而 `run_team` 只跑**事前**那 5 路 —— 第 6 路（执行进度官）
-    #    要有在途订单才跑，由 `run_decision(order_state=...)` 挂上去。
-    #    写死相等会在新增第 6 路的那一刻变成假失败（实测踩到）。
-    _PRE = [d for d in DIMENSIONS if d != "execution_progress"]
+    # ⚠️ `DIMENSIONS` 里既有**常跑**的路，也有**条件跑**的路：
+    #    `external_anchor` 要有外部锚数据、`execution_progress` 要有在途订单。
+    #    `run_team` 只跑常跑的那几路，条件路分别在 run_decision 里挂上去。
+    #    写死 `len(items) == len(DIMENSIONS)` 会在新增条件路的那一刻变成假失败
+    #    （这个坑本轮踩了两次：先被 execution_progress、再被 external_anchor）。
+    _COND = ("external_anchor", "execution_progress")
+    _PRE = [d for d in DIMENSIONS if d not in _COND]
     chk(len(items) == len(_PRE)
         and {i["report"]["dimension"] for i in items} == set(_PRE),
-        "事前 %d 路分析师都返回了结果（%d 个：%s）；第 6 路 execution_progress "
-        "要有在途订单才跑" % (len(_PRE), len(items),
-                        "、".join(sorted(i["report"]["dimension"] for i in items))))
+        "常跑的 %d 路分析师都返回了结果（%d 个：%s）；"
+        "%s 是**条件跑**的（分别要有外部锚数据 / 在途订单）"
+        % (len(_PRE), len(items),
+           "、".join(sorted(i["report"]["dimension"] for i in items)),
+           "、".join(_COND)))
     chk(all(i["report"]["dimension"] in DIMENSIONS for i in items),
         "dimension 取值合法")
     chk(all(i["report"]["verdict"] in VERDICTS for i in items),
@@ -3564,7 +3679,7 @@ def apply_gate_to_cost(cost, gate):
 def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                  now_ms=None, gate=True, scenario=None, fresh=True,
                  freeze_news=False, time_basis_force=None, llm_event=None,
-                 order_state=None, ext_event=None):
+                 order_state=None, ext_event=None, anchor=None):
     """端到端跑一次：分析师 -> 辩论 -> 闸门 -> 交易员 -> 风控官 -> 最终决策。
 
     返回 ``(cost, items, debate, decision, book)``。
@@ -3610,6 +3725,52 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                                     headlines=([] if freeze_news else None),
                                     news_mode=("static" if freeze_news else "auto"),
                                     news_assess=llm_event)
+
+    # ---- ⚓ 外部锚定（第三方真实美股报价）：**冻结输入优先**（复跑靠它）----
+    #    不传时读 `data/derived/anchor.json`（由 `tools/mcp_anchor.py --refresh` 落盘）。
+    #    ⚠️ 三种情况分开说，**都不能被当成"定价没有偏离"**：
+    #      · 传了冻结值        -> 用它（复跑路径）
+    #      · 有缓存、有该标的   -> 正常比对
+    #      · 没有缓存/无该标的  -> 报告写"未接外部锚"，如实标注缺数据
+    anchor_used, anchor_note = None, None
+    if isinstance(anchor, dict) and anchor.get("deviation_bp") is not None:
+        anchor_used = anchor
+        anchor_note = "冻结输入：偏离 %+.1f bp" % anchor["deviation_bp"]
+    else:
+        try:
+            _ap = os.path.join(BASE, "data", "derived", "anchor.json")
+            with open(_ap, encoding="utf-8") as _fh:
+                _ac = json.load(_fh)
+            _a = (_ac.get("bases") or {}).get(base.upper())
+            if _a:
+                anchor_used = _a
+                anchor_note = ("缓存（%s，美股 %s）：偏离 %s bp"
+                               % (_ac.get("fetched_utc"), _ac.get("session"),
+                                  "—" if _a.get("deviation_bp") is None
+                                  else "%+.1f" % _a["deviation_bp"]))
+            else:
+                anchor_note = "缓存里没有 %s 的报价（**不等于定价没有偏离**）" % base
+        except (OSError, ValueError) as exc:
+            anchor_note = ("**没有外部锚缓存**（`mcp_anchor.py --refresh` 可更新）：%s"
+                           "—— 这不等于『定价没有偏离』" % type(exc).__name__)
+    if anchor_used is not None:
+        try:
+            _arep, _ahyps, _adropped = analyst_external_anchor(
+                base, anchor_used, cost=cost)
+            _aok, _awhy = validate(_arep)
+            items = items + [{"report": _arep, "valid": _aok,
+                              "invalid_reason": _awhy}]
+            # 它的假设与别的 agent 假设一样并进风控 —— 不搞特殊通道
+            hyps = list(hyps) + list(_ahyps)
+            dropped = list(dropped) + list(_adropped)
+            if len(hyps) > MAX_HYPOTHESES:
+                dropped = dropped + [
+                    {"id": h["id"], "reason": "超出假设条数上限（%d）"
+                     % MAX_HYPOTHESES, "metric": h.get("metric"),
+                     "value": h.get("value")} for h in hyps[MAX_HYPOTHESES:]]
+                hyps = hyps[:MAX_HYPOTHESES]
+        except Exception as exc:  # noqa: BLE001
+            anchor_note = (anchor_note or "") + "｜锚定分析失败：%r" % (exc,)
 
     # ---- ⏱️ 执行进度官（执行中闭环）：**只在有在途订单时**才跑 ----
     # 为什么放在这里：它看的是"我已经下的那一单"，与上面 5 路（看市场）不是一回事。
@@ -3718,6 +3879,9 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     #    （说明区分"窗口内无事件"与"缺数据"——这两件事绝不能混）。
     decision["ext_gate_used"] = ext_ev
     decision["ext_gate_note"] = ext_note
+    # ⚓ 外部锚：**实际用到的那份**（复跑靠它冻结）+ 一句来源说明
+    decision["anchor_used"] = anchor_used
+    decision["anchor_note"] = anchor_note
     # ⏱️ 执行进度（有在途订单时才有）：报告 + 假设 + **确定性**处置口径
     if exec_prog is not None:
         decision["execution_progress"] = exec_prog
@@ -4300,6 +4464,82 @@ def decision_selftest():
     except Exception as exc:  # noqa: BLE001
         chk(False, "外部确定性事件自检异常：%r" % (exc,))
 
+    # ---- ⑰ ⚓ 外部锚定分析师：第三方真实美股报价（2026-09-20 新增）----
+    #    它答的是"rToken 这个价，相对**真实股票**贵还是便宜" ——
+    #    在此之前本项目**完全没有外部参照价**，所有数字都是自我参照的。
+    #    🔴 两条纪律要守住：① 只报**偏离幅度**，不报方向（不做价格预测）；
+    #    ② 美股休市时两个价**不同时刻**，口径含不可分离的漂移，置信度必须压低。
+    try:
+        def _mk(**kw):
+            d = {"stock_mid": 100.0, "rtoken_mid": 100.0, "deviation_bp": 0.0,
+                 "field": "deviation_bp", "label": "偏离", "same_instant": True,
+                 "session": "regular", "quote_utc": "t", "provider": "test"}
+            d.update(kw)
+            return d
+
+        # (a) 阈值内 -> neutral，**且不产生假设**（不能把小偏离说成风险）
+        _r0, _h0, _d0 = analyst_external_anchor("X", _mk(deviation_bp=5.0))
+        chk(_r0["dimension"] == "external_anchor" and _r0["verdict"] == "neutral"
+            and not _h0,
+            "偏离在阈值内 -> neutral 且**零假设**（%s）" % _r0["verdict"])
+        # (b) 超阈值 -> **正负都算风险**（刻意不判方向）
+        _both = []
+        for _v in (ANCHOR_DIVERGENCE_BP + 10, -(ANCHOR_DIVERGENCE_BP + 10)):
+            _r, _h, _ = analyst_external_anchor("X", _mk(deviation_bp=_v))
+            _both.append(_r["verdict"] == "unfavorable" and bool(_h)
+                         and _h[0]["id"] == "anchor_divergence")
+        chk(all(_both),
+            "%+.0f 与 %+.0f bp 都判 unfavorable + 假设（**正负都算风险，不判方向**）"
+            % (ANCHOR_DIVERGENCE_BP + 10, -(ANCHOR_DIVERGENCE_BP + 10)))
+        _h1 = analyst_external_anchor(
+            "X", _mk(deviation_bp=ANCHOR_DIVERGENCE_BP + 10))[1][0]
+        chk(bool(_h1.get("falsifier")) and "阈值" in _h1["falsifier"],
+            "偏离假设带**证伪条件**：%s" % _h1["falsifier"][:36])
+        # (c) 休市（不同时刻）-> 置信度压低 + notes 说清口径
+        _rs = analyst_external_anchor(
+            "X", _mk(deviation_bp=5.0, same_instant=False, session="closed"))[0]
+        chk(_rs["confidence"] < _r0["confidence"],
+            "休市（两个价不同时刻）置信度被压低：%.2f < %.2f"
+            % (_rs["confidence"], _r0["confidence"]))
+        chk("不同时刻" in _rs["notes"] and "不可分离" in _rs["notes"],
+            "notes 写明口径：%s" % _rs["notes"][:46])
+        # (d) 来源类别必须标明（第三方 ≠ 实测量）
+        chk("第三方" in " ".join(e["source"] for e in _r0["evidence"]),
+            "evidence 里标明**第三方数据**（不是本项目的实测量）")
+        # (e) 没有锚 -> 明确"未接"，**不能**说成"没有偏离"
+        _rn, _hn, _ = analyst_external_anchor("X", None)
+        chk(_rn["verdict"] == "neutral" and not _hn and "不等于" in _rn["notes"],
+            "没有外部锚时明确标注『未接』，而不是说『没有偏离』")
+        # (f) 契约：anchor 进 PARAM_FIELDS；真实决策里带上第 6 路
+        chk("anchor" in PARAM_FIELDS,
+            "anchor 进了复跑契约（PARAM_FIELDS 共 %d 项）" % len(PARAM_FIELDS))
+        _cad, _iad, _dad, _dcad, _bad = run_decision("NVDA", qty_usd=500.0,
+                                                     llm_event=NONE_EV)
+        _dims = sorted(str((i.get("report") or {}).get("dimension")) for i in _iad)
+        if "external_anchor" in _dims:
+            chk(len(_dims) == 6, "真实决策里带上第 6 路（%s）" % "、".join(_dims))
+            _lgad = build_log(base="NVDA", items=_iad, debate=_dad, cost=_cad,
+                              decision=_dcad, qty_usd=500.0, miss_bp=3.0,
+                              urgent=False, now_ms=None, book=_bad)
+            _pad = _lgad["parameters"]
+            chk(_pad.get("anchor") is not None,
+                "日志把**用到的外部锚**存进 parameters.anchor（偏离 %s bp）"
+                % (_pad.get("anchor") or {}).get("deviation_bp"))
+            _c3, _i3, _d3, _dec3, _b3 = run_decision(
+                "NVDA", qty_usd=500.0, miss_bp=3.0, now_ms=_pad.get("now_ms"),
+                llm_event=_pad.get("llm_event"), anchor=_pad.get("anchor"))
+            _lg3 = build_log(base="NVDA", items=_i3, debate=_d3, cost=_c3,
+                             decision=_dec3, qty_usd=500.0, miss_bp=3.0,
+                             urgent=False, now_ms=_pad.get("now_ms"), book=_b3)
+            _ok3, _rep3 = replay_check(_lgad, _lg3)
+            chk(_ok3, "带外部锚的决策复跑一致（契约字段全一致%s）"
+                % ("" if _ok3 else "；差异 %s"
+                   % str(_rep3.get("must_match_failed"))[:88]))
+        else:
+            chk(True, "本机没有外部锚缓存 —— 第 6 路未参与（**如实跳过**，不假装通过）")
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "外部锚定自检异常：%r" % (exc,))
+
     # ---- ⑬ 🔴 执行进度官：把链路从"只在下单前说话"补成**执行中闭环** ----
     #    2026-09-20 新增（P0）。修之前：挂单一直不成交、或**只成交一条腿**的时候，
     #    整条链路里**没有任何角色负责** —— 而这正是赛道三「执行辅助」手册点名的
@@ -4770,6 +5010,8 @@ def main(argv=None):
         # 📅 外部确定性事件同理：它是硬闸门的第三源。
         #    旧日志没有这个字段时 ext_event=None（如实走"读缓存"路径）。
         ext_frozen = pr.get("ext_event")
+        # ⚓ 外部锚同理：它是第 6 路分析师的输入。
+        anchor_frozen = pr.get("anchor")
         if llm_ev is None and pr.get("gate", {}).get("source", "").startswith("llm"):
             print("⚠️ 这份日志记录了 LLM 判定来源，但没有存下判定本体"
                   "（旧版本日志）。本次复跑会**重新调用一次 LLM**，"
@@ -4779,7 +5021,8 @@ def main(argv=None):
             miss_bp=float(pr.get("miss_bp") or 3.0),
             urgent=bool(pr.get("urgent")), now_ms=pr.get("now_ms"),
             scenario=pr.get("scenario"), llm_event=llm_ev,
-            order_state=os_frozen, ext_event=ext_frozen)
+            order_state=os_frozen, ext_event=ext_frozen,
+            anchor=anchor_frozen)
         new = build_log(base=base, items=items, debate=debate, cost=cost,
                         decision=decision, qty_usd=float(pr.get("qty_usd") or 5000.0),
                         miss_bp=float(pr.get("miss_bp") or 3.0),

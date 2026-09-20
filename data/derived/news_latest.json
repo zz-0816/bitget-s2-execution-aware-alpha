@@ -1,26 +1,18 @@
 {
-  "base": "AAPL",
+  "base": "SOXL",
   "categories": {
     "earnings": 2,
     "earnings_scheduled": 8,
-    "filing": 3,
-    "filing_material": 9,
     "macro": 8,
     "other": 38
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 2,
-    "n_total": 68,
-    "should_call_llm": true
+    "n_fresh": 0,
+    "n_total": 56,
+    "should_call_llm": false
   },
-  "fresh_headlines": [
-    "[Sun, 20 Se] Jim Cramer sends strong signal to Apple stock investors",
-    "[Sun, 20 Se] Prediction: Even With the $1,999 Price Tag, Apple's Foldable iPhone Duo Will Be a Hit and Apple Will Join Nvidia in the $5 Trillion Club."
-  ],
   "headlines_for_gate": [
-    "[2026-07-31] AAPL 申报：10-Q（季报）",
-    "[2026-07-30] AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -29,166 +21,12 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-17] AAPL 申报：4（内部人交易（Form 4））",
-    "[2026-09-10] AAPL 申报：4（内部人交易（Form 4））"
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
+    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
+    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
+    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
   ],
   "items": [
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126037020/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-10",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126036226/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035636/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035362/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "3",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：3",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035359/xslF345X06/form3.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-09-01",
-      "form": "8-K/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035325/ef20081427_8ka.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-27",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126034741/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-20",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126033928/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-08-13",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126032884/xslF345X06/form4.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Apple Inc.",
-      "date": "2026-08-11",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "AAPL 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000195004726007959/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-31",
-      "form": "10-Q",
-      "form_meaning": "季报",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Apple Inc.",
-      "date": "2026-07-30",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm"
-    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -639,91 +477,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 16:33:00 +0000",
+      "date": "Mon, 14 Sep 2026 17:40:30 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Cramer’s latest Apple verdict comes with an intriguing personal twist",
-      "title": "Jim Cramer sends strong signal to Apple stock investors",
-      "url": "https://www.thestreet.com/investing/stocks/apple-stock-jim-cramer-iphone-duo?.tsrc=rss"
+      "summary": "What goes down fast can go back up just as quickly when sentiment recovers.",
+      "title": "Why Direxion Daily Semiconductor Bull 3X ETF Dropped Today",
+      "url": "https://www.fool.com/investing/2026/09/14/direxion-daily-semiconductor-bull-3x-etf-dropped/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:00:22 +0000",
+      "date": "Mon, 14 Sep 2026 11:31:25 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most investors celebrate a stock that turns every dollar into eleven, but holding a massive winner inside a traditional IRA sets up a collision between the IRS and your retirement timeline that gets w",
-      "title": "Turning 73 Forces a Withdrawal From This Stock Whether the Owner Wants the Cash or Not",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/turning-73-forces-a-withdrawal-from-this-stock-whether-the-owner-wants-the-cash-or-not/?.tsrc=rss"
+      "summary": "In an interview with CNBC, Yardeni stated that existing data center constraints make a significant slowdown in AI infrastructure construction unlikely.",
+      "title": "Ed Yardeni Says ‘I’m Not Particularly Concerned’ About AI Slowdown Fears, Maintains 8,400 Year-End S&amp;P 500 Target",
+      "url": "https://stocktwits.com/news-articles/markets/equity/ai-stocks-slide-slowdown-fears-ed-yardeni-not-particularly-concerned/cZtmbt4RBRZ?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 22:07:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The credit is bigger this year. The bill at the register still isn’t zero.",
-      "title": "Bank of America does the math on Apple's $1,200 iPhone offer",
-      "url": "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 16:03:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple’s price target hike comes on the heels of surprising consumer survey findings.",
-      "title": "Apple gets bullish Wall Street call as iPhone demand jumps",
-      "url": "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 15:11:11 +0000",
+      "date": "Wed, 26 Aug 2026 21:00:04 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Coinbase’s filing used an Apple contract as its model, which is cash-settled, has no fixed expiration, and would trade from Sunday to Friday.",
-      "title": "Coinbase Files With CFTC To List US Single-Stock Perpetual Futures, Including AAPL And TSLA Contracts",
-      "url": "https://stocktwits.com/news-articles/markets/equity/coinbase-apple-tesla-perpetual-futures-coin-tsla-aapl/cZtxEhbRBEs?.tsrc=rss"
+      "summary": "&lt;p&gt;Here are the daily ETF fund flows for August 25, 2026.&lt;/p&gt;",
+      "title": "Daily ETF Flows: SOXL Inflows Total $520M",
+      "url": "http://www.etf.com/sections/daily-etf-flows/daily-etf-flows-soxl-inflows-total-520m?utm_source=yahoo-finance&amp;utm_medium=rss&amp;utm_campaign=yahoo-finance-rss&amp;.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 12:50:00 +0000",
+      "date": "Thu, 20 Aug 2026 11:36:30 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple stock just got a price target cut due to the memory processor crunch.",
-      "title": "John Ternus's First iPhone Launch Prompted a Bank of America Price Target Cut. Is Apple Stock a Buy?",
-      "url": "https://www.fool.com/investing/2026/09/19/john-ternuss-first-iphone-launch-prompted-a-bank-o/?.tsrc=rss"
+      "summary": "SOXL's implied volatility just hit 123%, making it one of the market's riskiest ETFs to hold outright. Here's how a bear call spread lets you collect income from that volatility instead, with defined ",
+      "title": "SOXL IV Just Hit 123%. These 2 Options Strategies That Pay You for the Risk.",
+      "url": "https://www.barchart.com/story/news/3947024/soxl-iv-just-hit-123-these-2-options-strategies-that-pay-you-for-the-risk?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 16:37:00 +0000",
+      "date": "Wed, 19 Aug 2026 23:35:42 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Apple is on track to do something great that it hasn't done since 2012.",
-      "title": "Prediction: Even With the $1,999 Price Tag, Apple's Foldable iPhone Duo Will Be a Hit and Apple Will Join Nvidia in the $5 Trillion Club.",
-      "url": "https://www.fool.com/investing/2026/09/20/prediction-even-with-the-1999-price-tag-apples-fol/?.tsrc=rss"
+      "summary": "Triple-leveraged semiconductor exposure sounds like a recipe for disaster, yet one ETF quietly turned a modest stake into something that rivals a year of aggressive trading. The math behind it challen",
+      "title": "SOXL Turns Every 1% Nvidia Move Into 3%. Here’s What $10,000 Did in the Last 12 Months",
+      "url": "https://247wallst.com/investing/etf/2026/08/19/soxl-turns-every-1-nvidia-move-into-3-heres-what-10000-did-in-the-last-12-months/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:10:00 +0000",
+      "date": "Wed, 05 Aug 2026 22:07:00 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Buffett bought more than $77 billion of this stock in the years leading up to his retirement.",
-      "title": "Greg Abel Recently Plowed $4.2 Billion Into Warren Buffett's Favorite Stock, and It Wasn't Apple",
-      "url": "https://www.fool.com/investing/2026/09/20/greg-abel-42-billion-warren-buffetts-stock-apple/?.tsrc=rss"
+      "summary": "Investors are flocking to an ETF that enhances the daily exposure of leading chip stocks. Buyer beware.",
+      "title": "The SOXL ETF Is a Popular—and Dangerous—Way to Play Chip Stocks",
+      "url": "https://finance.yahoo.com/m/9030f354-1f6e-3fa3-a195-21f4081a9ba9/the-soxl-etf-is-a-popular%E2%80%94and.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Wed, 05 Aug 2026 02:09:34 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "SOXL rewarded patient semiconductor bulls with one of the most explosive yearly returns on U.S. exchanges, then erased a fifth of that gain in a single month. Understanding exactly why reveals the hid",
+      "title": "This 3x Semiconductor ETF Turned $10,000 Into $56,000, Then Lost a Fifth in One Month",
+      "url": "https://247wallst.com/investing/etf/2026/08/04/this-3x-semiconductor-etf-turned-10000-into-56000-then-lost-a-fifth-in-one-month/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 04 Aug 2026 15:42:47 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Some of SOXL's favorite semiconductor stocks are very popular this morning.",
+      "title": "Why Direxion Daily Semiconductor Bull 3X ETF Jumped Today",
+      "url": "https://www.fool.com/investing/2026/08/04/why-direxion-daily-semiconductor-bull-3x-etf-jumpe/?.tsrc=rss"
     },
     {
       "category": "other",
@@ -815,41 +653,41 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T16:42:25.417759+00:00",
+  "probed_at": "2026-09-20T16:51:19.231346+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.60s",
+      "note": "耗时 1.67s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.93s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "edgar": {
-      "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 3.40s",
+      "n": 0,
+      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.74s",
+      "note": "耗时 0.65s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.67s",
+      "note": "耗时 0.63s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.58s",
+      "note": "提前数天（预告）｜ 耗时 0.74s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.57s",
+      "note": "提前数天（预告）｜ 耗时 0.66s",
       "ok": true
     },
     "sec_press": {
@@ -859,7 +697,7 @@
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.24s",
+      "note": "耗时 0.93s",
       "ok": true
     }
   }

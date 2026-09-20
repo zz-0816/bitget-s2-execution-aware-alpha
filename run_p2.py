@@ -785,6 +785,23 @@ def _run(cmd, label):
     return p.returncode
 
 
+def _run_any(cmds, label):
+    """一条自检步骤里跑**多条命令**，任一失败即失败。
+
+    为什么要这样（而不是"一个工具一步"）：每加一个工具，后面的步骤就得整体
+    重编号（⑰→⑱→⑲ 一路顺延），而编号散落在 README、提交材料、表单稿、
+    TASKS、CHECKLIST 十来处 —— 改一次就是一轮体力活，还容易漏。
+    把"步骤"与"命令"解耦之后，**加工具不再需要动编号**。
+    """
+    print("-" * 78)
+    print("▶ %s" % label)
+    rc = 0
+    for cmd in cmds:
+        p = subprocess.run(cmd, cwd=P2)
+        rc |= p.returncode
+    return rc
+
+
 def http_smoke(verbose=True):
     """HTTP 冒烟：**真的去打一遍**页面要用的每个端点。
 
@@ -966,22 +983,29 @@ def selftest(with_net=False):
     rc |= _run([py, os.path.join("tools", "doc_ref_check.py")],
                "⑰ 文档路径引用（以 git 入库状态为准 / 已声明的跨仓库引用）")
 
-    # ⑱ 📡 本项目自带的行情通道（tools/market_feed.py）。
-    #    它的自检**不联网**，重点验三样：归一化到快照 schema 的列对不对、
-    #    换算与累计名义额对不对、以及**落盘守卫**（绝不允许写进 data/spread/）。
-    rc |= _run([py, os.path.join("tools", "market_feed.py"), "--selftest"],
-               "⑱ 行情通道（schema 归一 / 换算 / **落盘守卫**）")
+    # ⑱ 📡 本项目自带的行情通道 + ⚓ 外部价格锚（官方 bitget-mcp-server）。
+    #    ⭐ 这一步**可以含多条命令** —— 以前每加一个工具就要把后面所有步骤重编号
+    #       （⑰→⑱→⑲ 一路顺延），纯属自找的麻烦。现在一条步骤可以跑一串工具，
+    #       以后加工具**不用再动编号**。
+    #    两者的自检**都不联网**：
+    #      · market_feed：归一化到快照 schema 的列、换算与累计名义额、
+    #        以及**落盘守卫**（绝不允许写进 data/spread/）
+    #      · mcp_anchor：偏离换算、**口径守卫**（开市才叫折溢价，休市只能叫偏移）、
+    #        缺失不硬算（读不到返回 None 而不是 0）
+    rc |= _run_any([[py, os.path.join("tools", "market_feed.py"), "--selftest"],
+                    [py, os.path.join("tools", "mcp_anchor.py"), "--selftest"]],
+                   "⑱ 行情通道 + 外部锚（schema 归一 / 落盘守卫 / **口径守卫**）")
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],
-                   "⑱ 消息面源可用性（联网）")
+                   "⑲ 消息面源可用性（联网）")
 
-        # 🔴 ⑲ 事件判定**回归门槛**：新 prompt / 新模型必须在同一套**留出**校准集上
+        # 🔴 ⑳ 事件判定**回归门槛**：新 prompt / 新模型必须在同一套**留出**校准集上
         #    不低于基线 —— 这是"改正了危险方向错误之后，不许再退回去"的回归锁。
         #    ⚠️ 没有 LLM key 时它**如实报"未执行"并返回 0**：既不冒充通过，
         #       也不算失败（这与仓库里其它地方"不假装跑过"的原则一致）。
         rc |= _run([py, os.path.join("tools", "event_calibration.py"), "--gate"],
-                   "⑲ 事件判定回归门槛（留出校准集：危险方向错误必须为 0）")
+                   "⑳ 事件判定回归门槛（留出校准集：危险方向错误必须为 0）")
 
     print("=" * 92)
     print("全量自检%s" % ("通过" if rc == 0 else "**失败**"))

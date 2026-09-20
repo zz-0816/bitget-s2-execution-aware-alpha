@@ -1,7 +1,7 @@
 {
  "bootstrapped": true,
- "calls": 67,
- "last_poll": "2026-09-20T16:38:08.275614+00:00",
+ "calls": 68,
+ "last_poll": "2026-09-20T16:42:35.814977+00:00",
  "seen": {
   "http://www.etf.com/sections/daily-etf-flows/daily-etf-flows-soxl-inflows-total-520m?utm_source=yahoo-finance&amp;utm_medium=rss&amp;utm_campaign=yahoo-finance-rss&amp;.tsrc=rss": "2026-09-19T19:42:08.624165+00:00",
   "https://247wallst.com/investing/2026/09/18/amazons-ai-bet-is-already-starting-to-pay-off/?.tsrc=rss": "2026-09-19T19:37:48.870635+00:00",
@@ -198,6 +198,7 @@
   "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss": "2026-09-20T15:00:15.971875+00:00",
   "https://www.fool.com/investing/2026/09/20/plug-power-vs-bloom-energy-which-hydrogen-adjacent/?.tsrc=rss": "2026-09-20T06:45:08.601535+00:00",
   "https://www.fool.com/investing/2026/09/20/prediction-anthropics-ipo-will-be-a-big-winner-for/?.tsrc=rss": "2026-09-20T09:48:08.799625+00:00",
+  "https://www.fool.com/investing/2026/09/20/prediction-even-with-the-1999-price-tag-apples-fol/?.tsrc=rss": "2026-09-20T16:42:35.814977+00:00",
   "https://www.fool.com/investing/2026/09/20/prediction-the-best-performing-big-bank-stock-of/?.tsrc=rss": "2026-09-20T16:13:44.495763+00:00",
   "https://www.fool.com/investing/2026/09/20/september-effect-full-swing-stocks-slump-history/?.tsrc=rss": "2026-09-20T14:16:03.803310+00:00",
   "https://www.fool.com/investing/2026/09/20/sp-500-valuation-26-years-history-suggests-crash/?.tsrc=rss": "2026-09-20T15:29:21.683409+00:00",
@@ -312,6 +313,7 @@
   "https://www.sec.gov/newsroom/press-releases/2026-90-sec-issues-innovation-exemption-facilitate-trading-tokenized-nms-stock-request-comment": "2026-09-18T16:22:20.364972+00:00",
   "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss": "2026-09-19T19:33:22.909980+00:00",
   "https://www.thestreet.com/investing/meta-stock-900-price-target-ai-ad-engine?.tsrc=rss": "2026-09-19T19:28:58.499386+00:00",
+  "https://www.thestreet.com/investing/stocks/apple-stock-jim-cramer-iphone-duo?.tsrc=rss": "2026-09-20T16:42:35.814977+00:00",
   "https://www.thestreet.com/investing/stocks/cramer-recommends-nokia-beaten-down-90s-ai-tech?.tsrc=rss": "2026-09-19T21:22:21.976500+00:00",
   "https://www.thestreet.com/investing/stocks/jim-cramer-sends-a-blunt-message-to-amd-stock-investors?.tsrc=rss": "2026-09-20T03:49:08.743833+00:00",
   "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss": "2026-09-19T22:27:26.740454+00:00",

@@ -966,6 +966,12 @@ def selftest(with_net=False):
     rc |= _run([py, os.path.join("tools", "doc_ref_check.py")],
                "⑰ 文档路径引用（以 git 入库状态为准 / 已声明的跨仓库引用）")
 
+    # ⑱ 📡 本项目自带的行情通道（tools/market_feed.py）。
+    #    它的自检**不联网**，重点验三样：归一化到快照 schema 的列对不对、
+    #    换算与累计名义额对不对、以及**落盘守卫**（绝不允许写进 data/spread/）。
+    rc |= _run([py, os.path.join("tools", "market_feed.py"), "--selftest"],
+               "⑱ 行情通道（schema 归一 / 换算 / **落盘守卫**）")
+
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],
                    "⑱ 消息面源可用性（联网）")

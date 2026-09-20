@@ -201,8 +201,8 @@ Select-String -Path docs\40-*.md -Pattern "无风险套利|risk-free|稳赚|保�
 跑下面这几条，材料第 3 段的数字就能逐条对上：
 
 ```powershell
-python run_p2.py --selftest                           # 17 步全部 [OK]，退出码 0（无需网络与 key；实测 330 项 [OK] / 0 项 [!!] / **0 项 [skip]**；项数会随自检增加，**以现场输出为准**）
-python run_p2.py --selftest --net                     # 再加 ⑱ 消息面源 + ⑲ **事件判定回归门槛**
+python run_p2.py --selftest                           # 18 步全部 [OK]，退出码 0（无需网络与 key；实测 358 项 [OK] / 0 项 [!!] / **0 项 [skip]**；项数会随自检增加，**以现场输出为准**）
+python run_p2.py --selftest --net                     # 再加 ⑲ 消息面源 + ⑳ **事件判定回归门槛**
 python project2\agent_team.py --selfcheck             # agent 层单独跑：全部 [OK] / 0 失败
 python project2\agent_team.py --decision-selftest     # 交易员/风控官/复跑契约 + **执行进度官**（⑬ 段）
 python run_p2.py --demo NVDA                          # 完整决策链（本次实测：最终不参与、0 USD）
@@ -299,8 +299,8 @@ git log --oneline -5
 
 ## 📋 一页速查（照这个顺序做）
 
-1. **跑一遍自检**：`python run_p2.py --selftest` → 17 步全部通过 / 0 失败（实测 330 项 `[OK]` / 0 项 `[!!]` / 0 项 `[skip]`（含真浏览器布局验收））
-   　配了 LLM key 的话再跑一次 `--selftest --net`（加 ⑱ 消息面源 + ⑲ 事件判定回归门槛）
+1. **跑一遍自检**：`python run_p2.py --selftest` → 18 步全部通过 / 0 失败（实测 358 项 `[OK]` / 0 项 `[!!]` / 0 项 `[skip]`（含真浏览器布局验收））
+   　配了 LLM key 的话再跑一次 `--selftest --net`（加 ⑲ 消息面源 + ⑳ 事件判定回归门槛）
 2. **核验快照**：`python tools\snapshot_manifest.py --verify` → 26 项 / 39.6 MB（冻结快照 16 项，逐字节核验）
 3. **起 Demo 并挂隧道**：`winget install --id Cloudflare.cloudflared` → `python run_p2.py --tunnel` → 用手机流量验证公网地址
 4. **仓库已公开** ✅ <https://github.com/zz-0816/bitget-s2-execution-aware-alpha>（推新提交：`git push`）

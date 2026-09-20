@@ -90,7 +90,7 @@ python -c "import hashlib,glob;[print(hashlib.sha256(open(p,encoding='utf-8').re
 >    把它的用例写进 prompt 等于拿测试集训练。
 >
 > 结果：留出集 n=10 上 v3 = 80% / 危险方向 1 条，v4 = **100% / 危险方向 0 条**，
-> 并已接成 `python run_p2.py --selftest --net` 第 ⑲ 步的**回归门槛**
+> 并已接成 `python run_p2.py --selftest --net` 第 ⑳ 步的**回归门槛**
 > （`data/calibration/baseline.json`，`max_dangerous_errors=0`）—— 改回去就红。
 > ⚠️ n=10 只够做回归，**不能当准确率结论**。
 >

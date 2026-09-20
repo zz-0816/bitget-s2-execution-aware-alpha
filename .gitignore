@@ -29,3 +29,9 @@ _tmp_*
 #    于是"上一轮还能开公网隧道，这一轮静默跳过"，日志里只有一行
 #    `没找到 cloudflared，跳过隧道`。稳定路径才是对的。
 tools/bin/
+
+# 📡 本仓库自带行情通道的采样输出（tools/market_feed.py --sample）
+# ⚠️ 它**刻意**不写进 data/spread/（那是已验证的冻结快照，写一个字节整套
+#    "可核验"就废了；`market_feed.guard_target()` 会在代码层拒绝）。
+# 这是**运行时**产物，像 data/run/ 一样不进库。
+data/live/

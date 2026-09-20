@@ -400,7 +400,7 @@ v3-2026-09-19   一致率 80%   危险方向 1     ← 修之前
 v4-2026-09-20   一致率 100%  危险方向 0     ← 门槛基线（data/calibration/baseline.json）
 ```
 
-已接成 `python run_p2.py --selftest --net` ***第 ⑲ 步**：
+已接成 `python run_p2.py --selftest --net` ***第 ⑳ 步**：
 
 ```powershell
 python tools\event_calibration.py --gate

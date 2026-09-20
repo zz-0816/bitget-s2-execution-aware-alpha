@@ -531,25 +531,41 @@ function renderGate(d) {
   const g = d.gate || {};
   const gm = d.gate_merge || {};
   const sev = g.gate_severity || 'none';
-  const usedLlm = String(g.gate_source || '').startsWith('llm');
+  // ⚠️ "这次用没用 LLM" **不能**靠生效来源的前缀判断。
+  //    实测踩到：外部确定性事件胜出时来源是 `mcp:...`，前缀不是 llm，
+  //    于是页面底部写"本次**未使用** LLM 判事件"，而上面 ② 明明列着 LLM 判定 ——
+  //    自相矛盾。**参与过就必须体现出来**（这条规矩本项目已经踩过一次）。
+  //    正确做法：直接看 `gate_merge.llm` 这份**记录**，而不是猜来源字符串。
+  const usedLlm = !!(gm.llm && gm.llm.source
+                     && String(gm.llm.source).startsWith('llm'));
   const llmRow = gm.llm
     ? (mdInline(gm.llm.severity || '—') +
        ' <span class="mono-dim">' + mdInline(String(gm.llm.reason || '').slice(0, 60)) +
        (gm.llm.frozen ? ' ｜ 冻结复用' : '') +
        (gm.llm.source ? ' ｜ ' + mdInline(gm.llm.source) : '') + '</span>')
     : '<span class="mono-dim">未参与（无 key / 明确用 static）</span>';
+  const extRow = gm.ext
+    ? (mdInline(gm.ext.severity || '—') +
+       ' <span class="mono-dim">' + mdInline(String(gm.ext.reason || '').slice(0, 90)) + '</span>')
+    : ('<span class="mono-dim">窗口内无事件</span>'
+       + (gm.ext_note ? ' <span class="mono-dim">｜' + mdInline(String(gm.ext_note).slice(0, 70)) + '</span>' : ''));
   $('gate').innerHTML =
     '<div class="verdict-bar ' + (sev === 'block' ? 'stand_down' : (sev === 'caution' ? 'caution' : 'proceed')) + '">' +
       '<div><div class="stance">' + esc(sev) + '</div>' +
       '<div class="mono-dim">severity（生效值）</div></div>' +
       '<div class="why">' + mdInline(g.gate_reason || '') + '</div></div>' +
-    // ⭐ 合并留痕：硬闸门 = 确定性日历 **与** LLM 判定，取更保守的一侧。
-    //    这一块是 2026-09-19 修的"说了没做"的落地——在此之前 LLM 判出的 block
-    //    只到辩论层，硬闸门只读日历（详见 docs/46）。
+    // ⭐ 合并留痕：硬闸门 = 确定性日历 **与** LLM 判定 **与** 外部确定性事件，
+    //    三者取更保守的一侧。
+    //    第一段是 2026-09-19 修的"说了没做"（LLM 判出的 block 只到辩论层）；
+    //    第三段是 2026-09-20 新增的（财报日历 / 除息 —— 实测接入当天就抓到
+    //    META 除息日 = 当天，此前链路一无所知）。
     '<table><tbody>' +
-      '<tr><th>确定性日历</th><td>' + mdInline((gm.static || {}).severity || '—') +
+      '<tr><th>① 确定性日历</th><td>' + mdInline((gm.static || {}).severity || '—') +
         ' <span class="mono-dim">' + mdInline(String((gm.static || {}).reason || '').slice(0, 60)) + '</span></td></tr>' +
-      '<tr><th>LLM 判定</th><td>' + llmRow + '</td></tr>' +
+      '<tr><th>② LLM 判定</th><td>' + llmRow + '</td></tr>' +
+      '<tr><th>③ 外部确定性事件<br><span class="mono-dim">财报 / 除息</span></th><td>' + extRow +
+        '<div class="mono-dim" style="margin-top:3px">来自官方 bitget-mcp-server（' +
+        '<b>第三方数据，不是本项目的实测量</b>）；拿不到事件表时<b>不当作「没有事件」</b></div></td></tr>' +
       '<tr><th><b>生效（取更严的一侧）</b></th><td><b>' +
         mdInline((gm.effective || {}).severity || sev) + '</b>' +
         ' <span class="mono-dim">来源 ' + mdInline(g.gate_source || '') + '</span></td></tr>' +

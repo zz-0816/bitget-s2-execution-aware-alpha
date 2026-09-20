@@ -2737,7 +2737,12 @@ PARAM_FIELDS = ("base", "qty_usd", "miss_bp", "urgent", "slice_usd",
                 #    提出裸露敞口假设 -> 风控一票否决 -> 规则表/否决清单都变。
                 #    不记进契约，`--replay` 就会漏掉那条 `agent:` 规则，
                 #    复跑报"不一致"而真正原因是输入根本没被记下来。
-                "order_state")
+                "order_state",
+                # 📅 **外部确定性事件**（财报/除息）同样是决策输入（2026-09-20）：
+                #    它会进硬闸门、能改 severity、能作废挂单类方案。
+                #    它是**外部活数据**（靠 `ext_events.py --refresh` 更新），
+                #    不冻进契约的话，隔一天复跑就会读到另一份事件表 -> 必然不一致。
+                "ext_event")
 
 
 def sha256_file(path):
@@ -2786,6 +2791,9 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
     # ⏱️ 在途订单（执行进度官的输入）：**规范化后**记录，只留决策真正读的字段。
     _ep = (decision or {}).get("execution_progress")
     os_param = _ep.get("order_state") if isinstance(_ep, dict) else None
+    # 📅 外部确定性事件：**只记实际用到的那份**（没有就是 None）。
+    #    它进契约的理由与 llm_event 完全相同：外部活数据不冻结，复跑必然不一致。
+    ext_param = (decision or {}).get("ext_gate_used")
     return {
         "log_format": LOG_FORMAT, "base": base, "qty_usd": qty_usd,
         "miss_bp": miss_bp, "urgent": bool(urgent),
@@ -2815,6 +2823,9 @@ def collect_params(base, *, items, debate, decision, cost, qty_usd, miss_bp,
         #    当冻结输入，否则 `agent:partial_fill_naked` 那条规则会凭空消失。
         #    None = 这次没有在途订单（不是"记丢了"）。
         "order_state": os_param,
+        # 📅 外部确定性事件（财报/除息）。与 llm_event 同理：它是**决策输入的
+        #    一部分**，复跑读回来当冻结输入；None = 这次窗口内没有事件。
+        "ext_event": ext_param,
         "data_used": {
             "analysts": sorted({e["source"] for i in items if i.get("valid")
                                 for e in i["report"]["evidence"]}),
@@ -3385,7 +3396,74 @@ SEVERITY_RANK = {"none": 0, "caution": 1, "block": 2}
 SEVERITY_ORDER = ("none", "caution", "block")
 
 
-def merge_gate(static_gate, llm_event):
+def merge_gate(static_gate, llm_event, ext_event=None):
+    """把**三个事件源**合并成**唯一一个硬闸门**。
+
+    三源：
+      ① ``static_gate`` 确定性日历（期权到期 / 休市 / in_house 窗口）
+      ② ``llm_event``   LLM 判定（读新闻标题）
+      ③ ``ext_event``   📅 **外部确定性事件**（官方 MCP：财报日历 / 除息）
+                        —— 2026-09-20 新增。它答的是前两源都答不了的**确定**问题：
+                        "下次财报是哪天""除息日是哪天"（除息会让现货腿按股息下跳、
+                        永续腿不跳 -> 基差跳变，而 maker 策略正好靠基差吃饭）。
+                        实测接入当天就抓到 **META 除息日 = 当天**，此前链路一无所知。
+
+    🔴 为什么必须合并（2026-09-19 修的第二处"说了没做"）
+    ---------------------------------------------------
+    文档写的是「severity=block → **挂单类方案直接作废**（硬规则，agent 不能推翻）」，
+    但实现里硬闸门走的是：
+
+        run_decision -> execution_cost.consult_gate() -> event_gate.static_gate()
+
+    也就是**只读确定性日历、从不问 LLM**；LLM 的判定只到了辩论层（变成一条证据）。
+    后果有两条：
+      ① 安全上：LLM 判出 block（例如刚披露的 8-K）时，**挂单类方案照样生成**——
+         而"挡不住突发新闻与财报"恰恰是我们自己写在局限里的最大缺口；
+      ② 观感上：把 key 配上之后页面会自相矛盾——闸门区块写"本次未使用 LLM"，
+         而它上面的新闻分析师写"✅ 本次由 LLM 判事件"。
+
+    实测证据（把 `assess` 打桩成必定返回 block，跑全部 10 个标的）：
+        news 分析师收到 block：True
+        硬闸门收到 block     ：False（cost['gate_severity']='none'、maker_allowed=True）
+
+    ⚠️ 当时**没有改变任何结论**：那 10 个标的都因别的原因（现货腿停滞等）已经
+    `stand_down`。所以它是**潜伏**缺陷 —— 等现货腿恢复成交、策略真正可执行时才会咬人，
+    而那正是最需要事件闸门的时候。
+
+    合并规则（**只取更保守的一侧**）：
+      * 三源取严重度最高的那个；
+      * 谁更严就让谁当 `source`，并在 reason 里写明其它源说了什么 —— 不藏；
+      * 返回 (severity, reason, source, maker_allowed)。
+
+    ⚠️ 调用方必须同时把结果写回 `cost`（见 `apply_gate_to_cost`），
+       否则会出现"闸门说 block、可 cost 里最优方式仍是挂单"的自相矛盾。
+    """
+    sev, why, src, maker = _merge_two(static_gate, llm_event)
+    if not ext_event:
+        return sev, why, src, maker
+    e_sev = ext_event.get("severity") or "none"
+    e_why = (ext_event.get("reason") or "")[:80]
+    e_src = ext_event.get("source") or "ext"
+    tag_e = "外部确定性事件 %s（%s）" % (e_sev, e_why)
+    r_e, r_cur = SEVERITY_RANK.get(e_sev, 1), SEVERITY_RANK.get(sev, 1)
+    # ⚠️ 外部事件胜出时来源会变成 `mcp:...`，**前缀不再是 llm** ——
+    #    而页面/日志要靠来源判断"这次有没有用 LLM"。所以这里把 LLM 的**参与**
+    #    显式拼进来源（`mcp:+llm`），否则会出现"底部说没用 LLM、② 行却列着 LLM 判定"
+    #    的自相矛盾（实测踩到）。**参与过就必须体现出来**。
+    _ev = llm_event or {}
+    _part = (bool(_ev) and str(_ev.get("source") or "").startswith("llm"))
+    _tag = ("+llm" if _part else "") + ("(frozen)" if _ev.get("frozen") else "")
+    if r_e > r_cur:
+        return (e_sev, "%s｜%s（更宽松，不采信）" % (tag_e, why),
+                e_src + _tag, e_sev != "block")
+    if r_cur > r_e:
+        return sev, "%s｜%s（更宽松，不采信）" % (why, tag_e), src, maker
+    if sev == "none" and e_sev == "none":
+        return sev, why, src, maker
+    return sev, "%s｜%s（同级，一致）" % (why, tag_e), src, maker
+
+
+def _merge_two(static_gate, llm_event):
     """把**确定性日历闸门**与**LLM 事件判定**合并成**唯一一个硬闸门**。
 
     🔴 为什么必须合并（2026-09-19 修的第二处"说了没做"）
@@ -3417,6 +3495,14 @@ def merge_gate(static_gate, llm_event):
 
     ⚠️ 调用方必须同时把结果写回 `cost`（见 `apply_gate_to_cost`），
        否则会出现"闸门说 block、可 cost 里最优方式仍是挂单"的自相矛盾。
+    """
+def _merge_two(static_gate, llm_event):
+    """两个源的合并（确定性日历 + LLM）。三源版本见 `merge_gate`。
+
+    单独拆出来是为了**不改动已有语义** —— 这一段的 `llm+static` 来源标记、
+    `(frozen)` 标记、以及"同级一致"的措辞都被文档与自检引用着。
+    第三源（外部确定性事件）在 `merge_gate` 里**叠在它之上**，
+    这样 ext_event=None 时行为与从前逐字节一致。
     """
     sev_s, why_s, src_s = (static_gate or ("none", "", "static"))[:3]
     ev = llm_event or {}
@@ -3478,7 +3564,7 @@ def apply_gate_to_cost(cost, gate):
 def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
                  now_ms=None, gate=True, scenario=None, fresh=True,
                  freeze_news=False, time_basis_force=None, llm_event=None,
-                 order_state=None):
+                 order_state=None, ext_event=None):
     """端到端跑一次：分析师 -> 辩论 -> 闸门 -> 交易员 -> 风控官 -> 最终决策。
 
     返回 ``(cost, items, debate, decision, book)``。
@@ -3572,7 +3658,47 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
             news_ev = r["event"]
             break
     static_gate = g
-    g = merge_gate(static_gate, news_ev)
+    # 📅 外部确定性事件（财报 / 除息）：**冻结输入优先**（复跑靠它）。
+    #    不传时读 `data/derived/ext_events.json` 缓存（由 `ext_events.py --refresh`
+    #    更新）。⚠️ 三种情况必须分开说，**都不能被当成"没有事件"**：
+    #      · 传了冻结值           -> 用它（复跑路径）
+    #      · 有缓存、窗口内无事件  -> 明确记 "none"（这是**判定结果**，不是缺数据）
+    #      · 没有缓存 / 没有该标的 -> 记 "unavailable"（**缺数据**，不许冒充安全）
+    ext_ev, ext_note = None, None
+    if ext_event is not None:
+        ext_ev = ext_event if ext_event.get("severity") else None
+        ext_note = ("冻结输入：%s" % (ext_event.get("severity") or "无事件"))
+    else:
+        try:
+            try:
+                from ext_events import (event_for as _ef, gate_from_events as _gfe,
+                                        load_cache as _lc)
+            except ImportError:
+                from project2.ext_events import (event_for as _ef,  # type: ignore
+                                                 gate_from_events as _gfe,
+                                                 load_cache as _lc)
+            _cache = _lc()
+            if _cache is None:
+                ext_note = ("**没有外部事件缓存**（`ext_events.py --refresh` 可更新）"
+                            "—— 这不等于『没有事件』")
+            else:
+                _e = _ef(_cache, base)
+                if _e is None:
+                    ext_note = "缓存里没有 %s 的记录（不等于没有事件）" % base
+                else:
+                    _px = (book or {}).get("mid")
+                    if isinstance(_px, dict):
+                        _px = _px.get("spot") or _px.get("mid")
+                    ext_ev = _gfe(_e, now_ms=now_ms, price=_px)
+                    ext_note = ("缓存（%s）：窗口内**无**财报/除息事件"
+                                % (_cache.get("fetched_utc") or "?")
+                                if ext_ev is None else
+                                "缓存（%s）：触发 %s"
+                                % (_cache.get("fetched_utc") or "?",
+                                   ext_ev.get("severity")))
+        except Exception as exc:  # noqa: BLE001
+            ext_note = "外部事件源不可用：%s: %s" % (type(exc).__name__, exc)
+    g = merge_gate(static_gate, news_ev, ext_ev)
     apply_gate_to_cost(cost, g)          # trader / 风控官读的是 cost
     event = {"severity": g[0], "reason": g[1], "source": g[2],
              "maker_allowed": g[3]}
@@ -3588,6 +3714,10 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     #    同时把**实际用到的** LLM 判定（实时调用的 / 冻结复用的）记下来 ——
     #    复跑靠它冻结输入（否则 LLM 是活输入，硬闸门依赖它就没法复跑）。
     decision["llm_gate_used"] = news_ev
+    # 📅 外部确定性事件：**实际用到的那份**（复跑靠它冻结输入），以及一句来源说明
+    #    （说明区分"窗口内无事件"与"缺数据"——这两件事绝不能混）。
+    decision["ext_gate_used"] = ext_ev
+    decision["ext_gate_note"] = ext_note
     # ⏱️ 执行进度（有在途订单时才有）：报告 + 假设 + **确定性**处置口径
     if exec_prog is not None:
         decision["execution_progress"] = exec_prog
@@ -3595,6 +3725,10 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
         "static": {"severity": static_gate[0], "reason": static_gate[1],
                    "source": static_gate[2]},
         "llm": news_ev,
+        # 📅 第三源：外部确定性事件（财报/除息）。None 表示"窗口内无事件"或
+        #    "缺数据"，到底哪种看 ext_gate_note —— **不在这里下结论**。
+        "ext": ext_ev,
+        "ext_note": ext_note,
         "effective": {"severity": g[0], "reason": g[1], "source": g[2],
                       "maker_allowed": g[3]},
     }
@@ -4096,6 +4230,76 @@ def decision_selftest():
     except Exception as exc:  # noqa: BLE001
         chk(False, "LLM 闸门闭环自检异常：%r" % (exc,))
 
+    # ---- ⑯ 📅 外部确定性事件：硬闸门的**第三个源**（2026-09-20 新增）----
+    #    它答的是前两源都答不了的**确定**问题：下次财报是哪天、除息日是哪天。
+    #    实测接入当天就抓到 **META 除息日 = 当天**（0.525 USD ≈ 7.8 bp 基差跳变），
+    #    而在此之前整条链路对此一无所知 —— 这就是"数据源集成"的实际价值。
+    try:
+        try:
+            import ext_events as _xe
+        except ImportError:
+            from project2 import ext_events as _xe  # type: ignore
+
+        # (a) 三源合并：更严的一侧胜出，且其它源**不许被藏**
+        _g_static = ("none", "日历无事件", "static")
+        _g_llm = {"severity": "none", "reason": "LLM 判无事件", "source": "llm"}
+        _g_ext = {"severity": "caution", "reason": "除息日当天", "source": "mcp"}
+        _m = merge_gate(_g_static, _g_llm, _g_ext)
+        chk(_m[0] == "caution" and "外部确定性事件" in _m[1],
+            "外部事件更严时**由它生效**（%s）" % _m[0])
+        chk("LLM" in _m[1] or "日历" in _m[1],
+            "另外两源仍写进 reason（**不许被藏**）：%s" % _m[1][:56])
+        _m2 = merge_gate(("block", "日历硬约束", "static"), _g_llm, _g_ext)
+        chk(_m2[0] == "block" and "更宽松，不采信" in _m2[1],
+            "外部事件更宽松时不越权（仍取 block，并如实标注它更宽松）")
+        # 🔴 外部事件胜出时来源里必须**保留 LLM 参与**的标记。
+        #    实测踩到：来源变成 `mcp:...` 后，页面按前缀判"没用 LLM"，
+        #    于是底部写"本次未使用 LLM"、而 ② 行列着 LLM 判定 —— 自相矛盾。
+        _m3 = merge_gate(_g_static, _g_llm, _g_ext)
+        chk("llm" in _m3[2], "外部事件胜出时来源仍标明 LLM 参与过（%s）" % _m3[2])
+        # (b) ext=None 时行为必须与两源版**逐字节一致**（不能悄悄改了旧行为）
+        chk(merge_gate(_g_static, _g_llm) == merge_gate(_g_static, _g_llm, None),
+            "不传外部事件时，合并结果与从前**逐字节一致**")
+        # (c) 纯函数规则：窗口内触发 / 窗口外不触发 / 只到 caution
+        _nowx = 1_789_900_000_000
+        chk(_xe.gate_from_events({"dividends": [
+            {"ex_dividend_date": "2026-09-20", "amount": 0.525}]},
+            now_ms=_nowx, price=670.0)["severity"] == "caution",
+            "除息日在窗口内 -> caution")
+        chk(_xe.gate_from_events({"earnings": {"report_date": "2026-11-17"}},
+                                 now_ms=_nowx) is None,
+            "财报日远在窗口外 -> 不触发（None 是**判定结果**，不是缺数据）")
+        # (d) 🔴 "窗口内无事件" 与 "缺数据" 必须是两种不同的东西
+        _cost, _i, _d, _dec_x, _b = run_decision("META", qty_usd=500.0,
+                                                 llm_event=NONE_EV)
+        _gm = _dec_x.get("gate_merge") or {}
+        _note = _gm.get("ext_note") or ""
+        # ⚠️ 断言要覆盖**四种**措辞：触发 / 窗口内无事件 / 缓存里没有该标的 /
+        #    没有缓存。初版只写了后三种，而 META 实际是"触发" —— 断言过窄会误报。
+        chk(any(k in _note for k in ("触发", "窗口内", "缓存里没有",
+                                     "没有外部事件缓存")),
+            "来源说明是四种情况之一（触发／窗口内无事件／缓存无此标的／无缓存）：%s"
+            % _note[:50])
+        chk("ext_event" in PARAM_FIELDS,
+            "ext_event 进了复跑契约（PARAM_FIELDS 共 %d 项）" % len(PARAM_FIELDS))
+        # (e) 契约闭环：写日志 -> 用日志参数复跑 -> 必须一致
+        _lgx = build_log(base="META", items=_i, debate=_d, cost=_cost,
+                         decision=_dec_x, qty_usd=500.0, miss_bp=3.0,
+                         urgent=False, now_ms=None, book=_b)
+        _px = _lgx["parameters"]
+        _c2x, _i2x, _d2x, _dec2x, _b2x = run_decision(
+            "META", qty_usd=float(_px["qty_usd"]), miss_bp=float(_px["miss_bp"]),
+            urgent=bool(_px["urgent"]), now_ms=_px.get("now_ms"),
+            llm_event=_px.get("llm_event"), ext_event=_px.get("ext_event"))
+        _lg2x = build_log(base="META", items=_i2x, debate=_d2x, cost=_c2x,
+                          decision=_dec2x, qty_usd=500.0, miss_bp=3.0,
+                          urgent=False, now_ms=_px.get("now_ms"), book=_b2x)
+        _okx, _repx = replay_check(_lgx, _lg2x)
+        chk(_okx, "带外部事件的决策复跑一致（契约字段全一致%s）"
+            % ("" if _okx else "；差异 %s" % str(_repx.get("must_match_failed"))[:88]))
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "外部确定性事件自检异常：%r" % (exc,))
+
     # ---- ⑬ 🔴 执行进度官：把链路从"只在下单前说话"补成**执行中闭环** ----
     #    2026-09-20 新增（P0）。修之前：挂单一直不成交、或**只成交一条腿**的时候，
     #    整条链路里**没有任何角色负责** —— 而这正是赛道三「执行辅助」手册点名的
@@ -4563,6 +4767,9 @@ def main(argv=None):
         # ⏱️ 在途订单同理：它是执行进度官（-> agent 一票否决）的输入。
         #    旧日志没有这个字段时 order_state=None（如实走"无在途订单"路径）。
         os_frozen = pr.get("order_state")
+        # 📅 外部确定性事件同理：它是硬闸门的第三源。
+        #    旧日志没有这个字段时 ext_event=None（如实走"读缓存"路径）。
+        ext_frozen = pr.get("ext_event")
         if llm_ev is None and pr.get("gate", {}).get("source", "").startswith("llm"):
             print("⚠️ 这份日志记录了 LLM 判定来源，但没有存下判定本体"
                   "（旧版本日志）。本次复跑会**重新调用一次 LLM**，"
@@ -4572,7 +4779,7 @@ def main(argv=None):
             miss_bp=float(pr.get("miss_bp") or 3.0),
             urgent=bool(pr.get("urgent")), now_ms=pr.get("now_ms"),
             scenario=pr.get("scenario"), llm_event=llm_ev,
-            order_state=os_frozen)
+            order_state=os_frozen, ext_event=ext_frozen)
         new = build_log(base=base, items=items, debate=debate, cost=cost,
                         decision=decision, qty_usd=float(pr.get("qty_usd") or 5000.0),
                         miss_bp=float(pr.get("miss_bp") or 3.0),

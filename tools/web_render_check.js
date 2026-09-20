@@ -231,15 +231,41 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }
 
+  // ⚠️ 页面**默认**跑的是 `position=auto` 那一份（在途持仓默认值）。
+  //    写死别的 key 会取到 undefined -> 断言静默跳过（这个坑本轮踩过两次）。
+  //    统一定义一次，后面所有基于"页面主决策"的断言都用它 —— 定义得太靠后
+  //    会让前面的断言炸 `Cannot access before initialization`（实测踩到）。
+  const autoKey = Object.keys(fixtures).find(
+    (k) => k.startsWith('/api/decision') && k.includes('position=auto'));
+  const mainDecision = (fixtures[autoKey] || {}).decision;
+
+  // ---- 📅 硬闸门的**第三个源**（外部确定性事件：财报/除息）----
+  //   加了源却不在页面上显示 = 等于没加（用户看不到"为什么这次更严"）。
+  const gateHtml = rendered.get('gate') || '';
+  const gm = (mainDecision || {}).gate_merge || {};
+  if (!/外部确定性事件/.test(gateHtml)) {
+    problems.push('闸门面板里没有第三个源（财报/除息）');
+  } else if (!/第三方数据/.test(gateHtml)) {
+    problems.push('第三源没有标明「第三方数据，不是本项目的实测量」');
+  } else {
+    notes.push('闸门三源 ✓（静态=' + ((gm.static || {}).severity || '—') +
+      ' ｜ LLM=' + ((gm.llm || {}).severity || '—') +
+      ' ｜ 外部=' + ((gm.ext || {}).severity || '窗口内无事件') +
+      ' ｜ 生效=' + ((gm.effective || {}).severity || '—') + '）');
+  }
+  // 🔴 自相矛盾检测：② 行列着 LLM 判定，底部却说"未使用 LLM"。
+  //    实测踩到（外部事件胜出 -> 来源前缀不是 llm -> 旧判定逻辑误判）。
+  const llmListed = !!(gm.llm && gm.llm.source);
+  const saysNoLlm = /本次未使用 LLM/.test(gateHtml);
+  if (llmListed && saysNoLlm) {
+    problems.push('闸门面板自相矛盾：② 行有 LLM 判定，底部却说「本次未使用 LLM」');
+  } else if (llmListed) {
+    notes.push('LLM 参与标记一致 ✓（来源 ' + ((gm.effective || {}).source || '—') + '）');
+  }
   // ---- 💵 入场损益测算：能把账算清，也能把"算不出来"说清 ----
   //   这一块最危险的失败方式是**看起来算得很全**：把"基差变动"这种真正的
   //   盈亏来源悄悄漏掉、只留一串漂亮的摩擦数字。所以断言分两头：
   //   ① 该有的数字都在；② **"算不出来的"必须显式列出**。
-  //   ⚠️ 页面**默认**跑的是 `position=auto` 那一份；写死别的 key 会取到
-  //      undefined -> 断言静默跳过（这个坑本轮已经踩过两次，所以这里显式判空）。
-  const autoKey = Object.keys(fixtures).find(
-    (k) => k.startsWith('/api/decision') && k.includes('position=auto'));
-  const mainDecision = (fixtures[autoKey] || {}).decision;
   const en = rendered.get('entry') || '';
   const ed = (mainDecision || {}).entry || {};
   if (!ed || ed.ok === undefined) {

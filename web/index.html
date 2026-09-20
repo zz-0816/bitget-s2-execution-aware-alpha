@@ -26,11 +26,17 @@
   <span class="head-status" id="head-status" role="status" aria-live="polite">尚未运行</span>
   <div class="session-box">
     <span class="meta"><span class="k">数据快照</span><span id="snap-ts">读取中…</span></span>
+    <span class="meta"><span class="k">数据新鲜度</span><span id="fresh-state" title="离线演示（按数据自带时刻判定）时数据旧是声明过的模式；实时模式下输入停了才是危险 —— 后者会让按龄判据失真">读取中…</span></span>
     <span class="meta"><span class="k">决策基准</span><span id="basis-ts" title="离线演示读的是冻结快照：按数据自带时刻判定，否则时间衰减规则会把冻结数据误判成『行情停滞』">读取中…</span></span>
     <span class="meta"><span class="k">LLM</span><span id="llm-state">—</span></span>
     <span class="meta"><span class="k">标的</span><span id="n-bases">—</span></span>
   </div>
 </header>
+
+<!-- 📉 数据新鲜度横幅：**只在危险时出现**（实时模式 + 输入已停）。
+     离线演示（basis=asof）时刻意不显示 —— 那种"旧"是声明过的模式，
+     每次都弹红条会让真正的告警失去意义。 -->
+<div class="fresh-banner" id="fresh-banner" role="alert" hidden></div>
 
 <!-- ═══════════════════ 应用外壳：左侧功能导航 + 右侧内容区 ═══════════════════ -->
 <div class="app">

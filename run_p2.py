@@ -420,6 +420,9 @@ def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
         #    离线演示读冻结快照时必须按数据自带时刻，否则时间衰减规则
         #    （行情停滞 >=30 分钟）会把冻结数据误判成"市场停了"。
         "time_basis": dec.get("time_basis"),
+        # 📉 数据新鲜度：每个输入源落后多少 + 这算不算危险。
+        #    离线声明模式（basis=asof）只说"旧"，实时模式但输入停了才叫 stale。
+        "freshness": dec.get("freshness"),
         "min_notional_usd": _min_notional(),
         "edge_threshold_bp": _edge_threshold(),
         "prompt": _prompt_info(),
@@ -574,10 +577,21 @@ def make_handler():
         def _api(self, path, q):
             try:
                 if path == "/api/health":
+                    # 📉 数据新鲜度也在这里给：顶栏要能**不跑决策**就说清
+                    #    "数据有多旧、这是声明过的离线模式还是输入停了"。
+                    try:
+                        from agent_team import data_freshness, time_basis
+                        _tb = time_basis()
+                        _fr = data_freshness(now_ms=_tb.get("now_ms"),
+                                             basis=_tb.get("basis"))
+                    except Exception as exc:  # noqa: BLE001
+                        _fr = {"verdict": "unknown",
+                               "why": "新鲜度不可用：%s" % type(exc).__name__}
                     return self._json({
                         "ok": True, "project": "execution-aware-alpha",
                         "version": VERSION, "bases": _bases(),
                         "snapshot": snapshot_info(), "llm": llm_config(),
+                        "freshness": _fr,
                         "server_utc": dt.datetime.now(dt.UTC).strftime(
                             "%Y-%m-%d %H:%M:%S UTC"),
                         "offline": True, "disclaimer": DISCLAIMER})

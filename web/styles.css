@@ -583,8 +583,24 @@ select option { background: var(--surface-2); color: var(--text); }
 .badge.unfavorable { color: var(--danger); border-color: var(--danger-line); background: var(--danger-bg); }
 .badge.neutral     { color: var(--warn);   border-color: var(--warn-line);   background: var(--warn-bg); }
 
-/* ============================== 11. 表格 ============================== */
-table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
+/* 📉 数据新鲜度横幅（只在"实时但输入停了"时是红的；
+   "声明过的离线模式"用安静样式 —— 恒红等于没有信号） */
+.fresh-banner {
+  margin: var(--sp-3) var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--danger-line);
+  background: var(--danger-bg);
+  color: var(--text);
+  font-size: var(--fs-12); line-height: 1.65;
+}
+.fresh-banner-quiet {
+  border-color: var(--line);
+  background: var(--bg-subtle);
+  color: var(--text-dim);
+}
+
+/* ============================== 11. 表格 ============================== */table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
 th, td {
   text-align: left; padding: var(--sp-2) var(--sp-3);
   border-bottom: 1px solid var(--line-subtle); vertical-align: top;

@@ -660,6 +660,143 @@ def data_asof_ms(kinds=("trades", "orderbook", "sentiment")):
     return best, " ｜ ".join(src)
 
 
+# ------------------------------------------------------------------ 📉 数据新鲜度官
+
+# 实时模式下，输入落后超过它就算"输入停了"。
+DATA_FRESH_MIN = 30.0
+
+# 每个输入源 → 怎么取它的"最后一刻"
+_FRESH_SOURCES = (
+    ("trades", "成交", "trades-*.csv"),
+    ("orderbook", "盘口档位", "orderbook-*.csv"),
+    ("sentiment", "情绪/资金费", "sentiment-*.csv"),
+    ("quote", "报价（点差）", "2*.csv"),
+)
+
+
+def data_freshness(now_ms=None, basis=None):
+    """📉 **数据新鲜度官** —— 每个输入源各自落后多少，以及**这算不算危险**。
+
+    ━━ 为什么必须有它 ━━
+
+    实测（2026-09-20）：本仓库快照的最后一笔数据停在 **09-19 07:16 UTC**，
+    而墙钟已经是 09-20 16:08 —— **滞后 33 小时**。链路照常输出结论，
+    页面上只有一行小字写着快照时刻，没有任何地方说"它有多旧"。
+
+    ━━ 关键：必须区分两种"旧"，否则这个判据会变成恒红 ━━
+
+      · ``basis=asof``（读冻结快照）→ 旧是**声明过的**离线模式，不是故障。
+        如实标注即可，**不报警**（报警会让演示永远红，等于没有信号）。
+      · ``basis=wallclock``（实时模式）→ 你以为在实时决策，但输入可能早就停了
+        （采样器挂了 / 代理断了）。这时**旧数据比没有数据更危险**：
+        "行情停滞""报价冻结"这类按龄判据会全部失真，而结论看起来很正常。
+        实测踩到过：采样器 09-18 停了 4 小时，链路照常给结论。
+
+    所以 ``verdict`` 三态：``ok`` / ``declared_offline``（标注即可）/ ``stale``（危险）。
+
+    返回的每一项都带**来源**（哪个文件、哪一刻），没有猜测值。
+    """
+    wall = int(dt.datetime.now(dt.UTC).timestamp() * 1000)
+    now = int(now_ms) if now_ms else wall
+    basis = basis or "unknown"
+    declared = basis in ("asof", "explicit")
+    note_clock = []
+    srcs = []
+    for name, label, pat in _FRESH_SOURCES:
+        cands = sorted(glob.glob(os.path.join(SPREAD, pat)))
+        if not cands:
+            continue
+        t = _tail_last_ts_ms(cands[-1])
+        if t is None:
+            continue
+        age = (now - t) / 60000.0
+        item = {"name": name, "label": label,
+                "file": os.path.basename(cands[-1]),
+                "clock": "data", "ref": "decision_clock",
+                "ts_utc": dt.datetime.fromtimestamp(t / 1000, dt.UTC)
+                          .strftime("%Y-%m-%dT%H:%M:%SZ")}
+        if age < 0:
+            # 行情比"决策基准时刻"还新 —— 说明两者**不在一个钟上**。
+            # 不许显示成"滞后 -1970 分钟"（那是负数，读者只会更糊涂）。
+            item.update({"age_min": 0.0, "ahead": True})
+            note_clock.append("%s 早于基准 %.1f 分钟" % (label, -age))
+        else:
+            item["age_min"] = round(age, 1)
+        srcs.append(item)
+    # 消息面：天生是"本机抓取的现在"，**不属于行情时钟**。
+    # ⚠️ 实测踩到：离线模式下（基准=09-19 07:27）新闻是 09-20 16:18 抓的，
+    #    按基准算就是 **-1970 分钟**。根因不是新闻有问题，而是**两个钟**：
+    #    行情按数据自带时刻、新闻按墙钟。所以它必须用**自己的参照系**算龄，
+    #    并且要把"这次决策的输入跨了两个钟"这件事**明说**出来。
+    try:
+        with open(os.path.join(BASE, "data", "derived", "news_latest.json"),
+                  encoding="utf-8") as fh:
+            probed = (json.load(fh) or {}).get("probed_at")
+        if probed:
+            pt = dt.datetime.fromisoformat(probed.replace("Z", "+00:00"))
+            if pt.tzinfo is None:
+                pt = pt.replace(tzinfo=dt.UTC)
+            srcs.append({"name": "news", "label": "消息面",
+                         "file": "data/derived/news_latest.json",
+                         "clock": "live", "ref": "wallclock",
+                         "ts_utc": pt.astimezone(dt.UTC)
+                                   .strftime("%Y-%m-%dT%H:%M:%SZ"),
+                         "age_min": round((wall - pt.timestamp() * 1000) / 60000.0, 1)})
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        pass
+
+    if not srcs:
+        return {"now_ms": now, "basis": basis, "mode": "unknown",
+                "sources": [], "oldest": None, "oldest_age_min": None,
+                "verdict": "unknown", "threshold_min": DATA_FRESH_MIN,
+                "why": "读不到任何输入源的时间戳 —— **不猜**，也不假装新鲜"}
+
+    # 「行情有多旧」只由**行情源**决定：新闻是实时的，把它算进"最旧"会掩盖真问题。
+    market = [s for s in srcs if s.get("clock") == "data"] or srcs
+    oldest = max(market, key=lambda s: s["age_min"])
+    news = next((s for s in srcs if s.get("clock") == "live"), None)
+    clock_split = bool(declared and news is not None)
+    fresh_min = max(0.0, min(s["age_min"] for s in market))
+    if declared:
+        verdict = "declared_offline"
+        why = ("本次按**数据自带时刻**判定（basis=%s）：数据旧是声明过的离线模式，"
+               "不是故障 —— 如实标注，不当作告警。最新行情 %s（%s），最旧 %s（%.1f 分钟）"
+               % (basis, oldest["file"],
+                  dt.datetime.fromtimestamp(
+                      (now - fresh_min * 60000) / 1000, dt.UTC)
+                  .strftime("%m-%d %H:%M"), oldest["label"], oldest["age_min"]))
+    elif oldest["age_min"] > DATA_FRESH_MIN:
+        verdict = "stale"
+        why = ("**实时模式但输入已停**：最旧的行情输入是「%s」（%s，滞后 %.1f 分钟 > 阈值 %.0f）"
+               "—— 旧数据比没有数据更危险，按龄判据（行情停滞/报价冻结）会失真"
+               % (oldest["label"], oldest["file"], oldest["age_min"], DATA_FRESH_MIN))
+    else:
+        verdict = "ok"
+        why = ("行情输入新鲜：最旧的是「%s」，滞后 %.1f 分钟 ≤ 阈值 %.0f"
+               % (oldest["label"], oldest["age_min"], DATA_FRESH_MIN))
+    if clock_split:
+        why += ("　⚠️ 本次决策的输入**跨了两个时钟**：行情按数据自带时刻（%s），"
+                "消息面是本机抓取的现在（%s，滞后 %.1f 分钟）—— "
+                "事件闸门读的是**实时标题**，而盘口是快照。"
+                % (dt.datetime.fromtimestamp(now / 1000, dt.UTC)
+                   .strftime("%m-%d %H:%M"),
+                   news["ts_utc"][:16].replace("T", " "), news["age_min"]))
+    if note_clock:
+        why += "　⚠️ 时钟异常：" + "；".join(note_clock)
+    return {"now_ms": now, "basis": basis, "mode": mode_of(declared),
+            "sources": srcs, "oldest": oldest["name"],
+            "oldest_age_min": oldest["age_min"],
+            "oldest_file": oldest["file"],
+            "news_age_min": (news or {}).get("age_min"),
+            "clock_split": clock_split,
+            "threshold_min": DATA_FRESH_MIN,
+            "verdict": verdict, "why": why}
+
+
+def mode_of(declared):
+    return "offline_declared" if declared else "live"
+
+
 def time_basis(now_ms=None, force=None):
     """决定"这次决策的『现在』是几点"，并**如实说明依据**。
 
@@ -3463,6 +3600,11 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
     }
     # ⭐ 决策基准时间：连同依据一起带出去（页面/接口/日志都要能说清"现在几点、凭什么"）
     decision["time_basis"] = tb
+    # 📉 数据新鲜度官：**每个输入源各自**落后多少，以及这算不算危险。
+    #    必须放在 time_basis 之后 —— 它是"离线声明模式"还是"实时但输入停了"，
+    #    取决于 basis，而 basis 是 time_basis 判出来的。
+    decision["freshness"] = data_freshness(now_ms=now_ms,
+                                           basis=(tb or {}).get("basis"))
     return cost, items, debate, decision, book
 
 
@@ -4164,6 +4306,57 @@ def decision_selftest():
             "复跑时丢掉在途订单 -> replay 报不一致（它确实是契约的一部分）")
     except Exception as exc:  # noqa: BLE001
         chk(False, "执行进度官接线自检异常：%r" % (exc,))
+
+    # ---- ⑭ 📉 数据新鲜度官：**两种"旧"必须分开判** ----
+    #    离线演示（basis=asof）时数据旧是**声明过的模式**，不该报警；
+    #    实时模式（wallclock）下输入停了才是危险 —— 那时按龄判据会失真。
+    #    两个方向都断言，否则"恒红"和"恒绿"都发现不了。
+    try:
+        _f_asof = data_freshness(basis="asof")
+        _f_live = data_freshness(basis="wallclock")
+        chk(_f_asof["verdict"] == "declared_offline" and _f_asof["sources"],
+            "离线演示（basis=asof）判为**声明过的旧**，不报警：%s ｜ 最旧 %s 滞后 %s 分钟"
+            % (_f_asof["verdict"], _f_asof["oldest"], _f_asof["oldest_age_min"]))
+        chk(_f_asof["verdict"] != "stale",
+            "离线模式下**不得**报 stale（否则演示恒红，真正的告警就没人看了）")
+        chk(_f_live["mode"] == "live" and _f_live["verdict"] in ("ok", "stale"),
+            "实时模式按阈值判：%s（最旧 %s 滞后 %s 分钟 vs 阈值 %.0f）"
+            % (_f_live["verdict"], _f_live["oldest"], _f_live["oldest_age_min"],
+               DATA_FRESH_MIN))
+        # 真实数据：本仓库快照确实停在 09-19，所以 wallclock 下**必须**判 stale。
+        # （这不是"测试碰巧通过"，而是这个判据存在的理由本身。）
+        chk(_f_live["verdict"] == "stale",
+            "实测快照滞后 %s 分钟 -> 实时模式下判 **stale**（这就是它存在的理由）"
+            % _f_live["oldest_age_min"])
+        chk(all(s.get("file") and s.get("ts_utc") is not None
+                and s.get("age_min") is not None for s in _f_live["sources"]),
+            "%d 个输入源每条都带 文件 + 时刻 + 滞后分钟（没有猜测值）"
+            % len(_f_live["sources"]))
+        # 🔴 回归：**任何一条的龄都不得为负**。
+        #    实测踩到：离线模式下（基准=09-19 07:27）消息面是 09-20 抓的 ->
+        #    按基准算就是 **-1970 分钟**，页面上显示"滞后 -1970 分钟"。
+        #    根因不是新闻有问题，是**两个钟**（行情按数据时刻、新闻按墙钟）。
+        #    现在每个源各用自己的参照系，并且把"跨钟"这件事明说出来。
+        _neg = [s["name"] for s in _f_live["sources"] if s["age_min"] < 0]
+        chk(not _neg,
+            "没有任何输入源的龄是负数（负龄 = 两个钟混用，实测踩过）：%s"
+            % ("、".join(_neg) if _neg else "无"))
+        _f_asof2 = data_freshness(now_ms=_f_asof["now_ms"], basis="asof")
+        chk(all(s["age_min"] >= 0 for s in _f_asof2["sources"]),
+            "离线模式（按数据自带时刻）下也全为非负 —— 消息面用**墙钟**算龄")
+        chk("clock_split" in _f_asof2,
+            "输出里带 clock_split 标记（跨钟时必须能看出来）：%s"
+            % _f_asof2.get("clock_split"))
+        chk(isinstance(_f_live.get("why"), str) and _f_live["why"],
+            "结论带一句话依据：%s" % _f_live["why"][:60])
+        # 接线：决策里必须真的带上它
+        _dec_f = run_decision("NVDA", qty_usd=500.0, llm_event=NONE_EV)[3]
+        chk(isinstance(_dec_f.get("freshness"), dict)
+            and _dec_f["freshness"].get("verdict"),
+            "决策里带出新鲜度（verdict=%s）"
+            % ((_dec_f.get("freshness") or {}).get("verdict"),))
+    except Exception as exc:  # noqa: BLE001
+        chk(False, "数据新鲜度官自检异常：%r" % (exc,))
 
     print("\n交易员/风控官自检%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1

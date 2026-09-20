@@ -34,12 +34,13 @@ const js = fs.readFileSync(path.join(root, 'web', 'app.js'), 'utf8');
 
 const store = new Map();          // key -> element
 const rendered = new Map();       // key -> innerHTML（最后一次写入）
+const texts = new Map();          // key -> textContent（最后一次写入）
 
 function makeEl(key) {
   const e = {
     _key: key,
     _html: '',
-    textContent: '',
+    _text: '',
     className: '',
     title: '',
     disabled: false,
@@ -49,6 +50,12 @@ function makeEl(key) {
     onclick: null,
     get innerHTML() { return this._html; },
     set innerHTML(v) { this._html = String(v); rendered.set(this._key, this._html); },
+    /* ⚠️ textContent 也必须被记录。初版只记 innerHTML，于是"只写 textContent
+       的状态"（顶栏那些 meta、加载文案）在检查里恒为空 —— 实测踩到：
+       数据新鲜度用 textContent 写，断言报"没有显示"，而页面其实是好的。
+       这是**测试工具的盲区**，不是页面的 bug：宁可补工具，别改页面去迁就它。 */
+    get textContent() { return this._text; },
+    set textContent(v) { this._text = String(v); texts.set(this._key, this._text); },
     appendChild(c) { this.children.push(c); this.firstChild = this.children[0]; return c; },
     removeChild(c) {
       const i = this.children.indexOf(c);
@@ -222,6 +229,37 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   if (/不可用|暂不可用/.test(rendered.get('verdict') || '')) {
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
+  }
+
+  // ---- 📉 数据新鲜度：顶栏必须写清"有多旧"，且**按模式分开措辞** ----
+  //   两种"旧"在页面上长得一样就白做了：离线演示（声明过的）该安静，
+  //   实时但输入停了该红。这里断言的是"页面没有把这两种混为一谈"。
+  const fresh = (texts.get('fresh-state') || rendered.get('fresh-state') || '');
+  const fbanner = rendered.get('fresh-banner') || '';
+  const fdata = (fixtures['/api/health'] || {}).freshness || {};
+  if (!/(小时|分钟|天)/.test(fresh) || !/(离线演示|实时但输入已停|新鲜|无法判定)/.test(fresh)) {
+    // 断言"有时长 + 有模式词"，而不是某个具体措辞 ——
+    // 文案会改（离线模式的参照系是基准时刻，不是墙钟，措辞必须跟着变），
+    // 但"必须同时说清有多旧 + 处在哪种模式"这条性质不该变。
+    problems.push('顶栏没有把"有多旧 + 哪种模式"说清（fresh-state = ' +
+      JSON.stringify(fresh.slice(0, 50)) + '）');
+  } else if (!fdata.verdict) {
+    problems.push('/api/health 没有返回 freshness（页面无从判断模式）');
+  } else if (fdata.verdict === 'declared_offline') {
+    if (!/离线演示模式/.test(fbanner)) {
+      problems.push('离线演示模式没有如实说明（应当说清"旧是声明过的模式，不是故障"）');
+    } else if (!/滞后/.test(fbanner)) {
+      problems.push('离线说明里没有写具体滞后多少');
+    } else {
+      notes.push('数据新鲜度 ✓（离线声明模式，滞后写清了：' +
+        fresh.replace(/<[^>]+>/g, '').slice(0, 24) + '）');
+    }
+  } else if (fdata.verdict === 'stale') {
+    if (!/数据新鲜度告警/.test(fbanner)) {
+      problems.push('实时但输入已停时没有弹告警横幅');
+    } else {
+      notes.push('数据新鲜度 ✓（stale 告警已弹）');
+    }
   }
 
   // ---- 概览表：**标的多选** + 条件去重 + 图例 ----

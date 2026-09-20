@@ -169,10 +169,78 @@ const RISK_CN = { low: ['低', 'pos'], medium: ['中', ''], high: ['高', 'neg']
 
 /* ---------------- 顶栏 ---------------- */
 
+/* 📉 数据新鲜度：顶栏一句话 + **只在危险时**弹横幅。
+ *
+ * 两种"旧"必须区别对待，否则这个提示会变成恒红、等于没有信号：
+ *   · declared_offline（basis=asof）：离线演示读冻结快照，旧是**声明过的模式**
+ *     -> 顶栏如实写"离线演示 · 滞后 X"，**不弹横幅**；
+ *   · stale（basis=wallclock 且输入落后超阈值）：你以为在实时决策，其实输入停了
+ *     -> 弹红条。这时"旧数据比没有数据更危险"：行情停滞/报价冻结这些按龄判据会失真。 */
+function fmtAge(min) {
+  if (min === null || min === undefined) return '—';
+  if (min < 90) return fmt(min, 1) + ' 分钟';
+  if (min < 60 * 36) return fmt(min / 60, 1) + ' 小时';
+  return fmt(min / 1440, 1) + ' 天';
+}
+
+function renderFreshness(f) {
+  const el = $('fresh-state');
+  const banner = $('fresh-banner');
+  if (!f || !el) return;
+  const v = f.verdict;
+  const age = fmtAge(f.oldest_age_min);
+  const src = f.oldest_file ? ('（最旧：' + f.oldest_file + '）') : '';
+  const cn = {
+    // ⚠️ 离线模式的参照系是**决策基准时刻**（数据自带时刻），不是墙钟。
+    //    写成"滞后 15 小时"会让人以为是"比现在旧 15 小时"，而快照本身比现在旧 33 小时
+    //    —— 两个数都对，但混在一起就说不清了。所以把参照系写进文案里。
+    declared_offline: '离线演示 · 最旧输入早于基准 ' + age,
+    stale: '⚠️ 实时但输入已停 · 滞后 ' + age,
+    ok: '新鲜 · 滞后 ' + age,
+    unknown: '无法判定',
+  }[v] || v;
+  el.textContent = cn;
+  el.title = (f.why || '') + '\n阈值 ' + (f.threshold_min || '—') + ' 分钟';
+  el.className = (v === 'stale') ? 'neg' : '';
+  // 输入源逐条摊开（悬停即可核对，不需要额外页面）。
+  // ⚠️ 要标出**每个源用的是哪个钟**：离线模式下行情按数据自带时刻、
+  //    消息面按墙钟（它天生是"本机抓取的现在"）。不标出来，
+  //    "滞后 11 分钟"和"滞后 1 分钟"会被当成同一把尺子量出来的。
+  const detail = (f.sources || []).map(function (s) {
+    const ref = (s.clock === 'live') ? '按本机时钟' : '按决策基准时刻';
+    return s.label + ' ' + s.file + ' ' + ref + ' 滞后 ' + fmtAge(s.age_min);
+  }).join('　｜　');
+  if (detail) el.title += '\n' + detail;
+
+  if (!banner) return;
+  if (v === 'stale') {
+    banner.hidden = false;
+    banner.innerHTML =
+      '<b>⚠️ 数据新鲜度告警</b>　' + mdInline(f.why || '') +
+      '<div class="mono-dim" style="margin-top:4px">' + esc(detail) + '</div>' +
+      '<div style="margin-top:4px">旧数据比没有数据更危险：' +
+      '「行情停滞」「报价冻结」这类<b>按龄判据</b>会失真，而结论看起来很正常。' +
+      '请先恢复采集，再相信这一页的任何结论。</div>';
+  } else if (v === 'declared_offline') {
+    // 刻意**不弹**横幅：这是声明过的离线模式。但要写清它意味着什么。
+    banner.hidden = false;
+    banner.className = 'fresh-banner fresh-banner-quiet';
+    banner.innerHTML =
+      '<b>离线演示模式</b>　' + mdInline(f.why || '') +
+      '<div class="mono-dim" style="margin-top:4px">' + esc(detail) + '</div>' +
+      '<div style="margin-top:4px">这是<b>声明过的</b>模式，不是故障：所有判据都按' +
+      '数据自带时刻算，所以结论可复跑。要接实时数据见 <code>docs/52</code>。</div>';
+  } else {
+    banner.hidden = true;
+    banner.className = 'fresh-banner';
+  }
+}
+
 async function loadHealth() {
   const h = await api(API.health);
   $('snap-ts').textContent = (h.snapshot && h.snapshot.snapshot_utc) || '—';
   $('n-bases').textContent = (h.bases || []).length + ' 个';
+  renderFreshness(h.freshness);
   const llm = h.llm || {};
   $('llm-state').textContent = llm.configured
     ? ('已配置（' + esc(llm.model || '') + '）')

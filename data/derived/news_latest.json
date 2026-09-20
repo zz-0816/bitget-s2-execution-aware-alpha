@@ -1,12 +1,12 @@
 {
-  "base": "HOOD",
+  "base": "AAPL",
   "categories": {
-    "earnings": 3,
+    "earnings": 2,
     "earnings_scheduled": 8,
     "filing": 3,
     "filing_material": 9,
     "macro": 8,
-    "other": 37
+    "other": 38
   },
   "event_driven": {
     "first_run": false,
@@ -15,6 +15,8 @@
     "should_call_llm": false
   },
   "headlines_for_gate": [
+    "[2026-07-31] AAPL 申报：10-Q（季报）",
+    "[2026-07-30] AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] CHRN 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -23,15 +25,13 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[2026-09-17] HOOD 申报：4（内部人交易（Form 4））",
-    "[2026-09-14] HOOD 申报：4（内部人交易（Form 4））",
-    "[2026-09-10] HOOD 申报：4（内部人交易（Form 4））",
-    "[2026-09-04] HOOD 申报：4（内部人交易（Form 4））"
+    "[2026-09-17] AAPL 申报：4（内部人交易（Form 4））",
+    "[2026-09-10] AAPL 申报：4（内部人交易（Form 4））"
   ],
   "items": [
     {
       "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
+      "company": "Apple Inc.",
       "date": "2026-09-17",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -39,38 +39,12 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000210858926000024/xslF345X06/wk-form4_1789677670.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-15",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009490/xsl144X01/primary_doc.xml"
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126037020/xslF345X06/form4.xml"
     },
     {
       "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-14",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000187091426000025/xslF345X06/wk-form4_1789417999.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
+      "company": "Apple Inc.",
       "date": "2026-09-10",
       "form": "4",
       "form_meaning": "内部人交易（Form 4）",
@@ -78,112 +52,138 @@
       "material": true,
       "relevance": 4,
       "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000181742526000012/xslF345X06/wk-form4_1789074490.xml"
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126036226/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-09-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035636/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035362/xslF345X06/form4.xml"
     },
     {
       "category": "filing",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-10",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "3",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：3",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035359/xslF345X06/form3.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Apple Inc.",
+      "date": "2026-09-01",
+      "form": "8-K/A",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：8-K/A",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126035325/ef20081427_8ka.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-27",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126034741/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126033928/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Apple Inc.",
+      "date": "2026-08-13",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "AAPL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126032884/xslF345X06/form4.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Apple Inc.",
+      "date": "2026-08-11",
       "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "HOOD 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009302/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-08",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000195004726009205/xsl144X01/primary_doc.xml"
+      "title": "AAPL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000195004726007959/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-04",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
+      "company": "Apple Inc.",
+      "date": "2026-07-31",
+      "form": "10-Q",
+      "form_meaning": "季报",
       "kind": "filing",
       "material": true,
-      "relevance": 4,
+      "relevance": 8,
       "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000165921126000018/xslF345X06/wk-form4_1788556464.xml"
+      "title": "AAPL 申报：10-Q（季报）",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
     },
     {
       "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-04",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
+      "company": "Apple Inc.",
+      "date": "2026-07-30",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
       "kind": "filing",
       "material": true,
-      "relevance": 4,
+      "relevance": 8,
       "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170556026000023/xslF345X06/wk-form4_1788556416.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170711226000006/xslF345X06/wk-form4_1788468202.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000210858926000022/xslF345X06/wk-form4_1788468181.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000165921126000016/xslF345X06/wk-form4_1788468153.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Robinhood Markets, Inc.",
-      "date": "2026-09-03",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "HOOD 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1783879/000170556026000021/xslF345X06/wk-form4_1788468129.xml"
+      "title": "AAPL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm"
     },
     {
       "category": "earnings_scheduled",
@@ -635,91 +635,91 @@
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 15:25:44 +0000",
+      "date": "Sun, 20 Sep 2026 13:00:22 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The stock market showed choppy, mixed weekly action. But Robinhood, Sandisk, AMD and Moderna rallied into buy areas.",
-      "title": "Dow Jones Futures: Can The Market Rally Take Flight? Robinhood, Sandisk, AMD, Moderna Surge Into Buy Areas",
-      "url": "https://finance.yahoo.com/m/832159c8-6dc5-38e6-b838-d7db7090ca09/dow-jones-futures%3A-can-the.html?.tsrc=rss"
+      "summary": "Most investors celebrate a stock that turns every dollar into eleven, but holding a massive winner inside a traditional IRA sets up a collision between the IRS and your retirement timeline that gets w",
+      "title": "Turning 73 Forces a Withdrawal From This Stock Whether the Owner Wants the Cash or Not",
+      "url": "https://247wallst.com/personal-finance/2026/09/20/turning-73-forces-a-withdrawal-from-this-stock-whether-the-owner-wants-the-cash-or-not/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 14:11:17 +0000",
+      "date": "Sat, 19 Sep 2026 22:07:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "AI is not so fashionable, in part, because most labs are privately owned, Vlad Tenev said. So that leaves regular investors with no “skin in the game,” he said.",
-      "title": "Robinhood CEO Says Civil Liability May Not Be Enough To Contain Biggest AI Risks",
-      "url": "https://stocktwits.com/news-articles/markets/equity/robinhood-ceo-says-civil-liability-may-not-be-enough-to-contain-biggest-ai-risks/cZtCOyvRBEC?.tsrc=rss"
+      "summary": "The credit is bigger this year. The bill at the register still isn’t zero.",
+      "title": "Bank of America does the math on Apple's $1,200 iPhone offer",
+      "url": "https://www.thestreet.com/markets/bank-of-america-does-the-math-on-apples-1200-iphone-offer?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 12:00:39 +0000",
+      "date": "Sat, 19 Sep 2026 16:03:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Robinhood stock surged in an end-of-week crypto rally. SpaceX is testing an aggressive entry. They lead five stocks near buy points.",
-      "title": "Robinhood Soars, SpaceX Orbits Entry: Five Stocks Near Buy Points",
-      "url": "https://finance.yahoo.com/m/3ea37ac5-5f20-3f34-9833-1eb8ea78898c/robinhood-soars%2C-spacex.html?.tsrc=rss"
+      "summary": "Apple’s price target hike comes on the heels of surprising consumer survey findings.",
+      "title": "Apple gets bullish Wall Street call as iPhone demand jumps",
+      "url": "https://www.thestreet.com/investing/apple-gets-bullish-wall-street-call-as-iphone-demand-jumps?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 08:01:01 +0000",
+      "date": "Sat, 19 Sep 2026 15:11:11 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Customers keep moving billions onto the platform every month. Reaching the milestone needs less help from the market than you might think.",
-      "title": "Prediction: Robinhood Will Pass $500 Billion in Customer Assets in 2027",
-      "url": "https://www.fool.com/investing/2026/09/19/prediction-robinhood-will-pass-usd500-billion-in-customer-assets-in-2027/?.tsrc=rss"
+      "summary": "Coinbase’s filing used an Apple contract as its model, which is cash-settled, has no fixed expiration, and would trade from Sunday to Friday.",
+      "title": "Coinbase Files With CFTC To List US Single-Stock Perpetual Futures, Including AAPL And TSLA Contracts",
+      "url": "https://stocktwits.com/news-articles/markets/equity/coinbase-apple-tesla-perpetual-futures-coin-tsla-aapl/cZtxEhbRBEs?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 22:05:01 +0000",
+      "date": "Sat, 19 Sep 2026 12:50:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The disposal was executed under a pre-established Rule 10b5-1 trading plan adopted in August 2025, reducing the insider's direct stake to 56,858 shares.",
-      "title": "Robinhood CFO Shiv Verma Sells 11,472 Shares for $1.3 Million",
-      "url": "https://www.fool.com/coverage/filings/2026/09/18/robinhood-cfo-shiv-verma-sells-11472-shares-for-13-million/?.tsrc=rss"
+      "summary": "Apple stock just got a price target cut due to the memory processor crunch.",
+      "title": "John Ternus's First iPhone Launch Prompted a Bank of America Price Target Cut. Is Apple Stock a Buy?",
+      "url": "https://www.fool.com/investing/2026/09/19/john-ternuss-first-iphone-launch-prompted-a-bank-o/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 15:00:00 +0000",
+      "date": "Sat, 19 Sep 2026 11:22:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Robinhood’s Abhishek Fatehpuria on winning the modern financial consumer at TechCrunch Disrupt 2026. Register now to save up to $200 before September 25 at 11:59 p.m. PT.",
-      "title": "Robinhood’s Abhishek Fatehpuria on winning the modern financial consumer at TechCrunch Disrupt 2026",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/robinhood-abhishek-fatehpuria-winning-modern-150000018.html?.tsrc=rss"
-    },
-    {
-      "category": "earnings",
-      "date": "Fri, 18 Sep 2026 11:25:02 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tenev made the forecast on Robinhood's February 2026 earnings call, when the business he was describing was running at roughly one dollar in every fifteen of company revenue.",
-      "title": "Robinhood’s CEO Says Prediction Markets Are Starting a ‘Supercycle That Could Drive Trillions In Annual Volume’ After 12 Billion Contracts Traded in 2025",
-      "url": "https://www.barchart.com/story/news/4676731/robinhoods-ceo-says-prediction-markets-are-starting-a-supercycle-that-could-drive-trillions-in-annual-volume-after-12-billion-contracts-traded-in-2025?.tsrc=rss"
+      "summary": "The pride of Cupertino continues its winning ways, and investors are eager to jump on the bandwagon.",
+      "title": "History Says You Should Know These 3 Things Before Buying Apple Stock (AAPL)",
+      "url": "https://www.fool.com/investing/2026/09/19/history-says-3-things-before-buy-apple-stock-aapl/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 11:45:00 +0000",
+      "date": "Sun, 20 Sep 2026 11:10:00 +0000",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The Fed raised rates 25 basis points on Sept. 16, and brokers and exchanges like Interactive Brokers, Robinhood, and CME Group stand to benefit from the new hiking cycle.",
-      "title": "Not Just Banks: 3 Trading Stocks to Watch After the Fed Rate Hike",
-      "url": "https://www.marketbeat.com/articles/not-just-banks-3-trading-stocks-to-watch-after-the-fed-rate-hike/?utm_source=yahoofinance&amp;utm_medium=yahoofinance&amp;.tsrc=rss"
+      "summary": "Buffett bought more than $77 billion of this stock in the years leading up to his retirement.",
+      "title": "Greg Abel Recently Plowed $4.2 Billion Into Warren Buffett's Favorite Stock, and It Wasn't Apple",
+      "url": "https://www.fool.com/investing/2026/09/20/greg-abel-42-billion-warren-buffetts-stock-apple/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Sat, 19 Sep 2026 19:13:00 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Jim Cramer touts a former mobile phone king as an AI buy, though its Q2 cash flow raises questions.",
+      "title": "Cramer strongly recommends buying beaten-down 90s tech legend",
+      "url": "https://www.thestreet.com/investing/stocks/cramer-recommends-nokia-beaten-down-90s-ai-tech?.tsrc=rss"
     },
     {
       "category": "other",
@@ -811,51 +811,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T16:09:12.579381+00:00",
+  "probed_at": "2026-09-20T16:20:16.463961+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.59s",
+      "note": "耗时 1.67s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.96s",
+      "note": "耗时 0.83s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.30s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.37s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.62s",
+      "note": "耗时 0.75s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.63s",
+      "note": "耗时 0.67s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-20": {
       "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.67s",
+      "note": "提前数天（预告）｜ 耗时 2.67s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.62s",
+      "note": "提前数天（预告）｜ 耗时 2.15s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.81s",
+      "note": "耗时 0.63s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.85s",
+      "note": "耗时 0.98s",
       "ok": true
     }
   }

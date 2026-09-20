@@ -1,7 +1,7 @@
 {
  "bootstrapped": true,
- "calls": 64,
- "last_poll": "2026-09-20T16:09:21.636849+00:00",
+ "calls": 66,
+ "last_poll": "2026-09-20T16:20:28.194108+00:00",
  "seen": {
   "http://www.etf.com/sections/daily-etf-flows/daily-etf-flows-soxl-inflows-total-520m?utm_source=yahoo-finance&amp;utm_medium=rss&amp;utm_campaign=yahoo-finance-rss&amp;.tsrc=rss": "2026-09-19T19:42:08.624165+00:00",
   "https://247wallst.com/investing/2026/09/18/amazons-ai-bet-is-already-starting-to-pay-off/?.tsrc=rss": "2026-09-19T19:37:48.870635+00:00",
@@ -10,6 +10,7 @@
   "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss": "2026-09-19T19:37:48.870635+00:00",
   "https://247wallst.com/investing/2026/09/19/3-stocks-to-buy-before-wall-street-catches-on-before-september-ends/?.tsrc=rss": "2026-09-19T19:46:33.184734+00:00",
   "https://247wallst.com/investing/2026/09/20/a-florida-car-dealer-family-spent-60-million-on-a-paris-wedding-heres-how-dealerships-make-that-kind-of-money/?.tsrc=rss": "2026-09-20T09:22:05.686853+00:00",
+  "https://247wallst.com/investing/2026/09/20/analyst-meta-needs-just-115-million-users-to-ignite-a-28-billion-ai-gold-rush-but-its-not-likely-to-happen/?.tsrc=rss": "2026-09-20T16:15:56.903475+00:00",
   "https://247wallst.com/investing/etf/2026/08/04/this-3x-semiconductor-etf-turned-10000-into-56000-then-lost-a-fifth-in-one-month/?.tsrc=rss": "2026-09-19T19:42:08.624165+00:00",
   "https://247wallst.com/investing/etf/2026/08/19/soxl-turns-every-1-nvidia-move-into-3-heres-what-10000-did-in-the-last-12-months/?.tsrc=rss": "2026-09-19T19:42:08.624165+00:00",
   "https://247wallst.com/investing/etf/2026/09/17/500000-split-between-voo-and-qqq-owns-the-same-seven-stocks-twice-and-nobody-adds-up-the-overlap/?.tsrc=rss": "2026-09-19T19:39:58.032108+00:00",
@@ -182,6 +183,7 @@
   "https://www.fool.com/investing/2026/09/20/berkshire-hathaway-s-ceo-now-has-to-consult-howard-buffett-before-buying-back-stock/?.tsrc=rss": "2026-09-20T07:07:01.091440+00:00",
   "https://www.fool.com/investing/2026/09/20/berkshire-hathaways-favorite-artificial-intelligen/?.tsrc=rss": "2026-09-20T14:24:53.073804+00:00",
   "https://www.fool.com/investing/2026/09/20/bill-ackman-has-45-of-his-new-hedge-funds-portfoli/?.tsrc=rss": "2026-09-20T08:34:06.398278+00:00",
+  "https://www.fool.com/investing/2026/09/20/buying-this-hidden-software-stock-might-just-give/?.tsrc=rss": "2026-09-20T16:13:44.495763+00:00",
   "https://www.fool.com/investing/2026/09/20/costco-stock-892-here-what-history-says-comes-next/?.tsrc=rss": "2026-09-20T10:22:55.704978+00:00",
   "https://www.fool.com/investing/2026/09/20/could-5000-invested-in-spacex-help-you-retire-a-mi/?.tsrc=rss": "2026-09-20T14:16:03.803310+00:00",
   "https://www.fool.com/investing/2026/09/20/deltas-non-main-cabin-revenue-hits-61-in-2026-why/?.tsrc=rss": "2026-09-20T15:07:13.602576+00:00",
@@ -193,6 +195,7 @@
   "https://www.fool.com/investing/2026/09/20/openai-just-beat-google-meta-and-amazon-to-this-key-milestone-why-it-s-bullish-for-ai-stocks/?.tsrc=rss": "2026-09-20T15:00:15.971875+00:00",
   "https://www.fool.com/investing/2026/09/20/plug-power-vs-bloom-energy-which-hydrogen-adjacent/?.tsrc=rss": "2026-09-20T06:45:08.601535+00:00",
   "https://www.fool.com/investing/2026/09/20/prediction-anthropics-ipo-will-be-a-big-winner-for/?.tsrc=rss": "2026-09-20T09:48:08.799625+00:00",
+  "https://www.fool.com/investing/2026/09/20/prediction-the-best-performing-big-bank-stock-of/?.tsrc=rss": "2026-09-20T16:13:44.495763+00:00",
   "https://www.fool.com/investing/2026/09/20/september-effect-full-swing-stocks-slump-history/?.tsrc=rss": "2026-09-20T14:16:03.803310+00:00",
   "https://www.fool.com/investing/2026/09/20/sp-500-valuation-26-years-history-suggests-crash/?.tsrc=rss": "2026-09-20T15:29:21.683409+00:00",
   "https://www.fool.com/investing/2026/09/20/stock-market-investors-bad-news-federa-reserve-this-happen-next/?.tsrc=rss": "2026-09-20T09:17:42.557568+00:00",

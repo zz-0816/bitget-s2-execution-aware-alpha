@@ -1,6 +1,14 @@
 /* ============================================================================
-   项目二 · 执行决策台 —— 前端设计系统（v2）
+   项目二 · 执行决策台 —— 前端设计系统（v3 · 功能分区版）
    ============================================================================
+
+   v3 做了什么（相对 v2 的单页长滚动）：
+     · 信息架构：12 个平权面板 → 4 个功能页（决策台 / 执行闭环 / 全标的概览 / 可信度）
+       + 决策台内部的 6 段「决策链步进器」（点一步看一段）
+     · 视觉层次：页标题 22px / 区块标题 16px / 正文 14px，三级分明；
+       侧栏导航常驻，随时知道"我在哪、还有哪些功能"
+     · 动态：功能页切换淡入上浮、步进器状态点 + 顶部状态条、
+       顶栏常驻裁决胶囊（切页不丢上下文）、条形生长、行变更闪烁、骨架屏
 
    设计依据（GitHub 上质量最高、且**可验证**的几个参考）：
      · 色阶  Radix Colors 的 12 级深色语义   https://github.com/radix-ui/colors
@@ -97,7 +105,10 @@
   /* 动效总开关：reduced-motion 时置 0，所有动画时长都乘它 */
   --m: 1;
 
-  --maxw: 1320px;
+  /* ---- 布局 ---- */
+  --maxw: 1400px;
+  --nav-w: 232px;
+  --top-h: 58px;
 }
 
 /* 🔴 无障碍：尊重系统的"减少动态效果"。所有动效都乘 --m，置 0 即整体关闭。 */
@@ -136,19 +147,10 @@ td, .cb-val, .mono, .hashbox, .qty, .stance, .base-name {
 }
 code { font-size: var(--fs-12); }
 
-h2 {
-  font-size: var(--fs-16);
-  font-weight: var(--fw-semi);
-  letter-spacing: .2px;
-  margin: 0 0 var(--sp-3);
-  display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
-}
-h2 .hint { font-size: var(--fs-12); font-weight: var(--fw-normal); color: var(--text-faint); }
-
 a { color: var(--accent-text); }
 a:hover { color: var(--b12); }
 
-/* 键盘可达性：只在键盘聚焦时显示焦点环（鼠标点击不显示） */
+/* 只在键盘聚焦时显示焦点环（鼠标点击不显示） */
 :focus-visible {
   outline: none;
   box-shadow: var(--ring);
@@ -163,11 +165,15 @@ a:hover { color: var(--b12); }
 }
 .skip-link:focus { left: 0; }
 
-/* ============================== 3. 顶栏 ============================== */
+/* 隐藏态：用属性选择器而不是 !important —— 被 hidden 的区块不受本文件任何
+   display 规则影响（UA 的 [hidden]{display:none} 直接生效），
+   顺便也让真浏览器的"元素越界/文字截断"检查跳过它们。 */
+[hidden] { display: none; }
+
+/* ============================== 3. 顶栏（全局状态） ============================== */
 .top {
   position: sticky; top: 0; z-index: 30;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--sp-4); flex-wrap: wrap;
+  display: flex; align-items: center; gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-5);
   background: var(--bg);
   border-bottom: 1px solid var(--line-subtle);
@@ -180,11 +186,12 @@ a:hover { color: var(--b12); }
   }
 }
 
-.brand { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
-.brand h1 { margin: 0; font-size: var(--fs-18); font-weight: var(--fw-bold); letter-spacing: -.2px; }
+.brand { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.brand-text { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-size: var(--fs-18); font-weight: var(--fw-bold); letter-spacing: -.2px; white-space: nowrap; }
 .brand .sub { color: var(--text-faint); font-size: var(--fs-12); }
 
-/* 存活指示灯：呼吸式脉冲（原来只有静态圆点，看不出"还活着"） */
+/* 存活指示灯：呼吸式脉冲（只有静态圆点的话，看不出"还活着"） */
 .dot {
   width: 9px; height: 9px; border-radius: 50%;
   background: var(--s9); display: inline-block; flex: none;
@@ -199,23 +206,129 @@ a:hover { color: var(--b12); }
   100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); opacity: 1; }
 }
 
+/* ⭐ 常驻裁决胶囊：功能页切来切去，当前这一单的结论始终在顶栏看得见 */
+.head-status {
+  margin-left: auto;
+  font-size: var(--fs-12); font-weight: var(--fw-medium);
+  padding: 4px var(--sp-3); border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--text-dim); white-space: nowrap;
+  transition: color var(--dur-3) var(--ease-out-2),
+              border-color var(--dur-3) var(--ease-out-2),
+              background var(--dur-3) var(--ease-out-2);
+}
+.head-status[data-st="proceed"]    { color: var(--ok);     border-color: var(--ok-line);     background: var(--ok-bg); }
+.head-status[data-st="caution"]    { color: var(--warn);   border-color: var(--warn-line);   background: var(--warn-bg); }
+.head-status[data-st="stand_down"] { color: var(--danger); border-color: var(--danger-line); background: var(--danger-bg); }
+
 .session-box {
   display: flex; gap: var(--sp-4); align-items: center; flex-wrap: wrap;
   font-size: var(--fs-12); color: var(--text-dim);
 }
+.session-box .meta { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
 .session-box .k { color: var(--text-faint); }
 
 /* 决策基准时间：按"快照时刻"判定时高亮 —— 这是"结论为什么可信"的关键信息，
    不该和普通元信息混在一起。离线演示若按墙钟算，结论会随时间漂移。 */
 .session-box .basis-asof { color: var(--ok); font-weight: var(--fw-medium); }
 
-/* ============================== 4. 主体与面板 ============================== */
-main {
+/* ============================== 4. 应用外壳（侧栏 + 内容） ============================== */
+.app {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: var(--sp-5) var(--sp-5) 0;
+  display: grid;
+  grid-template-columns: var(--nav-w) minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
 }
 
+/* ---- 侧栏导航（桌面：常驻竖列，跟随滚动） ---- */
+.app-nav {
+  position: sticky;
+  top: calc(var(--top-h) + var(--sp-3));
+  display: flex; flex-direction: column; gap: var(--sp-1);
+  padding: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--r-md);
+}
+
+.nav-item {
+  position: relative;
+  display: flex; align-items: center; gap: var(--sp-3);
+  width: 100%; text-align: left;
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: var(--sp-3);
+  color: var(--text-dim); font: inherit; cursor: pointer;
+  transition: background var(--dur-2) var(--ease-out-2),
+              color var(--dur-2) var(--ease-out-2),
+              border-color var(--dur-2) var(--ease-out-2);
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item .ico {
+  width: 18px; height: 18px; flex: none;
+  color: var(--text-faint);
+  transition: color var(--dur-2) var(--ease-out-2);
+}
+.nav-item:hover .ico { color: var(--text-dim); }
+.nav-item.is-on {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+  font-weight: var(--fw-medium);
+}
+.nav-item.is-on .ico { color: var(--accent); }
+/* 选中项的左侧强调条 —— 3px，不抢内容 */
+.nav-item.is-on::before {
+  content: ""; position: absolute; left: -1px; top: 10px; bottom: 10px;
+  width: 3px; border-radius: 2px; background: var(--accent);
+  animation: nav-mark calc(var(--dur-3) * var(--m)) var(--ease-out-3);
+}
+@keyframes nav-mark { from { transform: scaleY(.3); opacity: .2; } to { transform: none; opacity: 1; } }
+
+.nav-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.nav-label { font-size: var(--fs-14); }
+.nav-hint { font-size: var(--fs-11); color: var(--text-faint); font-weight: var(--fw-normal); }
+
+/* ---- 内容区 ---- */
+.app-main { min-width: 0; }
+
+/* 功能页切换：淡入 + 轻微上浮（尊重 reduced-motion） */
+.pane.is-in { animation: pane-in calc(var(--dur-3) * var(--m)) var(--ease-out-3) both; }
+@keyframes pane-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+/* 页内区块依次入场（stagger），让"这一页有哪几块"一眼看清 */
+.pane.is-in > .panel,
+.pane.is-in > .pane-head {
+  animation: rise calc(var(--dur-4) * var(--m)) var(--ease-out-3) both;
+}
+.pane.is-in > *:nth-child(2) { animation-delay: calc(60ms * var(--m)); }
+.pane.is-in > *:nth-child(3) { animation-delay: calc(120ms * var(--m)); }
+.pane.is-in > *:nth-child(4) { animation-delay: calc(180ms * var(--m)); }
+.pane.is-in > *:nth-child(5) { animation-delay: calc(240ms * var(--m)); }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 页头：页标题 22px，与区块标题（16px）形成清晰的两级层次 */
+.pane-head { margin-bottom: var(--sp-4); }
+.pane-title {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-22); font-weight: var(--fw-bold);
+  letter-spacing: -.3px; line-height: var(--lh-tight);
+}
+.pane-desc {
+  margin: 0; max-width: 74ch;
+  font-size: var(--fs-13); color: var(--text-dim);
+}
+
+/* ============================== 5. 面板（区块） ============================== */
 .panel {
   position: relative;
   background: var(--surface);
@@ -224,26 +337,24 @@ main {
   padding: var(--sp-4) var(--sp-5) var(--sp-5);
   margin-bottom: var(--sp-4);
   box-shadow: var(--e1);
-  /* 入场：淡入 + 轻微上移；--i 由 HTML 给，形成自上而下的错落节奏 */
-  opacity: 0;
-  animation: rise calc(var(--dur-4) * var(--m)) var(--ease-out-3) forwards;
-  animation-delay: calc(var(--i, 0) * 70ms * var(--m));
+  transition: border-color var(--dur-2) var(--ease-out-2);
 }
 .panel:hover { border-color: var(--line); }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
+/* 区块标题：16px + 左侧序号条，与"决策链"的心智模型对齐 */
+.panel-title {
+  margin: 0 0 var(--sp-3);
+  display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
+  font-size: var(--fs-16); font-weight: var(--fw-semi); letter-spacing: .2px;
 }
-
-/* 标题左侧的序号条 —— 与"决策链"的心智模型对齐 */
-.panel > h2::before {
+.panel-title::before {
   content: ""; width: 3px; height: 14px; border-radius: 2px;
   background: var(--accent); flex: none; opacity: .85;
 }
+.panel-title .hint { font-size: var(--fs-12); font-weight: var(--fw-normal); color: var(--text-faint); }
 
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
-@media (max-width: 1040px) { .grid2 { grid-template-columns: 1fr; } }
+/* 运行控制面板：视觉上比"结果区"更靠前，给一层浅浅的强调底 */
+.panel-run { background: var(--surface); border-color: var(--line); }
 
 .disclaimer {
   border-left: 3px solid var(--warn);
@@ -258,7 +369,7 @@ main {
 }
 .disclaimer b { color: var(--a9); }
 
-/* ============================== 5. 控件 ============================== */
+/* ============================== 6. 控件 ============================== */
 .controls {
   display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap;
   margin-bottom: var(--sp-4);
@@ -266,6 +377,9 @@ main {
   border-bottom: 1px dashed var(--line-subtle);
 }
 .controls label { color: var(--text-faint); font-size: var(--fs-12); }
+.field { display: inline-flex; align-items: center; gap: var(--sp-2); }
+
+.chips { display: inline-flex; gap: var(--sp-1); flex-wrap: wrap; }
 
 .chip {
   padding: 5px var(--sp-3);
@@ -273,8 +387,7 @@ main {
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--text-dim);
-  cursor: pointer; font-size: var(--fs-13);
-  user-select: none;
+  cursor: pointer; font-size: var(--fs-13); font-family: inherit;
   transition: background var(--dur-2) var(--ease-out-2),
               border-color var(--dur-2) var(--ease-out-2),
               color var(--dur-2) var(--ease-out-2),
@@ -309,34 +422,52 @@ select:hover { border-color: var(--line-strong); }
 /* 原生 option 在 Windows/Chrome 下不继承上面的底色，得单独给 */
 select option { background: var(--surface-2); color: var(--text); }
 
-button {
-  background: var(--accent); color: var(--on-accent);
-  border: 0; border-radius: var(--r-sm);
-  padding: 7px var(--sp-4); font-size: var(--fs-13); font-weight: var(--fw-semi);
-  cursor: pointer; font-family: inherit;
+/* 按钮基类：只有 .btn 才是"实心/幽灵按钮"，导航项与步进器各自独立，
+   避免全局 button 规则误伤 */
+.btn {
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  padding: 7px var(--sp-4);
+  font-size: var(--fs-13); font-weight: var(--fw-semi);
+  font-family: inherit; cursor: pointer;
   transition: background var(--dur-2) var(--ease-out-2),
+              border-color var(--dur-2) var(--ease-out-2),
+              color var(--dur-2) var(--ease-out-2),
               transform var(--dur-1) var(--ease-out-2);
 }
-button:hover { background: var(--b10); }
-button:active { transform: translateY(1px); }
-button[disabled] { opacity: .55; cursor: progress; transform: none; }
-button.ghost {
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--b10); }
+.btn-ghost {
   background: var(--surface-2); color: var(--text-dim);
-  border: 1px solid var(--line); font-weight: var(--fw-normal);
+  border-color: var(--line); font-weight: var(--fw-normal);
 }
-button.ghost:hover { background: var(--surface-hover); color: var(--text); border-color: var(--line-strong); }
+.btn-ghost:hover {
+  background: var(--surface-hover); color: var(--text);
+  border-color: var(--line-strong);
+}
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .55; cursor: progress; transform: none; }
 
-/* ============================== 6. 裁决条 ============================== */
+/* ============================== 7. 裁决条 ============================== */
 .verdict-bar {
   display: flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap;
   border-radius: var(--r-md); padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--line-subtle); background: var(--surface-2);
   transition: border-color var(--dur-3) var(--ease-out-2),
               background var(--dur-3) var(--ease-out-2);
+  animation: verdict-in calc(var(--dur-4) * var(--m)) var(--ease-out-3) both;
 }
-.verdict-bar .stance { font-size: var(--fs-27); font-weight: var(--fw-bold); letter-spacing: -.5px; line-height: var(--lh-tight); }
+@keyframes verdict-in {
+  from { opacity: 0; transform: translateY(6px) scale(.995); }
+  to   { opacity: 1; transform: none; }
+}
+.verdict-bar .stance {
+  font-size: var(--fs-27); font-weight: var(--fw-bold);
+  letter-spacing: -.5px; line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+}
 .verdict-bar .qty { font-size: var(--fs-18); font-weight: var(--fw-semi); }
 .verdict-bar .why { color: var(--text-dim); font-size: var(--fs-13); flex: 1 1 320px; min-width: 240px; }
+.verdict-bar .vblock { display: flex; flex-direction: column; gap: 2px; }
 
 .verdict-bar.proceed    { border-color: var(--ok-line);     background: var(--ok-bg); }
 .verdict-bar.proceed .stance    { color: var(--ok); }
@@ -345,26 +476,73 @@ button.ghost:hover { background: var(--surface-hover); color: var(--text); borde
 .verdict-bar.stand_down { border-color: var(--danger-line); background: var(--danger-bg); }
 .verdict-bar.stand_down .stance { color: var(--danger); }
 
-/* ============================== 7. 阶段条 ============================== */
-.stages { display: flex; gap: var(--sp-2); overflow-x: auto; padding: var(--sp-1) 0 var(--sp-2); }
+/* ============================== 8. 决策链步进器 ============================== */
+/* 6 段链条横排：一眼看清"整条链有哪几段、每段什么结论"，
+   点其中一段，下方详情区切到那一段的完整面板。 */
+.stages {
+  display: flex; gap: var(--sp-2);
+  overflow-x: auto;
+  padding: var(--sp-1) var(--sp-1) var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
 .stage {
-  min-width: 158px; flex: 1 1 158px;
+  position: relative;
+  min-width: 172px; flex: 1 1 172px;
+  display: flex; flex-direction: column; gap: 2px;
+  text-align: left;
   background: var(--surface-2); border: 1px solid var(--line-subtle);
   border-radius: var(--r-sm); padding: var(--sp-3);
+  color: var(--text); font: inherit; cursor: pointer;
   transition: transform var(--dur-2) var(--ease-out-2),
-              border-color var(--dur-2) var(--ease-out-2);
+              border-color var(--dur-2) var(--ease-out-2),
+              background var(--dur-2) var(--ease-out-2);
+}
+/* 顶部状态条：这一段判成了什么（颜色由 data-st 决定） */
+.stage::before {
+  content: ""; position: absolute; left: var(--sp-3); right: var(--sp-3); top: 0;
+  height: 3px; border-radius: 0 0 2px 2px; background: var(--line);
+  transition: background var(--dur-3) var(--ease-out-2);
 }
 .stage:hover { transform: translateY(-2px); border-color: var(--line); }
-.stage .s-name   { font-size: var(--fs-11); color: var(--text-faint); letter-spacing: .4px; }
-.stage .s-stance { font-size: var(--fs-14); font-weight: var(--fw-semi); margin: 2px 0; }
-.stage .s-detail { font-size: var(--fs-11); color: var(--text-dim); line-height: 1.45; }
+.stage.is-on {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.stage.is-on .s-name { color: var(--text-dim); }
+
+.stage[data-st="proceed"]::before    { background: var(--solid-ok); }
+.stage[data-st="caution"]::before    { background: var(--warn); }
+.stage[data-st="stand_down"]::before { background: var(--solid-danger); }
+
+.s-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.s-name { font-size: var(--fs-11); color: var(--text-faint); letter-spacing: .4px; }
+.s-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--s9);
+  transition: background var(--dur-3) var(--ease-out-2);
+}
+.s-dot[data-st="proceed"]    { background: var(--solid-ok); }
+.s-dot[data-st="caution"]    { background: var(--warn); }
+.s-dot[data-st="stand_down"] { background: var(--solid-danger); }
+.s-stance { font-size: var(--fs-14); font-weight: var(--fw-semi); margin: 2px 0; }
+.s-detail { font-size: var(--fs-11); color: var(--text-dim); line-height: 1.45; }
 
 .s-proceed { color: var(--ok); }
 .s-caution { color: var(--warn); }
 .s-stand_down { color: var(--danger); }
 
-/* ============================== 8. 分析师卡 ============================== */
-.analysts { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--sp-3); }
+/* ============================== 9. 详情区（步进器选中的那一段） ============================== */
+.detail { position: relative; }
+.detail-panel { animation: detail-in calc(var(--dur-3) * var(--m)) var(--ease-out-3) both; }
+@keyframes detail-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ============================== 10. 分析师卡 ============================== */
+.analysts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-3); }
 .acard {
   background: var(--surface-2); border: 1px solid var(--line-subtle);
   border-radius: var(--r-sm); padding: var(--sp-3);
@@ -379,7 +557,23 @@ button.ghost:hover { background: var(--surface-hover); color: var(--text); borde
 .acard .a-notes { font-size: var(--fs-12); color: var(--text-dim); margin-top: var(--sp-2); }
 .acard .a-ev { margin-top: var(--sp-2); border-top: 1px dashed var(--line-subtle); padding-top: var(--sp-2); }
 .acard .a-ev div { font-size: var(--fs-11); color: var(--s11); line-height: 1.6; }
-.acard .a-src { font-size: var(--fs-11); color: var(--text-faint); margin-top: var(--sp-1); word-break: break-all; }
+.acard .a-src { margin-top: var(--sp-2); }
+
+/* 证据来源：默认折叠成一行"备注"，点开才列出 指标 → 文件。
+   为什么收起来：一张卡上十来个指标各挂一条路径，既占版面又没人看；
+   但"每个数字都能点回数据文件"是本项目的底线，所以只收不删。 */
+.acard .a-src summary {
+  font-size: var(--fs-11); color: var(--text-faint);
+  cursor: pointer; list-style-position: inside;
+  transition: color var(--dur-2) var(--ease-out-2);
+}
+.acard .a-src summary:hover { color: var(--text-dim); }
+.acard .a-src[open] summary { color: var(--text-dim); }
+.acard .a-src-list { margin-top: var(--sp-1); }
+.acard .a-src-list div {
+  font-size: var(--fs-11); color: var(--text-faint);
+  line-height: 1.55; word-break: break-all;
+}
 
 .badge {
   font-size: var(--fs-11); padding: 1px var(--sp-2); border-radius: var(--r-pill);
@@ -389,7 +583,7 @@ button.ghost:hover { background: var(--surface-hover); color: var(--text); borde
 .badge.unfavorable { color: var(--danger); border-color: var(--danger-line); background: var(--danger-bg); }
 .badge.neutral     { color: var(--warn);   border-color: var(--warn-line);   background: var(--warn-bg); }
 
-/* ============================== 9. 表格 ============================== */
+/* ============================== 11. 表格 ============================== */
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
 th, td {
   text-align: left; padding: var(--sp-2) var(--sp-3);
@@ -413,28 +607,24 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 .pos { color: var(--ok); }
 .neg { color: var(--danger); }
 
-/* 理由/警告行（风险与理由区块） */
-.r-line { font-size: var(--fs-12); color: var(--text-dim); line-height: 1.6; }
-.r-warn { color: var(--warn); }
-.r-cell { min-width: 260px; }
-
 /* 数值刷新时的闪烁 —— 数据密集页面的关键反馈（"哪一格变了"） */
 @keyframes flash-up   { from { background: rgba(48, 164, 108, .30); } to { background: transparent; } }
 @keyframes flash-down { from { background: rgba(229, 72, 77, .28); }  to { background: transparent; } }
 .flash-up   { animation: flash-up   calc(900ms * var(--m)) var(--ease-out-3); }
 .flash-down { animation: flash-down calc(900ms * var(--m)) var(--ease-out-3); }
 
-/* ============================== 10. 成本条 ============================== */
+/* ============================== 12. 成本条 ============================== */
 .costbar { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-1) 0; font-size: var(--fs-12); }
 .costbar .cb-name  { width: 148px; flex: 0 0 148px; color: var(--text-dim); }
 .costbar .cb-track {
   flex: 1; height: 14px; background: var(--surface-2);
-  border-radius: var(--r-xs); overflow: hidden;
+  border-radius: var(--r-xs);
   border: 1px solid var(--line-subtle);
 }
 .costbar .cb-fill {
   height: 100%; width: 0;
   background: linear-gradient(90deg, var(--b7), var(--b9));
+  border-radius: var(--r-xs);
   /* 入场时从 0 长到目标宽度（宽度由 app.js 设置） */
   transition: width calc(var(--dur-4) * var(--m)) var(--ease-out-3);
 }
@@ -448,7 +638,7 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
   color: var(--danger); font-size: var(--fs-11);
 }
 
-/* ============================== 11. 辩论 ============================== */
+/* ============================== 13. 辩论 ============================== */
 .debate-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 @media (max-width: 820px) { .debate-split { grid-template-columns: 1fr; } }
 
@@ -471,7 +661,7 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 }
 .cross .cx { border-left: 2px solid var(--b8); padding-left: var(--sp-3); margin: var(--sp-2) 0; color: var(--s11); }
 
-/* ============================== 12. 标签 ============================== */
+/* ============================== 14. 标签 ============================== */
 .tag {
   font-size: var(--fs-11); padding: 1px var(--sp-2);
   border-radius: var(--r-xs); background: var(--surface-2);
@@ -482,7 +672,7 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 .tag.caution { color: var(--warn);   border-color: var(--warn-line);   background: var(--warn-bg); }
 .tag.agent   { color: var(--b11);    border-color: var(--b7);          background: var(--b1); }
 
-/* ============================== 13. 溯源 ============================== */
+/* ============================== 15. 溯源 ============================== */
 .prov { font-size: var(--fs-12); color: var(--text-dim); }
 .prov code { color: var(--s11); word-break: break-all; }
 .hashbox {
@@ -491,7 +681,7 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
   overflow-x: auto;
 }
 
-/* ============================== 14. Markdown（快照渲染）============================== */
+/* ============================== 16. Markdown（快照渲染）============================== */
 .md { font-size: var(--fs-13); }
 .md h1 { font-size: var(--fs-16); margin: 0 0 var(--sp-2); }
 .md h2 { font-size: var(--fs-14); margin: var(--sp-5) 0 var(--sp-2); }
@@ -505,8 +695,8 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 .md ul { padding-left: var(--sp-5); color: var(--text-dim); }
 .md table { margin: var(--sp-2) 0; }
 
-/* ============================== 15. 加载态 ============================== */
-/* 原来只有一行"加载中…"；现在给一个转圈，让等待可感知 */
+/* ============================== 17. 加载态 ============================== */
+/* 等待要可感知：给一个转圈，而不是光写一行"加载中…" */
 .loading {
   color: var(--text-faint); font-size: var(--fs-13);
   display: inline-flex; align-items: center; gap: var(--sp-2);
@@ -518,8 +708,9 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* 骨架屏：给"还没有内容"的格子一个会流动的占位 */
+/* 骨架屏：给"还没有内容"的格子一个会流动的占位（概览要跑 10 个标的，等得久） */
 .skeleton {
+  display: inline-block; width: 100%; min-height: 12px; vertical-align: middle;
   background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 37%, var(--surface-2) 63%);
   background-size: 400% 100%;
   animation: shimmer calc(1.4s * var(--m)) var(--ease-in-out-3) infinite;
@@ -527,7 +718,7 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
-/* ============================== 16. 告警弹窗 ============================== */
+/* ============================== 18. 告警弹窗 ============================== */
 #toasts {
   position: fixed; right: var(--sp-4); bottom: var(--sp-4); z-index: 50;
   display: flex; flex-direction: column; gap: var(--sp-2); max-width: 348px;
@@ -553,19 +744,45 @@ tr.agent-rule td:first-child { color: var(--b11); font-weight: var(--fw-semi); }
 @keyframes toast-in { from { opacity: 0; transform: translateX(16px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 
-/* ============================== 17. 页脚 ============================== */
+/* ============================== 19. 页脚 / 无脚本提示 ============================== */
 footer.bottom {
   max-width: var(--maxw); margin: 0 auto;
   padding: var(--sp-2) var(--sp-5) var(--sp-6);
   color: var(--text-faint); font-size: var(--fs-12);
 }
+.noscript-box { margin: var(--sp-4) var(--sp-5); }
 
-/* ============================== 18. 窄屏 ============================== */
-@media (max-width: 720px) {
-  main { padding: var(--sp-4) var(--sp-3) 0; }
+/* ============================== 20. 响应式 ============================== */
+/* 窄屏：侧栏落成横向可滑的功能切换条，内容占满整宽 */
+@media (max-width: 1080px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-3) 0;
+  }
+  .app-nav {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: var(--sp-2);
+  }
+  .nav-item { width: auto; flex: 0 0 auto; }
+  .nav-item.is-on::before {
+    left: var(--sp-3); right: var(--sp-3); top: auto; bottom: -1px;
+    width: auto; height: 3px;
+  }
+  .nav-hint { display: none; }
+  .pane-title { font-size: var(--fs-18); }
   .top { padding: var(--sp-3); }
+  .head-status { margin-left: 0; order: 3; }
+  footer.bottom { padding: var(--sp-2) var(--sp-3) var(--sp-6); }
+}
+
+@media (max-width: 720px) {
+  .panel { padding: var(--sp-3) var(--sp-4) var(--sp-4); }
   th, td { padding: var(--sp-2); }
   .costbar .cb-name { width: 110px; flex-basis: 110px; }
   .verdict-bar { gap: var(--sp-3); padding: var(--sp-3); }
   .verdict-bar .stance { font-size: var(--fs-22); }
+  .stage { min-width: 156px; flex-basis: 156px; }
 }

@@ -14,3 +14,11 @@ data/run/
 # 事件驱动降本的状态（T4-B）：运行时产物，不进库（news_state.json 仍由 news_sources.py 管理）
 data/derived/event_driven_state.json
 _tmp_*
+
+# 外部协作工具的本地状态（不是本项目内容，只存在于本机）
+# 说明：这类目录「存在但不该进库」——直接删可能弄坏在用的工具，所以选择**忽略**而不是删。
+.workbuddy/
+.claude/
+.cursor/
+.idea/
+.vscode/

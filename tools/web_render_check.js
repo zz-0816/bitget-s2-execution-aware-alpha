@@ -118,7 +118,13 @@ function matchFixture(full) {
     }
     if (ok) return k;
   }
-  return null;
+  /* ⚠️ 兜底：夹具是按**路径**存的（`collect()` 对非 decision 端点只存路径），
+     而页面一定会带上参数（`/api/overview?qty=5000`）。少了这一步，概览端点
+     就会 404 → 页面渲染出"加载失败"，而本检查只看 undefined/NaN/加载中，
+     **会把一个从未渲染成功的区块判成通过**（实测：全标的概览表长期只渲染
+     出 86 字符的报错行）。参数化的端点用同一份夹具近似即可 —— 这里验证的是
+     "这一块有没有渲染出来"，不是参数的逐字精确性。 */
+  return cands.includes(path) ? path : null;
 }
 
 const fetchShim = async (url) => {

@@ -14,139 +14,223 @@
 <!-- 键盘用户先看到的第一个可聚焦元素 -->
 <a class="skip-link" href="#main">跳到主内容</a>
 
+<!-- ═══════════════════ 顶栏：全局状态（不随功能页切换而变化） ═══════════════════ -->
 <header class="top">
   <div class="brand">
     <span class="dot" id="live-dot" role="img" aria-label="服务状态"></span>
-    <h1>执行决策台</h1>
-    <span class="sub">项目二 · Execution-aware Alpha ｜ 给定盘口与目标仓位：吃 / 挂 / 挂哪 / 分几笔</span>
+    <span class="brand-text">
+      <h1>执行决策台</h1>
+      <span class="sub">项目二 · Execution-aware Alpha ｜ 吃 / 挂 / 挂哪 / 分几笔</span>
+    </span>
   </div>
+  <span class="head-status" id="head-status" role="status" aria-live="polite">尚未运行</span>
   <div class="session-box">
-    <span><span class="k">数据快照</span> <span id="snap-ts">读取中…</span></span>
-    <span><span class="k">决策基准</span> <span id="basis-ts" title="离线演示读的是冻结快照：按数据自带时刻判定，否则时间衰减规则会把冻结数据误判成『行情停滞』">读取中…</span></span>
-    <span><span class="k">LLM</span> <span id="llm-state">—</span></span>
-    <span><span class="k">标的</span> <span id="n-bases">—</span></span>
+    <span class="meta"><span class="k">数据快照</span><span id="snap-ts">读取中…</span></span>
+    <span class="meta"><span class="k">决策基准</span><span id="basis-ts" title="离线演示读的是冻结快照：按数据自带时刻判定，否则时间衰减规则会把冻结数据误判成『行情停滞』">读取中…</span></span>
+    <span class="meta"><span class="k">LLM</span><span id="llm-state">—</span></span>
+    <span class="meta"><span class="k">标的</span><span id="n-bases">—</span></span>
   </div>
 </header>
 
-<main id="main">
-  <div class="disclaimer" id="disclaimer">加载中…</div>
+<!-- ═══════════════════ 应用外壳：左侧功能导航 + 右侧内容区 ═══════════════════ -->
+<div class="app">
 
-  <!-- ══════════ 1. 决策链主视图 ══════════ -->
-  <section class="panel" style="--i:0">
-    <h2>执行决策链
-      <span class="hint">5 路独立分析 → 多空辩论 → 事件闸门 → 交易员 → 风控官（一票否决）→ 最终决策</span>
-    </h2>
-    <div class="controls">
-      <span class="chip" id="base-chips"></span>
-      <label for="qty">名义额 USD</label>
-      <input type="number" id="qty" value="5000" min="100" step="1000" />
-      <button id="run">跑完整决策链</button>
-      <button id="run-overview" class="ghost">刷新全标的概览</button>
-      <span class="loading" id="run-state" role="status" aria-live="polite"></span>
-    </div>
-    <div id="verdict"><div class="loading">选一个标的，点「跑完整决策链」。这一页上的每个数字都能点回代码常量或数据文件。</div></div>
-    <div class="stages" id="stages"></div>
-  </section>
+  <nav class="app-nav" id="app-nav" aria-label="功能区切换">
+    <button type="button" class="nav-item is-on" id="tab-decision" aria-current="page"
+            aria-controls="pane-decision" data-pane="pane-decision">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2.2v3M12 18.8v3M2.2 12h3M18.8 12h3"/></svg>
+      <span class="nav-text"><span class="nav-label">决策台</span><span class="nav-hint">跑一单 · 看完整决策链</span></span>
+    </button>
+    <button type="button" class="nav-item" id="tab-exec"
+            aria-controls="pane-exec" data-pane="pane-exec">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.6 12a8.6 8.6 0 1 1-2.5-6.1"/><path d="M20.8 3.6v5.1h-5.1"/><path d="M12 7.8v4.7l3.1 1.8"/></svg>
+      <span class="nav-text"><span class="nav-label">执行闭环</span><span class="nav-hint">下单之后怎么办</span></span>
+    </button>
+    <button type="button" class="nav-item" id="tab-overview"
+            aria-controls="pane-overview" data-pane="pane-overview">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.6"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.6"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.6"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.6"/></svg>
+      <span class="nav-text"><span class="nav-label">全标的概览</span><span class="nav-hint">10 个标的横向对比</span></span>
+    </button>
+    <button type="button" class="nav-item" id="tab-trust"
+            aria-controls="pane-trust" data-pane="pane-trust">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3.2l6.9 2.9v5.4c0 4.2-2.8 7.4-6.9 9.3-4.1-1.9-6.9-5.1-6.9-9.3V6.1z"/><path d="M8.8 12.1l2.2 2.2 4.2-4.4"/></svg>
+      <span class="nav-text"><span class="nav-label">可信度</span><span class="nav-hint">阈值 · 溯源 · 数据边界</span></span>
+    </button>
+  </nav>
 
-  <!-- ══════════ 2. 五路分析师 ══════════ -->
-  <section class="panel" style="--i:1">
-    <h2>① 五路独立分析
-      <span class="hint">互不读对方结论；<strong>没有引用已实测的量的结论一律作废</strong></span>
-    </h2>
-    <div class="analysts" id="analysts"><div class="loading">尚未运行</div></div>
-  </section>
+  <main id="main" class="app-main">
+    <div class="disclaimer" id="disclaimer">加载中…</div>
 
-  <!-- ══════════ 3. 辩论 + 闸门 ══════════ -->
-  <div class="grid2">
-    <section class="panel" style="--i:2">
-      <h2>② 多空辩论 <span class="hint">每条论点必须给证伪条件；同一证伪条件只算一条</span></h2>
-      <div id="debate"><div class="loading">尚未运行</div></div>
+    <!-- ══════════════════════ 功能页 1 · 决策台 ══════════════════════ -->
+    <section class="pane" id="pane-decision" role="region" aria-label="决策台" tabindex="-1">
+      <div class="pane-head">
+        <h2 class="pane-title">决策台</h2>
+        <p class="pane-desc">给定盘口与目标名义额，跑完整决策链：五路独立分析 → 多空辩论 → 事件闸门 → 交易员 → 风控官（一票否决）→ 最终决策。<b>不代下单</b>，输出的是理由与条件。</p>
+      </div>
+
+      <div class="panel panel-run">
+        <h2 class="panel-title">运行控制
+          <span class="hint">选标的、给名义额，然后点「跑完整决策链」；页面每次刷新都重新跑，不读缓存结论</span>
+        </h2>
+        <div class="controls">
+          <span class="chips" id="base-chips"></span>
+          <span class="field">
+            <label for="qty">名义额 USD</label>
+            <input type="number" id="qty" value="5000" min="100" step="1000" />
+          </span>
+          <button id="run" class="btn btn-primary">跑完整决策链</button>
+          <button id="run-overview" class="btn btn-ghost">刷新全标的概览</button>
+          <span class="loading" id="run-state" role="status" aria-live="polite"></span>
+        </div>
+        <div id="verdict"><div class="loading">选一个标的，点「跑完整决策链」。这一页上的每个数字都能点回代码常量或数据文件。</div></div>
+        <div class="stages" id="stages" role="tablist" aria-label="决策链阶段"></div>
+      </div>
+
+      <div class="detail" id="stage-detail">
+        <section class="panel detail-panel" id="p-analysts" role="tabpanel" aria-label="五路独立分析">
+          <h2 class="panel-title">① 五路独立分析
+            <span class="hint">互不读对方结论；<b>没有引用已实测的量的结论一律作废</b></span>
+          </h2>
+          <div class="analysts" id="analysts"><div class="loading">尚未运行</div></div>
+        </section>
+
+        <section class="panel detail-panel" id="p-debate" role="tabpanel" aria-label="多空辩论" hidden>
+          <h2 class="panel-title">② 多空辩论
+            <span class="hint">每条论点必须给证伪条件；同一证伪条件只算一条</span>
+          </h2>
+          <div id="debate"><div class="loading">尚未运行</div></div>
+        </section>
+
+        <section class="panel detail-panel" id="p-gate" role="tabpanel" aria-label="事件闸门" hidden>
+          <h2 class="panel-title">③ 事件闸门
+            <span class="hint">LLM 在运行期的唯一职责；硬闸门取确定性日历与 LLM 判定中更保守的一侧</span>
+          </h2>
+          <div id="gate"><div class="loading">尚未运行</div></div>
+        </section>
+
+        <section class="panel detail-panel" id="p-trader" role="tabpanel" aria-label="交易员" hidden>
+          <h2 class="panel-title">④ 交易员
+            <span class="hint">不新造阈值、不做价格预测；只如实报与门槛的差距</span>
+          </h2>
+          <div id="trader"><div class="loading">尚未运行</div></div>
+        </section>
+
+        <section class="panel detail-panel" id="p-risk" role="tabpanel" aria-label="风控官" hidden>
+          <h2 class="panel-title">⑤ 风控官
+            <span class="hint">一票否决；只收紧，不放松</span>
+          </h2>
+          <div id="risk"><div class="loading">尚未运行</div></div>
+        </section>
+
+        <section class="panel detail-panel" id="p-final" role="tabpanel" aria-label="最终决策" hidden>
+          <h2 class="panel-title">⑥ 最终决策
+            <span class="hint">这一单到底怎么下；或者为什么不下</span>
+          </h2>
+          <div id="final-plan"><div class="loading">尚未运行</div></div>
+        </section>
+      </div>
     </section>
-    <section class="panel" style="--i:3">
-      <h2>③ 事件闸门 <span class="hint">LLM 在运行期的唯一职责</span></h2>
-      <div id="gate"><div class="loading">尚未运行</div></div>
+
+    <!-- ══════════════════════ 功能页 2 · 执行闭环 ══════════════════════ -->
+    <section class="pane" id="pane-exec" role="region" aria-label="执行闭环" tabindex="-1" hidden>
+      <div class="pane-head">
+        <h2 class="pane-title">执行闭环</h2>
+        <p class="pane-desc">下单<b>之后</b>那一段：裸露敞口 / 挂单停滞。这是赛道三「执行辅助」点名要的部分 —— 没有在途订单时它不产出任何结论，也<b>不会画绿灯</b>（没有数据 ≠ 没有风险）。</p>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">⑥ 执行进度官
+          <span class="hint">三条硬规矩：无在途订单就不出结论 · 合成演示单必须显眼标注 · 不给新价位与新规模</span>
+        </h2>
+        <div class="controls">
+          <span class="field">
+            <label for="pos-mode">在途持仓</label>
+            <select id="pos-mode" title="持仓单由用户/上层提供；本服务只读不写。没有在途订单时这一块不显示结论 —— 没有数据 ≠ 没有风险">
+              <option value="demo">合成演示单：现货腿已成交 / 永续腿未成交</option>
+              <option value="auto">自动读 data/positions/open.json</option>
+              <option value="none">不带上在途订单（看没有持仓的样子）</option>
+            </select>
+          </span>
+          <span class="loading" id="pos-state" role="status" aria-live="polite"></span>
+        </div>
+        <div id="execprog"><div class="loading">尚未运行</div></div>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">成本与联合成交分布
+          <span class="hint">实测取代独立假设</span>
+        </h2>
+        <div id="cost"><div class="loading">尚未运行</div></div>
+      </div>
     </section>
-  </div>
 
-  <!-- ══════════ 4. 交易员 + 风控官 ══════════ -->
-  <div class="grid2">
-    <section class="panel" style="--i:4">
-      <h2>④ 交易员 <span class="hint">不新造阈值、不做价格预测</span></h2>
-      <div id="trader"><div class="loading">尚未运行</div></div>
+    <!-- ══════════════════════ 功能页 3 · 全标的概览 ══════════════════════ -->
+    <section class="pane" id="pane-overview" role="region" aria-label="全标的概览" tabindex="-1" hidden>
+      <div class="pane-head">
+        <h2 class="pane-title">全标的概览</h2>
+        <p class="pane-desc">风险与理由（<b>不代下单</b>，只给理由与条件）。点标的名可以直接跳到决策台，并立刻跑这个标的的决策链。</p>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">横向对比
+          <span class="hint">每一行的理由都能回溯到数据文件；没有可回溯事件来源的标的，事件置信度已被压低</span>
+        </h2>
+        <div class="table-wrap">
+          <table id="ov-table">
+            <thead><tr>
+              <th>标的</th><th>风险</th><th>结论</th>
+              <th class="sep">可核验理由 / 警告</th>
+              <th class="sep">条件</th><th class="sep">事件严重度</th>
+            </tr></thead>
+            <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="hint" id="ov-note"></p>
+      </div>
     </section>
-    <section class="panel" style="--i:5">
-      <h2>⑤ 风控官 <span class="hint">一票否决；只收紧，不放松</span></h2>
-      <div id="risk"><div class="loading">尚未运行</div></div>
+
+    <!-- ══════════════════════ 功能页 4 · 可信度 ══════════════════════ -->
+    <section class="pane" id="pane-trust" role="region" aria-label="可信度与数据边界" tabindex="-1" hidden>
+      <div class="pane-head">
+        <h2 class="pane-title">可信度</h2>
+        <p class="pane-desc">页面上每个数字都能点回一个代码常量或数据文件：生效阈值与来源、可复跑溯源、以及诚实标注的数据边界。</p>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">生效阈值与来源
+          <span class="hint">页面上每个判断都由这些常量决定；它们全部来自实测</span>
+        </h2>
+        <div class="table-wrap">
+          <table id="params-table">
+            <thead><tr><th>参数</th><th>值</th><th>单位</th><th class="sep">来源</th><th class="sep">代码位置</th></tr></thead>
+            <tbody><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">可复跑溯源
+          <span class="hint">参数 + 阈值 + 输入 SHA256 + decision_hash</span>
+        </h2>
+        <div id="prov"><div class="loading">尚未运行</div></div>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">数据边界
+          <span class="hint">诚实标注局限 —— 这份清单可用 <code>--verify</code> 就地核验</span>
+        </h2>
+        <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
+      </div>
     </section>
-  </div>
-
-  <!-- ══════════ 4b. 执行进度官（执行中闭环） ══════════ -->
-  <section class="panel" style="--i:6">
-    <h2>⑥ 执行进度官 <span class="hint">下单<strong>之后</strong>怎么办 —— 裸露敞口 / 挂单停滞。这是赛道三「执行辅助」点名要的那一段</span></h2>
-    <div class="controls">
-      <label for="pos-mode">在途持仓</label>
-      <select id="pos-mode" title="持仓单由用户/上层提供；本服务只读不写。没有在途订单时这一块不显示结论 —— 没有数据 ≠ 没有风险">
-        <option value="demo">合成演示单：现货腿已成交 / 永续腿未成交</option>
-        <option value="auto">自动读 data/positions/open.json</option>
-        <option value="none">不带上在途订单（看"没有持仓"的样子）</option>
-      </select>
-      <span class="loading" id="pos-state" role="status" aria-live="polite"></span>
-    </div>
-    <div id="execprog"><div class="loading">尚未运行</div></div>
-  </section>
-
-  <!-- ══════════ 5. 成本 + 溯源 ══════════ -->
-  <div class="grid2">
-    <section class="panel" style="--i:7">
-      <h2>成本与联合成交分布 <span class="hint">实测取代独立假设</span></h2>
-      <div id="cost"><div class="loading">尚未运行</div></div>
-    </section>
-    <section class="panel" style="--i:8">
-      <h2>可复跑溯源 <span class="hint">参数 + 阈值 + 输入 SHA256 + decision_hash</span></h2>
-      <div id="prov"><div class="loading">尚未运行</div></div>
-    </section>
-  </div>
-
-  <!-- ══════════ 6. 全标的概览 ══════════ -->
-  <section class="panel" style="--i:9">
-    <h2>全标的概览 <span class="hint">风险与理由（<strong>不代下单</strong>，只给理由与条件）</span></h2>
-    <div class="table-wrap">
-      <table id="ov-table">
-        <thead><tr>
-          <th>标的</th><th>风险</th><th>结论</th>
-          <th class="sep">可核验理由 / 警告</th>
-          <th class="sep">条件</th><th class="sep">事件严重度</th>
-        </tr></thead>
-        <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
-      </table>
-    </div>
-    <p class="hint" id="ov-note"></p>
-  </section>
-
-  <!-- ══════════ 7. 阈值透明化 ══════════ -->
-  <section class="panel" style="--i:10">
-    <h2>生效阈值与来源 <span class="hint">页面上每个判断都由这些常量决定；它们全部来自实测</span></h2>
-    <div class="table-wrap">
-      <table id="params-table">
-        <thead><tr><th>参数</th><th>值</th><th>单位</th><th class="sep">来源</th><th class="sep">代码位置</th></tr></thead>
-        <tbody><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ══════════ 8. 数据边界 ══════════ -->
-  <section class="panel" style="--i:11">
-    <h2>数据边界 <span class="hint">诚实标注局限 —— 这份清单可用 <code>--verify</code> 就地核验</span></h2>
-    <div class="md" id="snapshot"><div class="loading">加载中…</div></div>
-  </section>
-</main>
+  </main>
+</div>
 
 <footer class="bottom" id="footer">—</footer>
 <div id="toasts" aria-live="polite" aria-atomic="false"></div>
 
 <noscript>
-  <div class="panel" style="margin:16px 22px">
-    <h2>这个页面需要 JavaScript</h2>
+  <div class="panel noscript-box">
+    <h2 class="panel-title">这个页面需要 JavaScript</h2>
     <p class="hint">页面本身是静态的，所有数据来自本机服务 <code>/api/*</code>。
     不开 JS 也能用命令行看同样的结论：<code>python run_p2.py --demo NVDA</code></p>
   </div>

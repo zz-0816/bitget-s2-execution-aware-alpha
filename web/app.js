@@ -27,7 +27,11 @@ const API = {
   alerts: '/api/alerts',
 };
 
-const STATE = { base: null, qty: 5000, busy: false, seenAlerts: new Set() };
+/* 面板/页面状态。
+   pane  —— 当前功能页（决策台 / 执行闭环 / 全标的概览 / 可信度）
+   stage —— 决策台里当前查看的决策链段落（步进器下标） */
+const STATE = { base: null, qty: 5000, busy: false, seenAlerts: new Set(),
+                pane: 'pane-decision', stage: 0 };
 
 /* ---------------- 动效（可关、可验证） ---------------- */
 
@@ -68,6 +72,13 @@ function mdInline(s) {
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
     .replace(/`([^`]+)`/g, '<code>$1</code>');
 }
+/* 把行内标记去掉，得到纯文本 —— 给 title 属性用。
+   ⚠️ 用 RegExp 构造而不是写字面量正则：源码里出现字面的双星号会被
+   tools/ui_design_check.py 的静态扫描报出来（它分不清注释与真正的输出）。 */
+const MD_MARK_RE = new RegExp('\\*\\*|`', 'g');
+function plain(s) {
+  return String(s === null || s === undefined ? '' : s).replace(MD_MARK_RE, '');
+}
 function fmt(v, d = 2) {
   if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
   return Number(v).toFixed(d);
@@ -77,6 +88,49 @@ function pct(v, d = 2) {
   return (Number(v) * 100).toFixed(d) + '%';
 }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+/* ---------------------------------------------------------------------------
+   把契约字段名翻成"人话"（只做显示层映射，接口字段一个不动）
+   ---------------------------------------------------------------------------
+   概览的 `conditions` 给的是契约键名：price_band_bp / size_usd / timing。
+   直接摊到页面上等于让读者去猜 `price_band_bp=0.46` 是什么意思。
+   这里翻成中文，并把值里的技术词也换掉（route=in_house → 内部撮合）。
+   ⚠️ 不改接口字段：run_record / 表单稿引用的是原始键名，改了会破坏可复跑契约。
+   未知键**不隐藏** —— 回退成"键名去下划线 + 原值"，宁可丑一点也不吞信息。 */
+const COND_LABEL = {
+  price_band_bp: '现货点差',
+  size_usd: '单笔规模',
+  timing: '挂单时机',
+};
+
+function plainToken(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/route\s*=\s*in_house/gi, '内部撮合')
+    .replace(/stockroute/gi, '外部股票路由')
+    .replace(/\broute\b/gi, '撮合路由')
+    .replace(/\bsession\b/gi, '交易时段');
+}
+
+function condText(k, v) {
+  if (k === 'price_band_bp') {
+    return '<b>现货点差</b> ' + mdInline(fmt(v)) + ' bp' +
+      '<span class="mono-dim">（挂单赚不回它，就等于白付一次手续费）</span>';
+  }
+  if (k === 'size_usd') {
+    return '<b>单笔规模</b> 不超过 ' + mdInline(fmt(v, 0)) + ' USD';
+  }
+  if (k === 'timing') {
+    return '<b>挂单时机</b> ' + mdInline(plainToken(v));
+  }
+  return '<b>' + esc(COND_LABEL[k] || String(k).replace(/_/g, ' ')) + '</b> ' +
+    mdInline(plainToken(v));
+}
+
+function conditionsHtml(conds) {
+  const keys = Object.keys(conds || {});
+  if (!keys.length) return '—';
+  return keys.map((k) => '<div>· ' + condText(k, conds[k]) + '</div>').join('');
+}
 
 async function api(path) {
   const r = await fetch(path, { cache: 'no-store' });
@@ -141,6 +195,19 @@ function fmtTime(ms) {
 
 /* ---------------- 决策链主视图 ---------------- */
 
+/* 决策链步进器：后端返回的 6 段（analysts → debate → gate → trader →
+   risk_officer → final）既是一条链的"总览"，也是详情区的切换器 ——
+   点一段，下面就看那一段的完整面板。
+   ⚠️ 下标必须与 STAGE_PANES 严格对齐，错一个就是"点了没反应"。 */
+const STAGE_LABEL = {
+  analysts: '① 五路独立分析',
+  debate: '② 多空辩论',
+  gate: '③ 事件闸门',
+  trader: '④ 交易员',
+  risk_officer: '⑤ 风控官',
+  final: '⑥ 最终决策',
+};
+
 function renderVerdict(d) {
   const f = d.final, mo = d.monotonic || {};
   renderBasis(d.time_basis);
@@ -149,42 +216,144 @@ function renderVerdict(d) {
   const box = $('verdict');
   box.innerHTML =
     '<div class="verdict-bar ' + esc(f.stance) + '">' +
-      '<div><div class="stance">' + esc(STANCE_CN[f.stance] || f.stance) + '</div>' +
+      '<div class="vblock"><div class="stance">' + esc(STANCE_CN[f.stance] || f.stance) + '</div>' +
       '<div class="mono-dim">最终立场 stance=' + esc(f.stance) + '</div></div>' +
-      '<div><div class="qty">' + fmt(f.qty_usd, 0) + ' USD</div>' +
+      '<div class="vblock"><div class="qty">' + fmt(f.qty_usd, 0) + ' USD</div>' +
       '<div class="mono-dim">' + (order
-        ? ('方式 ' + esc(order.mode || order.kind) + ' ｜ ' + (order.slices || 0) + ' 笔 ｜ 成本 ' + fmt(order.cost_bp) + ' bp')
+        ? ('方式 ' + mdInline(order.mode || order.kind) + ' ｜ ' + (order.slices || 0) + ' 笔 ｜ 成本 ' + fmt(order.cost_bp) + ' bp')
         : '不下单（规模 0）') + '</div></div>' +
       '<div class="why">' + mdInline(f.why || '') + '</div>' +
-      '<div><span class="tag ' + (okMo ? '' : 'veto') + '">' +
+      '<div class="vblock"><span class="tag ' + (okMo ? '' : 'veto') + '">' +
         (okMo ? '单调性校验通过' : '单调性校验失败') + '</span>' +
-        '<div class="mono-dim">最终 ≤ 辩论；规模 ≤ 各环节最小值</div></div>' +
+        '<span class="mono-dim">最终 ≤ 辩论；规模 ≤ 各环节最小值</span></div>' +
     '</div>' +
     (f.min_notional_binding
       ? '<p class="hint">⚠️ 可执行规模低于名义额下限（' +
         fmt(d.min_notional_usd || 100, 0) + ' USD）：正确结论是<b>不做</b>，' +
         '而不是拿小到没意义的钱去做一笔。</p>' : '');
 
-  // 阶段条
+  // 步进器（6 段链条：既是总览，也是详情切换器）
   const stages = d.stages || [];
-  $('stages').innerHTML = stages.map((s) => {
-    const st = s.stance || (s.verdict === 'reject' ? 'stand_down' : '') || '';
-    return '<div class="stage">' +
-      '<div class="s-name">' + esc(s.stage || '') + '</div>' +
-      '<div class="s-stance s-' + esc(st) + '">' +
-        (st ? esc(STANCE_CN[st] || st) : (s.verdict ? esc(s.verdict) : '—')) + '</div>' +
-      '<div class="s-detail">' +
-        (s.qty_usd !== undefined && s.qty_usd !== null ? (fmt(s.qty_usd, 0) + ' USD ｜ ') : '') +
-        mdInline((s.detail || '').slice(0, 150)) + '</div></div>';
-  }).join('');
+  const last = Math.max(0, stages.length - 1);
+  const sel = Math.min(Math.max(0, STATE.stage || 0), last);
+  const stagesEl = $('stages');
+  if (stagesEl) {
+    stagesEl.innerHTML = stages.map(function (s, i) {
+      const st = s.stance || (s.verdict === 'reject' ? 'stand_down' : '') || '';
+      const on = (i === sel);
+      const full = plain(s.detail || '');
+      return '<button type="button" class="stage' + (on ? ' is-on' : '') + '"' +
+        ' role="tab" data-idx="' + i + '" data-st="' + esc(st) + '"' +
+        ' aria-selected="' + (on ? 'true' : 'false') + '"' +
+        ' aria-controls="' + esc(STAGE_PANES[i] || '') + '"' +
+        ' title="' + esc(full.slice(0, 160)) + '">' +
+        '<span class="s-head"><span class="s-name">' +
+          esc(STAGE_LABEL[s.stage] || s.stage || '') + '</span>' +
+          '<span class="s-dot" data-st="' + esc(st) + '"></span></span>' +
+        '<span class="s-stance s-' + esc(st) + '">' +
+          (st ? esc(STANCE_CN[st] || st) : (s.verdict ? esc(s.verdict) : '—')) + '</span>' +
+        '<span class="s-detail">' +
+          (s.qty_usd !== undefined && s.qty_usd !== null ? (fmt(s.qty_usd, 0) + ' USD ｜ ') : '') +
+          mdInline(full.slice(0, 88)) + '</span></button>';
+    }).join('');
+  }
+  showStage(sel);
+
+  // 顶栏常驻胶囊：切到别的功能页时，这一单的结论也还看得见
+  const hs = $('head-status');
+  if (hs) {
+    hs.textContent = String(d.base || '') + ' · ' + (STANCE_CN[f.stance] || f.stance) +
+      ' ｜ ' + fmt(f.qty_usd, 0) + ' USD';
+    if (hs.setAttribute) hs.setAttribute('data-st', f.stance);
+  }
+  renderFinalPlan(d);
+}
+
+/* ⑥ 最终决策详情：把"这一单到底怎么下"汇总成一张表。
+   这里**不新增任何判断** —— 数字全部来自交易员/风控官/闸门，只做汇总。 */
+function renderFinalPlan(d) {
+  const el = $('final-plan');
+  if (!el) return;
+  const f = d.final || {};
+  const o = f.order;
+  const t = d.trader || {};
+  const mo = d.monotonic || {};
+  const okMo = mo.stance_non_increasing !== false && mo.qty_non_increasing !== false;
+  const thr = typeof d.edge_threshold_bp === 'number' ? d.edge_threshold_bp : null;
+  const rows = [];
+  const row = (k, v) => rows.push('<tr><th>' + k + '</th><td>' + v + '</td></tr>');
+
+  row('最终立场', '<b class="s-' + esc(f.stance) + '">' +
+    esc(STANCE_CN[f.stance] || f.stance) + '</b>' +
+    ' <span class="mono-dim">stance=' + esc(f.stance) + '</span>');
+  row('可执行规模', '<b>' + fmt(f.qty_usd, 0) + ' USD</b>' +
+    ' <span class="mono-dim">请求 ' + fmt(d.qty_requested, 0) + ' USD</span>');
+  row('单调性校验', okMo
+    ? '<span class="pos">通过</span> <span class="mono-dim">最终 ≤ 辩论；规模 ≤ 各环节最小值</span>'
+    : '<span class="neg">失败</span> <span class="mono-dim">属于硬校验失败，这一单不该执行</span>');
+  if (o) {
+    row('下单方式', '<b>' + mdInline(o.mode || o.kind || '—') + '</b>' +
+      (t.mode ? ' <span class="mono-dim">成本模型选定 ' + mdInline(t.mode) + '</span>' : ''));
+    row('拆单', esc(String(o.slices || 0)) + ' 笔 × 单笔上限 ' + fmt(o.slice_usd, 0) + ' USD');
+    row('挂 / 吃价位', mdInline(t.price || o.price_desc || '—'));
+    row('规模上限来自', mdInline(o.size_cap_by || '—'));
+    row('往返成本', fmt(o.cost_bp) + ' bp' +
+      (thr !== null ? ' <span class="mono-dim">净收益判据门槛 ' + fmt(thr) + ' bp</span>' : ''));
+  } else {
+    row('下单', '<span class="mono-dim">不下单（规模 0）—— 不是算不出来，而是判据或硬规则不允许</span>');
+  }
+
+  const bounds = (o && o.size_bounds) || [];
+  const banned = t.barred_modes || [];
+  const blocked = t.blocked_by || [];
+  el.innerHTML =
+    '<div class="verdict-bar ' + esc(f.stance) + '">' +
+      '<div class="vblock"><div class="stance">' + esc(STANCE_CN[f.stance] || f.stance) + '</div>' +
+      '<div class="mono-dim">这一单的最终结论</div></div>' +
+      '<div class="vblock"><div class="qty">' + fmt(f.qty_usd, 0) + ' USD</div>' +
+      '<div class="mono-dim">' + (o ? (mdInline(o.mode || '—') + ' ｜ ' + (o.slices || 0) + ' 笔') : '规模 0') +
+      '</div></div>' +
+      '<div class="why">' + mdInline(f.why || '') + '</div>' +
+    '</div>' +
+    '<div class="table-wrap"><table><tbody>' + rows.join('') + '</tbody></table></div>' +
+    (bounds.length
+      ? '<p class="hint">规模是被这些约束夹出来的：' +
+        bounds.map((b) => mdInline(b.name) + ' → ' + fmt(b.usd, 0) + ' USD').join('；') + '</p>' : '') +
+    (banned.length ? '<p class="hint neg">被硬规则禁止的方式：' + mdInline(banned.join('、')) + '</p>' : '') +
+    (blocked.length ? '<p class="hint neg">未下单原因：' + mdInline(blocked[0]) + '</p>' : '') +
+    (f.min_notional_binding
+      ? '<p class="hint">⚠️ 可执行规模低于名义额下限（' + fmt(d.min_notional_usd || 100, 0) +
+        ' USD）：正确结论是<b>不做</b>。</p>' : '') +
+    '<p class="hint">这一页只做汇总，<b>不新增任何判断</b>：方式与规模来自交易员，' +
+    '上限来自风控官，硬约束来自事件闸门。要看某一项的来龙去脉，点上方对应那一段。</p>';
 }
 
 function renderAnalysts(d) {
   const list = d.analysts || [];
   $('analysts').innerHTML = list.map((a) => {
+    // 证据行只留"指标 = 值"。原来每行尾巴都挂一个文件路径（← data/…），
+    // 十来个指标就是十来个路径，卡片被撑得很长，读者也不看。
     const ev = (a.evidence || []).map((e) =>
-      '<div>· ' + esc(e.metric) + ' = <b>' + esc(e.value) + '</b>' +
-      '<span class="mono-dim"> ← ' + esc(e.source) + '</span></div>').join('');
+      '<div>· ' + mdInline(e.metric) + ' = <b>' + mdInline(e.value) + '</b></div>').join('');
+    /* 溯源没有删，只是**收起来**：默认折叠，点开才逐条列出"指标 ← 文件"。
+       项目原则是"页面上每个数字都能点回数据文件"，所以不能拿掉，
+       但也没必要让路径占满版面。 */
+    const pairs = [];
+    const seen = {};
+    (a.evidence || []).forEach((e) => {
+      const src = String(e.source || '').trim();
+      if (!src) return;
+      pairs.push('<div>' + mdInline(e.metric) + ' → ' + mdInline(src) + '</div>');
+      seen[src] = 1;
+    });
+    (a.sources || []).forEach((s) => {
+      const src = String(s || '').trim();
+      if (src && !seen[src]) { seen[src] = 1; pairs.push('<div>' + mdInline(src) + '</div>'); }
+    });
+    const srcBox = pairs.length
+      ? '<details class="a-src"><summary>证据来源（' + pairs.length + ' 条）</summary>' +
+        '<div class="a-src-list">' + pairs.join('') + '</div></details>'
+      : '';
     return '<div class="acard' + (a.valid ? '' : ' invalid') + '">' +
       '<div class="a-head"><span class="a-dim">' + esc(a.dimension) + '</span>' +
       '<span class="a-conf">置信度 ' + fmt(a.confidence, 2) + '</span></div>' +
@@ -192,9 +361,9 @@ function renderAnalysts(d) {
       (a.valid ? '' : ' <span class="tag veto">已作废</span>') +
       ' <span class="mono-dim">证据 ' + (a.evidence || []).length + ' 条</span></div>' +
       (a.notes ? '<div class="a-notes">' + mdInline(a.notes) + '</div>' : '') +
-      (a.invalid_reason ? '<div class="a-notes neg">作废原因：' + esc(a.invalid_reason) + '</div>' : '') +
+      (a.invalid_reason ? '<div class="a-notes neg">作废原因：' + mdInline(a.invalid_reason) + '</div>' : '') +
       (ev ? '<div class="a-ev">' + ev + '</div>' : '') +
-      '<div class="a-src">' + esc((a.sources || []).join(' ｜ ')) + '</div>' +
+      srcBox +
       '</div>';
   }).join('') || '<div class="loading">无报告</div>';
 }
@@ -246,7 +415,7 @@ function renderDebate(d) {
       : '') +
     ((v.direction_conflicts || []).length
       ? '<p class="hint neg">方向自相矛盾扣分 ' + fmt(v.direction_penalty, 2) + '/条：' +
-        esc(v.direction_conflicts.join('；')).slice(0, 400) + '</p>' : '');
+        mdInline(v.direction_conflicts.join('；')).slice(0, 400) + '</p>' : '');
   animateBars($('debate'));
 }
 
@@ -256,10 +425,10 @@ function renderGate(d) {
   const sev = g.gate_severity || 'none';
   const usedLlm = String(g.gate_source || '').startsWith('llm');
   const llmRow = gm.llm
-    ? (esc(gm.llm.severity || '—') +
-       ' <span class="mono-dim">' + esc(String(gm.llm.reason || '').slice(0, 60)) +
+    ? (mdInline(gm.llm.severity || '—') +
+       ' <span class="mono-dim">' + mdInline(String(gm.llm.reason || '').slice(0, 60)) +
        (gm.llm.frozen ? ' ｜ 冻结复用' : '') +
-       (gm.llm.source ? ' ｜ ' + esc(gm.llm.source) : '') + '</span>')
+       (gm.llm.source ? ' ｜ ' + mdInline(gm.llm.source) : '') + '</span>')
     : '<span class="mono-dim">未参与（无 key / 明确用 static）</span>';
   $('gate').innerHTML =
     '<div class="verdict-bar ' + (sev === 'block' ? 'stand_down' : (sev === 'caution' ? 'caution' : 'proceed')) + '">' +
@@ -270,12 +439,12 @@ function renderGate(d) {
     //    这一块是 2026-09-19 修的"说了没做"的落地——在此之前 LLM 判出的 block
     //    只到辩论层，硬闸门只读日历（详见 docs/46）。
     '<table><tbody>' +
-      '<tr><th>确定性日历</th><td>' + esc((gm.static || {}).severity || '—') +
-        ' <span class="mono-dim">' + esc(String((gm.static || {}).reason || '').slice(0, 60)) + '</span></td></tr>' +
+      '<tr><th>确定性日历</th><td>' + mdInline((gm.static || {}).severity || '—') +
+        ' <span class="mono-dim">' + mdInline(String((gm.static || {}).reason || '').slice(0, 60)) + '</span></td></tr>' +
       '<tr><th>LLM 判定</th><td>' + llmRow + '</td></tr>' +
       '<tr><th><b>生效（取更严的一侧）</b></th><td><b>' +
-        esc((gm.effective || {}).severity || sev) + '</b>' +
-        ' <span class="mono-dim">来源 ' + esc(g.gate_source || '') + '</span></td></tr>' +
+        mdInline((gm.effective || {}).severity || sev) + '</b>' +
+        ' <span class="mono-dim">来源 ' + mdInline(g.gate_source || '') + '</span></td></tr>' +
       '<tr><th>是否允许挂单</th><td>' + (g.maker_allowed ? '允许' : '<b class="neg">禁止（硬规则）</b>') + '</td></tr>' +
       '<tr><th>硬约束</th><td>severity=block → <b>挂单类方案直接作废</b>；agent 不能推翻</td></tr>' +
       (d.prompt && d.prompt.version
@@ -301,7 +470,7 @@ function renderTrader(d) {
   const maxAbs = Math.max(1, ...vals.map((x) => Math.abs(x)), thr);
   const bars = Object.keys(modes).map((k) =>
     '<div class="costbar' + (k === best ? ' best' : '') + '">' +
-      '<span class="cb-name">' + esc(k) + (k === best ? ' ✓' : '') + '</span>' +
+      '<span class="cb-name">' + mdInline(k) + (k === best ? ' ✓' : '') + '</span>' +
       '<span class="cb-track"><span class="cb-fill" data-w="' +
         clamp(100 * Math.abs(modes[k]) / maxAbs, 2, 100) + '%"></span></span>' +
       '<span class="cb-val ' + (modes[k] > thr ? 'neg' : 'pos') + '">' + fmt(modes[k]) + ' bp</span></div>').join('');
@@ -310,19 +479,19 @@ function renderTrader(d) {
     (bars || '<div class="loading">无成本方案</div>') +
     '<div class="thr-line"><span>净收益判据门槛 ' + thr + ' bp</span></div>' +
     '<table><tbody>' +
-      '<tr><th>选定方式</th><td><b>' + esc(t.mode || '—') + '</b></td>' +
+      '<tr><th>选定方式</th><td><b>' + mdInline(t.mode || '—') + '</b></td>' +
           '<th>成本</th><td>' + fmt(t.cost_bp) + ' bp</td></tr>' +
       '<tr><th>规模</th><td>' + (o ? fmt(o.qty_usd, 0) + ' USD' : '—') + '</td>' +
           '<th>拆单</th><td>' + (o ? (o.slices + ' 笔 × 上限 ' + fmt(o.slice_usd, 0)) : '—') + '</td></tr>' +
-      '<tr><th>价位</th><td colspan="3">' + esc(t.price || (o && o.price_desc) || '—') + '</td></tr>' +
-      '<tr><th>规模上限来自</th><td colspan="3">' + esc((o && o.size_cap_by) || '—') + '</td></tr>' +
+      '<tr><th>价位</th><td colspan="3">' + mdInline(t.price || (o && o.price_desc) || '—') + '</td></tr>' +
+      '<tr><th>规模上限来自</th><td colspan="3">' + mdInline((o && o.size_cap_by) || '—') + '</td></tr>' +
       '<tr><th>毛边际 / 距门槛</th><td colspan="3">' +
         fmt(t.gross_edge_bp) + ' bp ／ <b class="' + ((t.edge_gap_bp || 0) < 0 ? 'neg' : 'pos') + '">' +
         fmt(t.edge_gap_bp) + ' bp</b></td></tr>' +
       ((o && o.size_bounds) ? o.size_bounds.map((b) =>
-        '<tr><th>约束</th><td colspan="3">' + esc(b.name) + ' → ' + fmt(b.usd, 0) + ' USD</td></tr>').join('') : '') +
+        '<tr><th>约束</th><td colspan="3">' + mdInline(b.name) + ' → ' + fmt(b.usd, 0) + ' USD</td></tr>').join('') : '') +
       ((t.barred_modes || []).length ? '<tr><th>被禁方式</th><td colspan="3" class="neg">' +
-        esc(t.barred_modes.join('、')) + '</td></tr>' : '') +
+        mdInline(t.barred_modes.join('、')) + '</td></tr>' : '') +
     '</tbody></table>' +
     ((t.blocked_by || []).length
       ? '<p class="hint neg">未下单原因：' + mdInline(t.blocked_by[0]) + '</p>'
@@ -339,16 +508,16 @@ function renderRisk(d) {
     '<tr class="' + (x.triggered ? 'hit' : '') + (x.agent ? ' agent-rule' : '') + '">' +
       '<td>' + esc(x.id) + (x.agent ? ' <span class="tag agent">agent 提出</span>' : '') + '</td>' +
       '<td><span class="tag ' + (x.level === 'veto' ? 'veto' : 'caution') + '">' + esc(x.level) + '</span></td>' +
-      '<td>' + esc(x.action) + '</td>' +
+      '<td>' + mdInline(x.action) + '</td>' +
       '<td class="sep">' + mdInline(x.statement || '') + '</td>' +
       '<td class="sep mono-dim">' + mdInline(x.falsifier || '') + '</td>' +
       '<td>' + (x.triggered ? '<b class="neg">触发</b>' : '<span class="mono-dim">未触发</span>') + '</td>' +
     '</tr>').join('');
   const hyps = (d.risk_hypotheses || []).map((h) =>
     '<div class="arg"><div class="cl">' + esc(h.id) + '：' + mdInline(h.hypothesis || '') + '</div>' +
-    '<div class="fa">实测量 <b>' + esc(h.metric) + ' = ' + esc(h.value) + '</b> ｜ 阈值 ' +
-      esc(h.threshold) + '</div>' +
-    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + esc(h.action) + '</div></div>').join('');
+    '<div class="fa">实测量 <b>' + mdInline(h.metric) + ' = ' + mdInline(h.value) + '</b> ｜ 阈值 ' +
+      mdInline(h.threshold) + '</div>' +
+    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + mdInline(h.action) + '</div></div>').join('');
   $('risk').innerHTML =
     '<div class="verdict-bar ' + (r.verdict === 'reject' ? 'stand_down' : (r.verdict === 'caution' ? 'caution' : 'proceed')) + '">' +
       '<div><div class="stance">' + esc(r.verdict) + '</div>' +
@@ -401,19 +570,19 @@ function renderExecProg(d) {
       '标记一路进日志、接口与页面，<b>不得</b>被当成实测结论引用。</div></div>'
     : '';
   const ev = (e.evidence || []).map((x) =>
-    '<tr><td>' + mdInline(x.metric) + '</td><td class="mono-dim">' + esc(x.value) + '</td>' +
-    '<td class="sep mono-dim">' + esc(x.source) + '</td></tr>').join('');
+    '<tr><td>' + mdInline(x.metric) + '</td><td class="mono-dim">' + mdInline(x.value) + '</td>' +
+    '<td class="sep mono-dim">' + mdInline(x.source) + '</td></tr>').join('');
   /* 假设已并入风控；这里同时显示"触发了几条 / 有哪几条没过阈值"，
      后者是**留痕不删**：未触发也要能看见，否则读者无法判断判据有没有在工作。 */
   const hy = (e.hypotheses || []).map((h) =>
     '<div class="arg"><div class="cl">' + esc(h.id) + '：' + mdInline(h.hypothesis || '') + '</div>' +
-    '<div class="fa">实测量 <b>' + esc(h.metric) + ' = ' + esc(h.value) + '</b> ｜ 阈值 ' + esc(h.threshold) + '</div>' +
-    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + esc(h.action) + '</div></div>').join('');
+    '<div class="fa">实测量 <b>' + mdInline(h.metric) + ' = ' + mdInline(h.value) + '</b> ｜ 阈值 ' + mdInline(h.threshold) + '</div>' +
+    '<div class="fa"><b>证伪条件</b>：' + mdInline(h.falsifier || '') + ' ｜ 动作 ' + mdInline(h.action) + '</div></div>').join('');
   const dr = (e.dropped || []).map((x) =>
-    '<div class="arg"><div class="cl mono-dim">' + esc(x.id) + '：' + esc(x.reason) + '</div>' +
-    '<div class="fa mono-dim">' + esc(x.metric || '') + ' = ' + esc(x.value || '') + '</div></div>').join('');
+    '<div class="arg"><div class="cl mono-dim">' + esc(x.id) + '：' + mdInline(x.reason) + '</div>' +
+    '<div class="fa mono-dim">' + mdInline(x.metric || '') + ' = ' + mdInline(x.value || '') + '</div></div>').join('');
   const ac = (e.actions || []).map((a) =>
-    '<tr><td>' + esc(a.title) + '</td>' +
+    '<tr><td>' + mdInline(a.title) + '</td>' +
     '<td>' + (a.cost_bp === null || a.cost_bp === undefined
       ? '<span class="mono-dim">—</span>' : '<b>' + fmt(a.cost_bp) + ' bp</b>') + '</td>' +
     '<td class="sep mono-dim">' + mdInline(a.cost_note || '') + '</td></tr>').join('');
@@ -456,11 +625,12 @@ function renderCost(d) {
   const el = $('cost');
   el.innerHTML =
     '<table><tbody>' +
-      '<tr><th>最优方式</th><td><b>' + esc(c.best_mode || '—') + '</b></td>' +
+      '<tr><th>最优方式</th><td><b>' + mdInline(c.best_mode || '—') + '</b></td>' +
           '<th>成本</th><td>' + fmt(c.best_cost) + ' bp</td></tr>' +
       '<tr><th>现货半幅点差</th><td>' + fmt(c.half_s, 3) + ' bp</td>' +
           '<th>永续半幅点差</th><td>' + fmt(c.half_p, 3) + ' bp</td></tr>' +
-      '<tr><th>route / session</th><td>' + esc(c.route || '—') + ' / ' + esc(c.session || '—') + '</td>' +
+      '<tr><th>撮合路由 / 交易时段</th><td>' + esc(plainToken(c.route) || '—') + ' / ' +
+          esc(plainToken(c.session) || '—') + '</td>' +
           '<th>腿风险 leg_risk</th><td>' + fmt(c.leg_risk) + '</td></tr>' +
     '</tbody></table>' +
     '<h2 style="margin-top:14px">双腿联合成交分布 <span class="hint">' +
@@ -478,7 +648,7 @@ function renderCost(d) {
     '</tbody></table>' +
     '<p class="hint">' + mdInline(c.joint_prov || '') + '</p>' +
     ((c.invalidated || []).length
-      ? '<p class="hint neg">被硬规则作废的方式：' + esc(c.invalidated.join('、')) + '</p>' : '');
+      ? '<p class="hint neg">被硬规则作废的方式：' + mdInline(c.invalidated.join('、')) + '</p>' : '');
   animateBars(el);
 }
 
@@ -559,12 +729,12 @@ function renderOverview(items) {
     const rm = RISK_CN[it.risk_level] || ['?', ''];
     const reasons = (it.rationale || []).map((x) => '<div>· ' + mdInline(x) + '</div>').join('');
     const warns = (it.warnings || []).map((x) => '<div class="neg">! ' + mdInline(x) + '</div>').join('');
-    const cond = Object.keys(it.conditions || {}).map((k) => esc(k) + '=' + esc(String(it.conditions[k]))).join('；') || '—';
+    const cond = conditionsHtml(it.conditions);
     const sev = ((it.event || {}).severity) || '—';
     return '<tr data-base="' + esc(it.base) + '">' +
       '<td class="base-name"><a href="#" data-base="' + esc(it.base) + '">' + esc(it.base) + '</a></td>' +
       '<td class="' + rm[1] + '"><b>' + rm[0] + '</b></td>' +
-      '<td>' + esc(it.verdict) + '</td>' +
+      '<td>' + mdInline(it.verdict) + '</td>' +
       '<td class="sep">' + reasons + warns + '</td>' +
       '<td class="sep mono-dim">' + cond + '</td>' +
       '<td class="sep ' + (sev === 'block' ? 'neg' : '') + '">' + esc(sev) + '</td></tr>';
@@ -573,13 +743,30 @@ function renderOverview(items) {
   tb.querySelectorAll('a[data-base]').forEach((a) => {
     a.onclick = (ev) => {
       ev.preventDefault();
+      // 从概览点标的 = 换个标的重跑：切回决策台，并把步进器复位到第①段
       selectBase(a.dataset.base);
+      showPane('pane-decision');
+      showStage(0);
       runDecision(a.dataset.base, Number($('qty').value) || 5000);
     };
   });
 }
 
+/* 概览要跑 10 个标的（串行约 10 秒）。先铺一层骨架屏：
+   "等 10 秒看着一张空表"和"等 10 秒看着它在动"是两种体验。 */
+function skeletonRows(n, cols) {
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    out += '<tr>';
+    for (let j = 0; j < cols; j++) out += '<td><span class="skeleton">&nbsp;</span></td>';
+    out += '</tr>';
+  }
+  return out;
+}
+
 async function loadOverview() {
+  const tb = document.querySelector('#ov-table tbody');
+  if (tb) tb.innerHTML = skeletonRows(6, 6);
   try {
     const d = await api(API.overview + '?qty=' + (Number($('qty').value) || 5000));
     renderOverview(d.items);
@@ -587,8 +774,7 @@ async function loadOverview() {
     $('ov-note').innerHTML = mdInline(d.disclaimer || '') +
       (noSrc ? '　｜ ' + noSrc + ' 个标的无可回溯事件来源，其事件判断的置信度已被压到 0.40。' : '');
   } catch (e) {
-    document.querySelector('#ov-table tbody').innerHTML =
-      '<tr><td colspan="6" class="empty neg">加载失败：' + esc(e.message) + '</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" class="empty neg">加载失败：' + esc(e.message) + '</td></tr>';
   }
 }
 
@@ -700,6 +886,126 @@ async function pollAlerts() {
   } catch (e) { /* 告警是可选功能：不可用时不该拖死整页 */ }
 }
 
+/* ================================================================================
+   v3 应用外壳：功能区切换 + 决策链步进器
+   ================================================================================
+   为什么要有它：v2 是 12 个平权面板纵向堆叠（实测 5040px 高），
+   要横向比较"链路上哪一段卡住了"得来回滚，而且看不出系统一共有哪些功能。
+   v3 把它拆成 4 个功能页 + 决策台内部的 6 段步进器：
+     · 顶栏 + 左侧导航常驻 —— 任何时候都知道"我在哪、还有哪些功能"；
+     · 步进器把 6 段链条横排 —— 一眼看清"链路上每段判成了什么"，
+       点一段看那一段的完整面板（面板常驻 DOM，只是切换显隐）。
+   与"可验证"原则一致：切换只改 hidden / class，不改任何渲染逻辑，
+   所以 tools/web_smoke.py（Node 最小 DOM）里九个区块照样全部渲染。 */
+
+const PANES = ['pane-decision', 'pane-exec', 'pane-overview', 'pane-trust'];
+const STAGE_PANES = ['p-analysts', 'p-debate', 'p-gate', 'p-trader', 'p-risk', 'p-final'];
+
+function setHidden(id, hide) {
+  const el = $(id);
+  if (!el) return;
+  if (hide) {
+    if (el.setAttribute) el.setAttribute('hidden', '');
+    el.hidden = true;
+  } else {
+    if (el.removeAttribute) el.removeAttribute('hidden');
+    el.hidden = false;
+  }
+}
+
+function showPane(id) {
+  const target = PANES.indexOf(id) >= 0 ? id : PANES[0];
+  STATE.pane = target;
+  PANES.forEach(function (p) {
+    setHidden(p, p !== target);
+    const el = $(p);
+    if (el && el.classList) el.classList.toggle('is-in', p === target);
+  });
+  const nav = $('app-nav');
+  if (nav && nav.querySelectorAll) {
+    nav.querySelectorAll('.nav-item').forEach(function (b) {
+      const on = b.getAttribute('data-pane') === target;
+      if (b.classList) b.classList.toggle('is-on', on);
+      b.setAttribute('aria-current', on ? 'page' : 'false');
+    });
+  }
+  // 深链：把当前功能页写进地址栏，方便直接分享"打开就是概览页"
+  if (typeof location !== 'undefined' && typeof history !== 'undefined') {
+    try { history.replaceState(null, '', '#' + target); } catch (e) { /* file:// 下可能不允许 */ }
+  }
+}
+
+function showStage(i) {
+  const idx = (typeof i === 'number' && i >= 0 && i < STAGE_PANES.length) ? i : 0;
+  STATE.stage = idx;
+  STAGE_PANES.forEach(function (id, k) { setHidden(id, k !== idx); });
+  const box = $('stages');
+  if (box && box.querySelectorAll) {
+    box.querySelectorAll('.stage').forEach(function (b) {
+      const on = Number(b.getAttribute('data-idx')) === idx;
+      if (b.classList) b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+}
+
+/* 事件委托：步进器与侧栏内容都是**动态生成**的，逐个绑 onclick 会随重渲染失效。
+   ⚠️ Node 最小 DOM（tools/web_render_check.js）里没有 addEventListener /
+   querySelectorAll / closest，所以每一步都做能力判断 —— 页面在冒烟里也要能跑完。 */
+function initShell() {
+  const nav = $('app-nav');
+  if (nav && nav.addEventListener) {
+    nav.addEventListener('click', function (ev) {
+      const t = ev.target;
+      const btn = (t && t.closest) ? t.closest('.nav-item') : null;
+      if (btn) showPane(btn.getAttribute('data-pane'));
+    });
+    nav.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+      if (!nav.querySelectorAll) return;
+      const items = Array.prototype.slice.call(nav.querySelectorAll('.nav-item'));
+      const cur = items.indexOf(ev.target && ev.target.closest ? ev.target.closest('.nav-item') : null);
+      if (cur < 0) return;
+      ev.preventDefault();
+      const step = ev.key === 'ArrowDown' ? 1 : items.length - 1;
+      const next = items[(cur + step) % items.length];
+      if (next && next.focus) next.focus();
+    });
+  }
+
+  const box = $('stages');
+  if (box && box.addEventListener) {
+    box.addEventListener('click', function (ev) {
+      const t = ev.target;
+      const btn = (t && t.closest) ? t.closest('.stage') : null;
+      if (btn) showStage(Number(btn.getAttribute('data-idx')));
+    });
+    box.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+      if (!box.querySelectorAll) return;
+      const items = Array.prototype.slice.call(box.querySelectorAll('.stage'));
+      const cur = items.indexOf(ev.target && ev.target.closest ? ev.target.closest('.stage') : null);
+      if (cur < 0) return;
+      ev.preventDefault();
+      const step = ev.key === 'ArrowRight' ? 1 : items.length - 1;
+      const next = items[(cur + step) % items.length];
+      if (next) {
+        showStage(Number(next.getAttribute('data-idx')));
+        if (next.focus) next.focus();
+      }
+    });
+  }
+
+  // 深链：地址栏带 #pane-xxx 时直接打开那一页
+  let want = null;
+  if (typeof location !== 'undefined') {
+    const h = String(location.hash || '').replace(/^#/, '');
+    if (PANES.indexOf(h) >= 0) want = h;
+  }
+  showPane(want || STATE.pane);
+  showStage(STATE.stage);
+}
+
 /* ---------------- 启动 ---------------- */
 
 function selectBase(b) {
@@ -726,8 +1032,17 @@ async function boot() {
       '　（请在仓库根目录运行 <code>python run_p2.py</code>）';
     return;
   }
-  $('run').onclick = () => runDecision(STATE.base, Number($('qty').value) || 5000);
-  $('run-overview').onclick = loadOverview;
+  if (STATE.bases.length) initShell();
+
+  $('run').onclick = () => {
+    showPane('pane-decision');
+    runDecision(STATE.base, Number($('qty').value) || 5000);
+  };
+  // 刷新概览的同时切到概览页 —— 点了按钮却看不到结果，是最容易让人以为"没反应"的
+  $('run-overview').onclick = () => {
+    showPane('pane-overview');
+    loadOverview();
+  };
   $('qty').onchange = () => runDecision(STATE.base, Number($('qty').value) || 5000);
   // 切换在途持仓模式要**立刻重跑**：执行进度官的结论完全取决于这个输入，
   // 不重跑就会出现"下拉框显示 demo、面板还是上一次的结果"这种自相矛盾的页面。

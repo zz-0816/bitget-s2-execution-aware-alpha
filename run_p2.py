@@ -1001,9 +1001,11 @@ def selftest(with_net=False):
     #        缺失不硬算（读不到返回 None 而不是 0）
     rc |= _run_any([[py, os.path.join("tools", "market_feed.py"), "--selftest"],
                     [py, os.path.join("tools", "mcp_anchor.py"), "--selftest"],
-                    [py, os.path.join("project2", "ext_events.py"), "--selftest"]],
-                   "⑱ 行情通道 + 外部锚 + 外部确定性事件"
-                   "（schema 归一 / 落盘守卫 / 口径守卫 / **事件窗口规则**）")
+                    [py, os.path.join("project2", "ext_events.py"), "--selftest"],
+                    [py, os.path.join("project2", "account_feed.py"), "--selftest"],
+                    [py, os.path.join("tools", "anchor_calibration.py"), "--selftest"]],
+                   "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + 阈值标定"
+                   "（schema 归一 / 落盘守卫 / 口径守卫 / **只读边界** / 样本量门槛）")
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],

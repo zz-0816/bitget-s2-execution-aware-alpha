@@ -70,6 +70,8 @@ MCP_URL = os.environ.get("P2_MCP_EQUITY", "https://agent.bitget.com/mcp")
 PROXY = os.environ.get("P2_PROXY", "http://127.0.0.1:7890")
 ENTRY_QUOTE = "equity_price_quote"
 ENTRY_EARNINGS = "equity_calendar_earnings"
+ENTRY_TARGETS = "equity_estimates_price_target"
+ENTRY_CONSENSUS = "equity_estimates_consensus"
 # 🗄️ 决策链只读这个缓存（取数与消费分开，见 cache_payload 的说明）
 CACHE = os.path.join(BASE, "data", "derived", "anchor.json")
 DEFAULT_BASES = ["NVDA", "TSLA", "AAPL", "META", "GOOGL",
@@ -161,6 +163,128 @@ def rtoken_from_snapshot(base):
             "ts_utc": dt.datetime.fromtimestamp(ts / 1000, dt.UTC)
                       .strftime("%Y-%m-%dT%H:%M:%SZ"),
             "source": os.path.basename(files[-1])}
+
+
+# ---------------------------------------------------------------- 第三方观点
+
+# 目标价的**新鲜度窗口**。为什么必须有它：全历史有 850+ 条、最早到 2016 年，
+# 而 NVDA 的目标价区间是 **59 ~ 1400** —— 拿 2016 年的 59 美元和今天比，
+# 算出来的"分歧度"毫无意义。实测只有 22~39 条落在 90 天内。
+TARGET_FRESH_DAYS = 90
+# 少于这么多条近期目标价就**不判**（样本不足时说"不知道"，不硬给结论）
+MIN_TARGETS = 8
+# 一致预期的陈旧闸门。⚠️ 实测：`fore_org_num` 看起来是 42 家机构的共识，
+# 但它的 `scraped_date` 是 **2024-11-21**（陈旧 22 个月）——
+# 这种数据**必须拒绝使用**，否则等于拿两年前的预期当今天的。
+CONSENSUS_STALE_DAYS = 30
+
+
+def _pct(sorted_vals, q):
+    """线性插值分位数（样本少时比 nearest 稳）。"""
+    if not sorted_vals:
+        return None
+    if len(sorted_vals) == 1:
+        return sorted_vals[0]
+    pos = q * (len(sorted_vals) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_vals) - 1)
+    frac = pos - lo
+    return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
+
+
+def parse_targets(text, now_ms=None, fresh_days=TARGET_FRESH_DAYS):
+    """解析分析师目标价 -> **只用近期样本**的稳健统计量。
+
+    🔴 用 **IQR（p75−p25）/ 中位** 而不是极差：实测 TSLA 近期目标价里有一个
+       **24.9** 的离群值（中位 418.5），用极差算出来的"分歧度"会被它一个人主导
+       （11473 bp）。IQR 抗离群，更能代表"机构之间到底分歧多大"。
+    """
+    try:
+        j = json.loads(text)
+        res = ((j.get("data") or {}).get("results")) or []
+    except (TypeError, ValueError):
+        return None, "目标价返回不可解析"
+    if not res:
+        return None, "没有目标价数据（ETF 通常没有）"
+    now = dt.datetime.fromtimestamp(
+        (now_ms or time.time() * 1000) / 1000, dt.UTC).date()
+    recent, all_dates = [], []
+    for r in res:
+        d, t = r.get("published_date"), r.get("price_target")
+        if not d or t is None:
+            continue
+        all_dates.append(str(d)[:10])
+        try:
+            days = (now - dt.date.fromisoformat(str(d)[:10])).days
+            tv = float(t)
+        except (TypeError, ValueError):
+            continue
+        if 0 <= days <= fresh_days:
+            recent.append({"firm": r.get("analyst_firm"), "target": tv,
+                           "rating": r.get("rating_current"),
+                           "action": r.get("action"), "date": str(d)[:10],
+                           "days": days})
+    out = {"n_all": len(all_dates), "n_recent": len(recent),
+           "fresh_days": fresh_days,
+           "oldest_all": min(all_dates) if all_dates else None,
+           "newest_all": max(all_dates) if all_dates else None,
+           "provider": j.get("provider")}
+    if not recent:
+        out["enough"] = False
+        return out, "近 %d 天内没有目标价" % fresh_days
+    vals = sorted(x["target"] for x in recent)
+    med = _pct(vals, 0.5)
+    out.update({
+        "median": med, "min": vals[0], "max": vals[-1],
+        "p25": _pct(vals, 0.25), "p75": _pct(vals, 0.75),
+        "enough": len(recent) >= MIN_TARGETS,
+        "min_targets": MIN_TARGETS,
+        # 稳健分歧度（IQR 口径）；同时留极差供对照，但**规则只用前者**
+        "dispersion_bp": (None if not med else
+                          (_pct(vals, 0.75) - _pct(vals, 0.25)) / med * 10000.0),
+        "range_bp": (None if not med else (vals[-1] - vals[0]) / med * 10000.0),
+        "newest_recent": max(x["date"] for x in recent),
+        "actions": sorted({x["action"] for x in recent if x.get("action")}),
+        "items": recent[:12],
+    })
+    return out, None
+
+
+def parse_consensus(text, now_ms=None, stale_days=CONSENSUS_STALE_DAYS):
+    """解析一致预期，并**判它是不是陈旧数据**。
+
+    🔴 实测（2026-09-20）：`equity_estimates_consensus` 返回的
+       `scraped_date` 是 **2024-11-21** —— 陈旧 22 个月。
+       这种数据必须**拒绝使用**：拿两年前的 EPS 预期当今天的，
+       比没有数据更糟（它会看起来很权威：`fore_org_num: 42`）。
+    """
+    try:
+        j = json.loads(text)
+        res = ((j.get("data") or {}).get("results")) or []
+    except (TypeError, ValueError):
+        return None, "一致预期返回不可解析"
+    if not res:
+        return None, "没有一致预期数据"
+    now = dt.datetime.fromtimestamp(
+        (now_ms or time.time() * 1000) / 1000, dt.UTC).date()
+    dates = sorted({str(r.get("scraped_date"))[:10]
+                    for r in res if r.get("scraped_date")})
+    newest = dates[-1] if dates else None
+    stale = None
+    if newest:
+        try:
+            stale = (now - dt.date.fromisoformat(newest)).days
+        except ValueError:
+            stale = None
+    return ({"n_periods": len(res), "newest_scraped": newest,
+             "oldest_scraped": dates[0] if dates else None,
+             "stale_days": stale, "stale_limit": stale_days,
+             "usable": (stale is not None and stale <= stale_days),
+             "provider": j.get("provider"),
+             "sample": {k: res[0].get(k) for k in
+                        ("fore_indicator_name", "target_consensus",
+                         "target_low", "target_high", "fore_org_num",
+                         "report_period_scraped")}}, None)
 
 
 # ---------------------------------------------------------------- MCP
@@ -296,6 +420,24 @@ def fetch(bases, rtoken="live", use_proxy=True, now_ms=None):
                 #    "开市/休市"在 premium_bp / drift_and_premium_bp 之间变 ——
                 #    下游不该为了取值去猜今天用哪个名字。
                 row["deviation_bp"] = v
+        # 第三方**观点**：目标价 + 一致预期。这里只**取回并统计**，
+        # 判定留给 agent_team（保持"取数与消费分开"，只有一份实现）。
+        _tt, _terr = a.query(ENTRY_TARGETS, {"symbol": base})
+        if _terr:
+            row["targets_error"] = _terr
+        else:
+            _tg, _tgerr = parse_targets(_tt, now_ms=now)
+            row["targets"] = _tg
+            if _tgerr:
+                row["targets_note"] = _tgerr
+        _ct, _cerr = a.query(ENTRY_CONSENSUS, {"symbol": base})
+        if _cerr:
+            row["consensus_error"] = _cerr
+        else:
+            _cs, _cserr = parse_consensus(_ct, now_ms=now)
+            row["consensus"] = _cs
+            if _cserr:
+                row["consensus_note"] = _cserr
         out["rows"].append(row)
     ok_rows = [r for r in out["rows"] if r.get("stock") and r.get("rtoken")]
     out["ok"] = bool(ok_rows)
@@ -352,6 +494,12 @@ def cache_payload(out):
             "quote_utc": r["stock"].get("quote_utc"),
             "provider": r["stock"].get("provider"),
             "rtoken_source": (r.get("rtoken") or {}).get("source"),
+            # 第三方**观点**（目标价 / 一致预期）—— 与"价格锚"不同：
+            # 它们是**别人的判断**，用的时候必须标 source_kind=third_party。
+            "targets": r.get("targets"),
+            "targets_note": r.get("targets_note"),
+            "consensus": r.get("consensus"),
+            "consensus_note": r.get("consensus_note"),
         }
     return {"fetched_utc": out.get("fetched_utc"), "mcp": out.get("mcp"),
             "session": out.get("session"), "compare_label": out.get("compare_label"),

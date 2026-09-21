@@ -73,6 +73,8 @@ VERDICTS = ("favorable", "unfavorable", "neutral")
 DIMENSIONS = ("basis", "sentiment", "news", "technical", "execution_risk",
               # ⚓ 2026-09-20：**只在接了外部锚时**才跑（第三方真实美股报价）
               "external_anchor",
+              # 📊 2026-09-20：**只在有第三方目标价时**才跑（机构观点分布）
+              "analyst_opinion",
               # ⭐ 2026-09-20：**只在有在途订单时**才跑（执行中闭环）
               "execution_progress")
 
@@ -110,14 +112,35 @@ HYPOTHESIS_ACTIONS = {
     "anchor_divergence": {
         "level": "caution", "action": "require_review",
         "measure": "|rToken 中价 − 真实美股中价| / 真实美股中价 > 阈值（第三方数据）"},
+    # 📊 2026-09-20 新增（第三方机构观点）：机构目标价的**分歧度**过高。
+    #    只用"分歧多大"，**不用**"看多还是看空" —— 后者是拿别人的价格预测
+    #    当我们的结论，既违反红线也不是实测。
+    "estimate_dispersion": {
+        "level": "caution", "action": "require_review",
+        "measure": "机构目标价 IQR 分歧度 > 阈值（**第三方观点分布**，不是价格预测）"},
 }
 
 
 # ---------------------------------------------------------------- 通用
 
-def ev(metric, value, source):
-    """构造一条**可核验证据**。三个字段缺一不可。"""
-    return {"metric": str(metric), "value": str(value), "source": str(source)}
+# 证据的**来源类别**。本项目的底线是"每个数字都能点回来源"，但来源有好几种，
+# 混在一起会让人以为第三方观点也是我们量出来的 —— 那是编。
+#   measured    : 本项目的**实测**（来自本仓库 data/ 下的文件或确定性计算）
+#   third_party : **第三方数据**（官方 MCP 等外部数据源给的观点/报价）
+#   derived     : 由实测**派生**（比值、阈值比较、分类计数）
+#   declared    : 常量 / 约定值（例如"阈值 20 bp 是我们的约定，不是标定值"）
+SOURCE_KINDS = ("measured", "third_party", "derived", "declared")
+
+
+def ev(metric, value, source, kind="measured"):
+    """构造一条**可核验证据**：指标 / 数值 / 来源**缺一不可**，另带来源类别。
+
+    ``kind`` 默认 ``measured``，所以老调用点一行都不用改；
+    接第三方数据源时必须显式写 ``kind="third_party"`` —— 页面上会打出标记，
+    免得读者把"分析师目标价"当成我们量出来的东西。
+    """
+    return {"metric": str(metric), "value": str(value), "source": str(source),
+            "kind": kind if kind in SOURCE_KINDS else "measured"}
 
 
 def report(dim, verdict, confidence, evidence, notes="", sources=None):
@@ -1202,13 +1225,15 @@ def analyst_external_anchor(base, anchor, cost=None):
            % (anchor.get("provider") or "provider 未标明",
               anchor.get("quote_utc") or "时刻未知"))
 
-    e.append(ev("真实美股中价", "%.4f" % anchor["stock_mid"], src))
+    e.append(ev("真实美股中价", "%.4f" % anchor["stock_mid"], src,
+                kind="third_party"))
     e.append(ev("rToken 中价", "%.4f（来源 %s）"
                 % (anchor["rtoken_mid"], anchor.get("rtoken_source") or "?"),
-                "data/spread（本项目侧）"))
-    e.append(ev(label, "%+.1f bp" % dev, src))
+                "data/spread（本项目侧）", kind="measured"))
+    e.append(ev(label, "%+.1f bp" % dev, src, kind="derived"))
     e.append(ev("两个价是否同一时刻", "是" if same else "**否**（口径含不可分离的漂移）",
-                "美股时段 %s" % (anchor.get("session") or "未知")))
+                "美股时段 %s" % (anchor.get("session") or "未知"),
+                kind="third_party"))
 
     if abs(dev) > ANCHOR_DIVERGENCE_BP:
         hyps.append({
@@ -1234,6 +1259,135 @@ def analyst_external_anchor(base, anchor, cost=None):
                if not same else "；两个价同一时刻，可比"))
     note += "｜⚠️ 真实美股报价是**第三方数据**，不是本项目的实测量"
     return report("external_anchor", verdict, conf, e, note), hyps, dropped
+
+
+# ------------------------------------------------- 📊 第三方观点（机构目标价）
+
+# 机构目标价的**分歧度**阈值（bp，IQR 口径）。
+# ⚠️ **这是约定，不是标定值**。实测（2026-09-20，一次性快照）8 个可比标的的
+#    IQR 分歧度落在 **893 ~ 2254 bp**；把阈值放在观测区间的上沿，含义是
+#    "在当前可比样本里属于分歧最大的那一档"。样本只有一次快照，
+#    **不足以标定** —— `tools/anchor_calibration.py` 会在攒够样本后用实测值替换它。
+ESTIMATE_DISPERSION_BP = 2000.0
+# 少于这么多条近期目标价就**不判**（样本不足时说"不知道"，不硬给结论）
+MIN_TARGETS = 8
+
+
+def analyst_third_party(base, anchor):
+    """📊 **第三方机构观点**（分析师目标价 / 一致预期）。
+
+    ━━ 它和外部锚的区别（这个区别决定了怎么用）━━
+
+      · ⚓ 外部锚 = **真实股价**（客观报价，只是不在我们手里）
+      · 📊 这里   = **别人的判断**（观点）
+
+    观点**不能**用来推方向 —— 那等于拿别人的价格预测当我们的结论，
+    既违反"不做价格预测"的红线，也不是实测。所以本路只用它做一件
+    **可度量**的事：
+
+        机构之间**分歧多大**（IQR 口径）-> 高分歧 = 高不确定 = 挂单被
+        逆向选择的风险上升 -> ``caution``
+
+    ━━ 三条硬规矩 ━━
+
+    ① **只用近 90 天的目标价**。实测全历史 850+ 条、最早到 2016 年，
+       而 NVDA 的目标价区间是 **59 ~ 1400** —— 拿 2016 年的 59 美元算分歧度
+       是**没有意义的**。
+    ② **用 IQR 而不是极差**。实测 TSLA 近期目标价里有一个 **24.9** 的离群值
+       （中位 418.5）：极差口径给它算出 11473 bp，IQR 口径只有 2001 bp。
+       极差被一个人主导，不能代表"机构之间分歧多大"。
+    ③ **样本不足就不判**（n < ``MIN_TARGETS``），并说明是样本问题不是"没风险"。
+
+    ━━ 一致预期的陈旧闸门 ━━
+
+    `equity_estimates_consensus` 返回的 `scraped_date` **可能是很久以前**
+    （实测见过 2024-11-21，陈旧 22 个月）。这种数据**必须拒绝**：
+    它看起来最权威（`fore_org_num: 42` 家机构），拿它当今天的预期比没有数据更糟。
+
+    ━━ 来源类别 ━━
+
+    本路 evidence **全部**标 ``kind="third_party"`` —— 页面上会打出标记，
+    免得读者把分析师的目标价当成我们量出来的。
+    """
+    e, hyps, dropped = [], [], []
+    t = (anchor or {}).get("targets") if isinstance(anchor, dict) else None
+    c = (anchor or {}).get("consensus") if isinstance(anchor, dict) else None
+    prov = "第三方：mcp:bitget-mcp-server"
+    if not isinstance(t, dict) or not t.get("n_recent"):
+        note = "没有可用的第三方目标价"
+        if isinstance(t, dict) and t.get("n_all"):
+            note += "（全历史 %d 条，但近 %d 天内 0 条）" % (
+                t["n_all"], t.get("fresh_days") or TARGET_FRESH_DAYS)
+        return report("analyst_opinion", "neutral", 0.0, [],
+                      note + " —— **这不等于『没有分歧』**"), hyps, dropped
+
+    n = int(t["n_recent"])
+    disp = t.get("dispersion_bp")
+    e.append(ev("近 %d 天的机构目标价条数" % (t.get("fresh_days") or 90),
+                "%d 条（全历史 %d 条）" % (n, t.get("n_all") or 0),
+                "%s equity_estimates_price_target" % prov, kind="third_party"))
+    if disp is not None:
+        e.append(ev("机构目标价 **IQR 分歧度**（p75−p25）/中位",
+                    "%.0f bp（中位 %.2f ｜ p25 %.2f ｜ p75 %.2f）"
+                    % (disp, t["median"], t["p25"], t["p75"]),
+                    "%s（口径：IQR 抗离群；极差口径为 %.0f bp，供对照）"
+                    % (prov, t.get("range_bp") or 0), kind="third_party"))
+    e.append(ev("目标价最新发布日", "%s（最新一条）" % (t.get("newest_recent") or "—"),
+                "%s（**只用近 %d 天的**：全历史最早到 %s，价格水平不可比）"
+                % (prov, t.get("fresh_days") or 90, t.get("oldest_all") or "?"),
+                kind="third_party"))
+    if isinstance(c, dict):
+        if c.get("usable"):
+            s = c.get("sample") or {}
+            e.append(ev("一致预期（EPS）",
+                        "%s ≈ %s（%s 家机构 ｜ 区间 %s~%s）"
+                        % (s.get("fore_indicator_name"), s.get("target_consensus"),
+                           s.get("fore_org_num"), s.get("target_low"),
+                           s.get("target_high")),
+                        "%s equity_estimates_consensus（抓取日 %s，滞后 %s 天）"
+                        % (prov, c.get("newest_scraped"), c.get("stale_days")),
+                        kind="third_party"))
+        else:
+            e.append(ev("一致预期", "**拒绝采用**（抓取日 %s，滞后 %s 天 > %s）"
+                        % (c.get("newest_scraped"), c.get("stale_days"),
+                           c.get("stale_limit")),
+                        "%s —— 陈旧数据看起来最权威（%s 家机构），"
+                        "拿它当今天的预期比没有数据更糟"
+                        % (prov, (c.get("sample") or {}).get("fore_org_num")),
+                        kind="third_party"))
+
+    if n < MIN_TARGETS:
+        dropped.append({"id": "estimate_dispersion",
+                        "reason": "样本不足（%d < %d），**不判**" % (n, MIN_TARGETS),
+                        "metric": "近 90 天目标价条数", "value": "%d 条" % n})
+        note = ("机构目标价样本不足（%d < %d）—— **不判**，"
+                "而不是当成『分歧不大』" % (n, MIN_TARGETS))
+        verdict, conf = "neutral", 0.3
+    elif disp is not None and disp > ESTIMATE_DISPERSION_BP:
+        hyps.append({
+            "id": "estimate_dispersion",
+            "hypothesis": "机构目标价的**四分位分歧**达到 %.0f bp，超过阈值 %.0f —— "
+                          "分歧大 = 不确定高 = 挂单被逆向选择的风险上升"
+                          % (disp, ESTIMATE_DISPERSION_BP),
+            "metric": "机构目标价 IQR 分歧度", "value": "%.0f bp" % disp,
+            "threshold": "> %.0f bp" % ESTIMATE_DISPERSION_BP,
+            "falsifier": "若 IQR 分歧度回落到 %.0f bp 以内（或近期样本 < %d 条），"
+                         "本条不成立" % (ESTIMATE_DISPERSION_BP, MIN_TARGETS),
+            "action": "复核执行方式：缩小规模 / 改吃单，别在高不确定窗口挂大单",
+        })
+        verdict, conf = "unfavorable", 0.5
+        note = ("机构分歧 %.0f bp > 阈值 %.0f（%d 条近期目标价）"
+                % (disp, ESTIMATE_DISPERSION_BP, n))
+    else:
+        dropped.append({"id": "estimate_dispersion", "reason": "分歧在阈值内",
+                        "metric": "机构目标价 IQR 分歧度",
+                        "value": "%.0f bp" % (disp if disp is not None else 0)})
+        verdict, conf = "neutral", 0.4
+        note = ("机构分歧 %.0f bp ≤ 阈值 %.0f（%d 条近期目标价）"
+                % (disp if disp is not None else 0, ESTIMATE_DISPERSION_BP, n))
+    note += ("｜⚠️ 这是**第三方观点的分布**，不是本项目的实测，"
+             "也**不是价格预测** —— 本路只用「分歧多大」，不用「看多还是看空」")
+    return report("analyst_opinion", verdict, conf, e, note), hyps, dropped
 
 
 # ------------------------------------------------- ⑥ 执行进度（执行中闭环）
@@ -3464,7 +3618,7 @@ def selftest():
     #    `run_team` 只跑常跑的那几路，条件路分别在 run_decision 里挂上去。
     #    写死 `len(items) == len(DIMENSIONS)` 会在新增条件路的那一刻变成假失败
     #    （这个坑本轮踩了两次：先被 execution_progress、再被 external_anchor）。
-    _COND = ("external_anchor", "execution_progress")
+    _COND = ("external_anchor", "analyst_opinion", "execution_progress")
     _PRE = [d for d in DIMENSIONS if d not in _COND]
     chk(len(items) == len(_PRE)
         and {i["report"]["dimension"] for i in items} == set(_PRE),
@@ -3579,45 +3733,18 @@ def merge_gate(static_gate, llm_event, ext_event=None):
 
 
 def _merge_two(static_gate, llm_event):
-    """把**确定性日历闸门**与**LLM 事件判定**合并成**唯一一个硬闸门**。
+    """两个源的合并（确定性日历 + LLM）。**三源版本是 `merge_gate`。**
 
-    🔴 为什么必须合并（2026-09-19 修的第二处"说了没做"）
-    ---------------------------------------------------
-    文档写的是「severity=block → **挂单类方案直接作废**（硬规则，agent 不能推翻）」，
-    但实现里硬闸门走的是：
+    ⚠️ 这里曾经**有两个同名定义**（后一个把前一个覆盖掉）：一次编辑把
+       `merge_gate` 拆成"三源壳 + `_merge_two` 内核"时，原函数的 docstring
+       留在了第一个定义上、函数体落在第二个定义上。**行为是对的**
+       （Python 后定义覆盖前定义，跑的是带函数体那个），但两份定义并存
+       是典型的"下次改错的地方" —— 已合并成一份，历史说明留在 `merge_gate` 里。
 
-        run_decision -> execution_cost.consult_gate() -> event_gate.static_gate()
-
-    也就是**只读确定性日历、从不问 LLM**；LLM 的判定只到了辩论层（变成一条证据）。
-    后果有两条：
-      ① 安全上：LLM 判出 block（例如刚披露的 8-K）时，**挂单类方案照样生成**——
-         而"挡不住突发新闻与财报"恰恰是我们自己写在局限里的最大缺口；
-      ② 观感上：把 key 配上之后页面会自相矛盾——闸门区块写"本次未使用 LLM"，
-         而它上面的新闻分析师写"✅ 本次由 LLM 判事件"。
-
-    实测证据（把 `assess` 打桩成必定返回 block，跑全部 10 个标的）：
-        news 分析师收到 block：True
-        硬闸门收到 block     ：False（cost['gate_severity']='none'、maker_allowed=True）
-
-    ⚠️ 当时**没有改变任何结论**：那 10 个标的都因别的原因（现货腿停滞等）已经
-    `stand_down`。所以它是**潜伏**缺陷 —— 等现货腿恢复成交、策略真正可执行时才会咬人，
-    而那正是最需要事件闸门的时候。
-
-    合并规则（**只取更保守的一侧**）：
-      * 两侧取严重度更高的那个；
-      * 谁更严就让谁当 `source`，并在 reason 里写明另一侧说了什么 —— 不藏；
-      * 返回 (severity, reason, source, maker_allowed)。
-
-    ⚠️ 调用方必须同时把结果写回 `cost`（见 `apply_gate_to_cost`），
-       否则会出现"闸门说 block、可 cost 里最优方式仍是挂单"的自相矛盾。
-    """
-def _merge_two(static_gate, llm_event):
-    """两个源的合并（确定性日历 + LLM）。三源版本见 `merge_gate`。
-
-    单独拆出来是为了**不改动已有语义** —— 这一段的 `llm+static` 来源标记、
+    拆出来是为了**不改动已有语义**：这一段的 `llm+static` 来源标记、
     `(frozen)` 标记、以及"同级一致"的措辞都被文档与自检引用着。
     第三源（外部确定性事件）在 `merge_gate` 里**叠在它之上**，
-    这样 ext_event=None 时行为与从前逐字节一致。
+    这样 `ext_event=None` 时行为与从前逐字节一致。
     """
     sev_s, why_s, src_s = (static_gate or ("none", "", "static"))[:3]
     ev = llm_event or {}
@@ -3763,6 +3890,20 @@ def run_decision(base, *, qty_usd=5000.0, miss_bp=None, urgent=False,
             # 它的假设与别的 agent 假设一样并进风控 —— 不搞特殊通道
             hyps = list(hyps) + list(_ahyps)
             dropped = list(dropped) + list(_adropped)
+            if len(hyps) > MAX_HYPOTHESES:
+                dropped = dropped + [
+                    {"id": h["id"], "reason": "超出假设条数上限（%d）"
+                     % MAX_HYPOTHESES, "metric": h.get("metric"),
+                     "value": h.get("value")} for h in hyps[MAX_HYPOTHESES:]]
+                hyps = hyps[:MAX_HYPOTHESES]
+            # 📊 第三方**机构观点**（目标价 / 一致预期）：与锚**同一份缓存、
+            #    同一次冻结**。它只用"分歧多大"，不用"看多还是看空"。
+            _orep, _ohyps, _odropped = analyst_third_party(base, anchor_used)
+            _ook, _owhy = validate(_orep)
+            items = items + [{"report": _orep, "valid": _ook,
+                              "invalid_reason": _owhy}]
+            hyps = list(hyps) + list(_ohyps)
+            dropped = list(dropped) + list(_odropped)
             if len(hyps) > MAX_HYPOTHESES:
                 dropped = dropped + [
                     {"id": h["id"], "reason": "超出假设条数上限（%d）"
@@ -4504,8 +4645,20 @@ def decision_selftest():
         chk("不同时刻" in _rs["notes"] and "不可分离" in _rs["notes"],
             "notes 写明口径：%s" % _rs["notes"][:46])
         # (d) 来源类别必须标明（第三方 ≠ 实测量）
-        chk("第三方" in " ".join(e["source"] for e in _r0["evidence"]),
-            "evidence 里标明**第三方数据**（不是本项目的实测量）")
+        _kinds = {e["kind"] for e in _r0["evidence"]}
+        chk("third_party" in _kinds,
+            "锚定路的 evidence 含 **third_party** 标记（不是全部算实测）：%s"
+            % "、".join(sorted(_kinds)))
+        # ⚠️ 实测踩到：初版忘了给这一路打标记，于是**真实美股报价**被标成
+        #    `measured` —— 正是 source_kind 这层要防的事。所以这里断言到具体条目。
+        _stock_ev = [e for e in _r0["evidence"] if "美股" in e["metric"]]
+        chk(_stock_ev and _stock_ev[0]["kind"] == "third_party",
+            "**真实美股报价**那条被标成 third_party（kind=%s）"
+            % (_stock_ev[0]["kind"] if _stock_ev else "无"))
+        _rt_ev = [e for e in _r0["evidence"] if "rToken" in e["metric"]]
+        chk(_rt_ev and _rt_ev[0]["kind"] == "measured",
+            "rToken 价是**我们自己**的数据 -> measured（kind=%s）"
+            % (_rt_ev[0]["kind"] if _rt_ev else "无"))
         # (e) 没有锚 -> 明确"未接"，**不能**说成"没有偏离"
         _rn, _hn, _ = analyst_external_anchor("X", None)
         chk(_rn["verdict"] == "neutral" and not _hn and "不等于" in _rn["notes"],
@@ -4517,7 +4670,10 @@ def decision_selftest():
                                                      llm_event=NONE_EV)
         _dims = sorted(str((i.get("report") or {}).get("dimension")) for i in _iad)
         if "external_anchor" in _dims:
-            chk(len(_dims) == 6, "真实决策里带上第 6 路（%s）" % "、".join(_dims))
+            # ⚠️ 断言**集合包含**，不写死路数 —— 这是本轮第三次踩同一个坑：
+            #    先写死 5、再写死 6，每次加一路就假失败一次。
+            chk({"external_anchor", "analyst_opinion"} <= set(_dims),
+                "真实决策里带上外部锚 + 第三方观点两路（%s）" % "、".join(_dims))
             _lgad = build_log(base="NVDA", items=_iad, debate=_dad, cost=_cad,
                               decision=_dcad, qty_usd=500.0, miss_bp=3.0,
                               urgent=False, now_ms=None, book=_bad)

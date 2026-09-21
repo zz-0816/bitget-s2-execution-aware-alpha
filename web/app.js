@@ -441,8 +441,15 @@ function renderAnalysts(d) {
   $('analysts').innerHTML = list.map((a) => {
     // 证据行只留"指标 = 值"。原来每行尾巴都挂一个文件路径（← data/…），
     // 十来个指标就是十来个路径，卡片被撑得很长，读者也不看。
-    const ev = (a.evidence || []).map((e) =>
-      '<div>· ' + mdInline(e.metric) + ' = <b>' + mdInline(e.value) + '</b></div>').join('');
+    // ⭐ 但**来源类别**必须留在行上：`third_party` 是**别人的数据/判断**，
+    //    不是我们量出来的 —— 不标出来，读者会把分析师目标价当成我们的实测。
+    const KIND_TAG = { third_party: '第三方', declared: '约定值', derived: '派生' };
+    const ev = (a.evidence || []).map((e) => {
+      const t = KIND_TAG[e.kind];
+      return '<div>· ' + mdInline(e.metric) + ' = <b>' + mdInline(e.value) + '</b>' +
+        (t ? ' <span class="tag ' + (e.kind === 'third_party' ? 'agent' : '') + '">' +
+             esc(t) + '</span>' : '') + '</div>';
+    }).join('');
     /* 溯源没有删，只是**收起来**：默认折叠，点开才逐条列出"指标 ← 文件"。
        项目原则是"页面上每个数字都能点回数据文件"，所以不能拿掉，
        但也没必要让路径占满版面。 */
@@ -451,7 +458,9 @@ function renderAnalysts(d) {
     (a.evidence || []).forEach((e) => {
       const src = String(e.source || '').trim();
       if (!src) return;
-      pairs.push('<div>' + mdInline(e.metric) + ' → ' + mdInline(src) + '</div>');
+      pairs.push('<div>' + (KIND_TAG[e.kind]
+        ? '[' + esc(KIND_TAG[e.kind]) + '] ' : '') +
+        mdInline(e.metric) + ' → ' + mdInline(src) + '</div>');
       seen[src] = 1;
     });
     (a.sources || []).forEach((s) => {

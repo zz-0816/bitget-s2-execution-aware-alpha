@@ -1,17 +1,22 @@
 {
-  "base": "SPY",
+  "base": "META",
   "categories": {
     "earnings": 2,
-    "earnings_scheduled": 8,
+    "earnings_scheduled": 27,
+    "filing": 4,
+    "filing_material": 8,
     "macro": 7,
     "other": 39
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 0,
-    "n_total": 56,
-    "should_call_llm": false
+    "n_fresh": 1,
+    "n_total": 87,
+    "should_call_llm": true
   },
+  "fresh_headlines": [
+    "[Mon, 21 Se] This struggling home furnishings stock is on the cusp of a comeback, Jefferies says"
+  ],
   "headlines_for_gate": [
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
     "[2026-09-21] GRFS 预定于 2026-09-21 发布财报（time-not-supplied）",
@@ -21,12 +26,168 @@
     "[2026-09-21] CBAT 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] YYAI 预定于 2026-09-21 发布财报（time-not-supplied）",
     "[2026-09-21] FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement",
-    "[Wed, 16 Se] Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
-    "[Fri, 11 Se] Agencies seek comment on proposed third-party risk management guidance and issue statement on community bank engagement with core service providers",
-    "[Wed, 16 Se] Federal Reserve issues FOMC statement"
+    "[2026-09-22] AZO 预定于 2026-09-22 发布财报（time-pre-market）",
+    "[2026-09-22] THO 预定于 2026-09-22 发布财报（time-pre-market）",
+    "[2026-09-22] KBH 预定于 2026-09-22 发布财报（time-after-hours）",
+    "[2026-09-22] WOR 预定于 2026-09-22 发布财报（time-after-hours）"
   ],
   "items": [
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014140/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-16",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326014061/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-15",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001023/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-14",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001013/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-11",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013860/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-10",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013794/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-09",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001004/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-08",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326013672/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-09-08",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001000/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012729/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012727/xslF345X06/ownership.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Meta Platforms, Inc.",
+      "date": "2026-08-20",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "META 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326012726/xslF345X06/ownership.xml"
+    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-21",
@@ -121,6 +282,234 @@
       "symbol": "FRGT",
       "time": "time-not-supplied",
       "title": "FRGT 预定于 2026-09-21 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$54.78",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "AZO",
+      "time": "time-pre-market",
+      "title": "AZO 预定于 2026-09-22 发布财报（time-pre-market）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$0.95",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "THO",
+      "time": "time-pre-market",
+      "title": "THO 预定于 2026-09-22 发布财报（time-pre-market）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$0.88",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "KBH",
+      "time": "time-after-hours",
+      "title": "KBH 预定于 2026-09-22 发布财报（time-after-hours）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$0.74",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "WOR",
+      "time": "time-after-hours",
+      "title": "WOR 预定于 2026-09-22 发布财报（time-after-hours）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$0.35",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "MLKN",
+      "time": "time-pre-market",
+      "title": "MLKN 预定于 2026-09-22 发布财报（time-pre-market）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "($0.09)",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "AREC",
+      "time": "time-not-supplied",
+      "title": "AREC 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "ESP",
+      "time": "time-not-supplied",
+      "title": "ESP 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "ELME",
+      "time": "time-not-supplied",
+      "title": "ELME 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "($0.21)",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "ZENA",
+      "time": "time-not-supplied",
+      "title": "ZENA 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "HERE",
+      "time": "time-pre-market",
+      "title": "HERE 预定于 2026-09-22 发布财报（time-pre-market）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "ALPS",
+      "time": "time-not-supplied",
+      "title": "ALPS 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "BRLS",
+      "time": "time-not-supplied",
+      "title": "BRLS 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "AAME",
+      "time": "time-not-supplied",
+      "title": "AAME 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "($0.22)",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "AYTU",
+      "time": "time-after-hours",
+      "title": "AYTU 预定于 2026-09-22 发布财报（time-after-hours）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "NAII",
+      "time": "time-not-supplied",
+      "title": "NAII 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "SEGG",
+      "time": "time-not-supplied",
+      "title": "SEGG 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "$3",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "BRTX",
+      "time": "time-not-supplied",
+      "title": "BRTX 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "SHPH",
+      "time": "time-not-supplied",
+      "title": "SHPH 预定于 2026-09-22 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-22",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "GTEN",
+      "time": "time-not-supplied",
+      "title": "GTEN 预定于 2026-09-22 发布财报（time-not-supplied）",
       "url": "https://www.nasdaq.com/market-activity/earnings"
     },
     {
@@ -477,187 +866,187 @@
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:15:15 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Most covered call ETFs hand you a fat monthly check while quietly draining your principal, but a small group of actively managed funds has cracked the formula to deliver both. The catch is that each o",
-      "title": "After Comparing Every Covered Call ETF With Over $1 Billion in Assets, These 3 Pay Up to 8 Percent and Still Grew Your Principal",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/after-comparing-every-covered-call-etf-with-over-1-billion-in-assets-these-3-pay-up-to-8-percent-and-still-grew-your-principal/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 21:05:57 +0000",
+      "date": "Mon, 21 Sep 2026 10:00:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A single ETF purchase made before most investors had ever heard the term changed what passive investing looks like today, but the original is no longer the obvious choice for everyone holding it.",
-      "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/a-10000-investment-in-spy-at-its-1993-launch-is-worth-this-much-today-without-you-adding-a-dime/?.tsrc=rss"
+      "summary": "A state visit from Chinese leader Xi Jinping, conferences from Meta and Qualcomm, and a lot of FedSpeak form the last full week of September.",
+      "title": "Trump and Xi dine with AI titans and Meta takes the stage: What to watch this week",
+      "url": "https://finance.yahoo.com/markets/article/trump-and-xi-dine-with-ai-titans-and-meta-takes-the-stage-what-to-watch-this-week-100000383.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sat, 19 Sep 2026 08:35:00 +0000",
+      "date": "Mon, 21 Sep 2026 10:02:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "These two S&amp;P 500 ETFs seem interchangeable. They're not.",
-      "title": "VOO vs. SPY: Is There Actually a Difference?",
-      "url": "https://www.fool.com/investing/2026/09/19/voo-vs-spy-is-there-actually-a-difference/?.tsrc=rss"
+      "summary": "Stock futures were rising to start the week as oil prices fell and the market digested positive progress between the U.S. and China",
+      "title": "Intel, AMD, Strategy, Meta, Warner Bros, and More Stocks That Explain Today’s Market",
+      "url": "https://finance.yahoo.com/m/6c151bf6-d6e0-326a-905a-75334358e038/intel%2C-amd%2C-strategy%2C-meta%2C.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Fri, 18 Sep 2026 21:45:11 +0000",
+      "date": "Mon, 21 Sep 2026 07:12:21 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Meta Platforms (NasdaqGS:META) faces a French privacy probe into its AI-powered smart glasses following recent complaints about data collection. Regulators in France are examining whether the AI glass",
+      "title": "Meta Platforms (META) Faces A Privacy Probe In France",
+      "url": "https://finance.yahoo.com/technology/ai/articles/meta-platforms-meta-faces-privacy-071221190.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 06:49:06 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "CEO of OpenAI, Nvidia, and Microsoft, as well as Apple’s chairman Tim Cook, among others, would attend the state dinner with Chinese President Xi Jinping.",
+      "title": "Stocktwits Tech Watch: Trump-Xi Summit, AI Pacing Debate and Meta And YouTube Events In Focus This Week",
+      "url": "https://stocktwits.com/news-articles/markets/equity/stocktwits-tech-watch-trump-xi-summit-ai-pacing-debate-and-meta-and-you-tube-events-in-focus-this-week/cZMRIBoRB40?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 02:46:17 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "A seven-figure VOO balance sounds like a retirement paycheck until you do the actual math on what it deposits each month, then realize covering the rest means a tax bill your fund prospectus quietly i",
-      "title": "$1 Million in VOO Pays $871 a Month, and Covering the Gap Means Selling Shares the IRS Taxes",
-      "url": "https://247wallst.com/investing/etf/2026/09/18/1-million-in-voo-pays-871-a-month-and-covering-the-gap-means-selling-shares-the-irs-taxes/?.tsrc=rss"
+      "summary": "Burry says the liabilities are growing more than the companies themselves.",
+      "title": "Michael Burry Warns Hyperscalers Are Hiding $3 Trillion In AI Liabilities — And Wall Street Isn’t Looking: ‘When The Music’s Over…’",
+      "url": "https://stocktwits.com/news-articles/markets/equity/michael-burry-warns-hyperscalers-are-hiding-3-trillion-in-ai-liabilities-and-wall-street-isn-t-looking-when-the-music-s-over/cZMRbsvRB4I?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 13:06:20 +0000",
+      "date": "Sun, 20 Sep 2026 16:14:57 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Replacing a married couple's Social Security income with dividends sounds straightforward until you see how brutally the math punishes the wrong yield tier at the wrong time in retirement.",
-      "title": "How to Build $3,250 a Month in Dividend Income to Cover a Married Couple’s Social Security Checks, Starting From Zero",
-      "url": "https://247wallst.com/personal-finance/2026/09/20/how-to-build-3250-a-month-in-dividend-income-to-cover-a-married-couples-social-security-checks-starting-from-zero/?.tsrc=rss"
+      "summary": "Google and Meta just launched competing AI agents that actually take actions in your digital life, not just answer questions, and a retirement investor writing one check today faces a choice where the",
+      "title": "The AI Agent Wars Just Got Personal: Google’s CC vs. Meta’s Muse",
+      "url": "https://247wallst.com/investing/2026/09/20/the-ai-agent-wars-just-got-personal-googles-cc-vs-metas-muse/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 09:59:02 +0000",
+      "date": "Sun, 20 Sep 2026 16:03:03 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Fifteen years of automatic S&amp;P 500 investing through crashes, pandemics, and AI euphoria reveals something surprising: the fund you pick matters far less than one overlooked detail that quietly de",
-      "title": "If You Had Invested $500 a Month in VOO Since Its 2010 Launch, You Would Have About $330,000 Today",
-      "url": "https://247wallst.com/investing/etf/2026/09/20/if-you-had-invested-500-a-month-in-voo-since-its-2010-launch-you-would-have-about-330000-today/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Sat, 19 Sep 2026 16:05:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Both options are rooted in the same basic buy-and-hold philosophy, but one differs from the other in one way that's very important for the foreseeable future.",
-      "title": "Is Berkshire Hathaway Stock a Better Buy Than an S&amp;P 500 Index Fund?",
-      "url": "https://www.fool.com/investing/2026/09/19/is-berkshire-hathaway-stock-a-better-buy-than-an/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Fri, 18 Sep 2026 23:52:05 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "A simple momentum screen applied to S&amp;P 500 stocks has quietly built a performance gap that turns identical starting portfolios into dramatically different ending balances, and the strategy costs ",
-      "title": "SPMO Owns the S&amp;P 500’s 100 Fastest-Rising Stocks. Its Momentum Screen Has Beaten the Index by 67-Points Over the Last Five Years",
-      "url": "https://247wallst.com/investing/2026/09/18/spmo-owns-the-sp-500s-100-fastest-rising-stocks-its-momentum-screen-has-beaten-the-index-by-67-points-over-the-last-five-years/?.tsrc=rss"
-    },
-    {
-      "category": "macro",
-      "date": "Sun, 20 Sep 2026 12:47:23 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Tariffs, fuel prices and interest rates are squeezing American companies, particularly manufacturers, auto suppliers, retailers and transportation businesses.",
-      "title": "‘It&apos;s awful’: How tariffs, soaring fuel costs and higher interest rates are squeezing American companies",
-      "url": "https://www.cnbc.com/2026/09/20/tariffs-fuel-prices-and-interest-rates-squeeze-us-companies.html"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 16:56:14 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Scott Bessent and China’s He Lifeng are holding talks on trade, AI and critical minerals ahead of Trump and Xi’s Sept. 24 summit.",
-      "title": "Bessent meets China Vice Premier He Lifeng ahead of Trump-Xi summit",
-      "url": "https://www.cnbc.com/2026/09/20/bessent-he-lifeng-trump-xi-summit.html"
-    },
-    {
-      "category": "other",
-      "date": "Sun, 20 Sep 2026 11:25:08 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Jensen Huang's position as the leader of the world's most valuable company, has earned him Trump's ear on the most important topics in AI.",
-      "title": "Nvidia CEO Jensen Huang emerges as Trump&apos;s top ally in AI safety debate",
-      "url": "https://www.cnbc.com/2026/09/20/nvidia-ceo-jensen-huang-emerges-as-trumps-top-ally-in-ai-debate.html"
+      "summary": "Oppenheimer's top internet analyst ran the numbers on Meta's AI subscription push and walked away skeptical, raising a pointed question about whether Muse can ever justify the valuation premium Wall S",
+      "title": "Analyst: Meta Needs Just 115 Million Users to Ignite a $28 Billion AI Gold Rush — But It’s Not Likely to Happen",
+      "url": "https://247wallst.com/investing/2026/09/20/analyst-meta-needs-just-115-million-users-to-ignite-a-28-billion-ai-gold-rush-but-its-not-likely-to-happen/?.tsrc=rss"
     },
     {
       "category": "earnings",
-      "date": "Sun, 20 Sep 2026 12:00:01 GMT",
+      "date": "Mon, 21 Sep 2026 02:07:26 +0000",
       "kind": "news",
       "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Williams-Sonoma is outperforming the furnishings industry due to its ability to grow profitability despite a weak housing backdrop.",
-      "title": "Williams-Sonoma&apos;s stock has soared in a sluggish housing market. Here&apos;s how it won over Wall Street",
-      "url": "https://www.cnbc.com/2026/09/20/williams-sonoma-stock-rises-housing-market.html"
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Nvidia's Jensen Huang is becoming Trump's top AI ally, outpacing Zuckerberg and Bezos as the stock extends its rally.",
+      "title": "Nvidia's Jensen Huang Beats Zuckerberg, Bezos for Trump's AI Favor as Stock Climbs",
+      "url": "https://beincrypto.com/jensen-huang-trump-ai-ally-nvidia/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 14:23:53 GMT",
+      "date": "Mon, 21 Sep 2026 11:10:55 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "The State Department urged Americans to reconsider Middle East travel as Houthi attacks intensify and Iran keeps the Strait of Hormuz closed.",
-      "title": "U.S. urges Americans to reconsider Middle East travel as Iran tensions rise",
-      "url": "https://www.cnbc.com/2026/09/20/us-middle-east-travel-warning-iran-war-hormuz.html"
+      "summary": "Bitcoin rose above $85,000 on Monday extending a rally over the past few days.",
+      "title": "Bitcoin hits highest level since January at $85,000, as the market debates whether the &apos;crypto winter&apos; is over",
+      "url": "https://www.cnbc.com/2026/09/21/bitcoin-price-crypto-rally.html"
+    },
+    {
+      "category": "macro",
+      "date": "Mon, 21 Sep 2026 11:05:14 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Bessent met over the weekend with his Chinese counterpart, He Lifeng, ahead of a summit between Chinese President Xi Jinping and President Donald Trump.",
+      "title": "Treasury Secretary Bessent talks to CNBC as Trump administration faces affordability concerns",
+      "url": "https://www.cnbc.com/2026/09/21/treasury-bessent-cnbc-squawk-trump-bond-affordabilty.html"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:10:13 GMT",
+      "date": "Mon, 21 Sep 2026 11:00:01 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "Morgan Stanley said this week that stocks including SpaceX, SiTime and EchoStar are attractive.",
-      "title": "Morgan Stanley says stocks like Warner Music are a table-pounding buy right now",
-      "url": "https://www.cnbc.com/2026/09/20/buy-stocks-such-as-warner-music-morgan-stanley-says-.html"
+      "summary": "Nissan has two production shifts at its assembly plant in Smyrna, Tennessee, and adding another could mean hundreds, if not thousands, of new jobs.",
+      "title": "Nissan eyes increasing U.S. production as new Rogue hybrid launches",
+      "url": "https://www.cnbc.com/2026/09/21/nissan-2027-rogue-production.html"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 11:59:45 GMT",
+      "date": "Mon, 21 Sep 2026 12:02:29 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "As measured by the iShares Latin America 40 ETF (ILF), the region is handily beating the S&P 500 year to date, up 15% compared to the S&P's 11% move",
-      "title": "Caruso-Cabrera: The investing tailwinds for Latin America are the best in decades",
-      "url": "https://www.cnbc.com/2026/09/20/caruso-cabrera-the-investing-tailwinds-for-latin-america-are-the-best-in-decades.html"
+      "summary": "President Trump cited what he called \"cumulative stories\" by the three media outlets for his ban of them, saying, \"You get sick of it.\"",
+      "title": "Trump to be sued by MS NOW, CNN, Politico to reverse White House ban",
+      "url": "https://www.cnbc.com/2026/09/21/trump-lawsuit-white-house-ban-ms-now-cnn-politico.html"
     },
     {
       "category": "other",
-      "date": "Sun, 20 Sep 2026 12:00:01 GMT",
+      "date": "Mon, 21 Sep 2026 10:40:51 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "Serial airline investor Bill Franke is embracing more upmarket changes like first-class seats.",
-      "title": "Budget airline king Bill Franke warms to first-class seats and premium upgrades",
-      "url": "https://www.cnbc.com/2026/09/20/bill-franke-frontier-spirit-budget-airlines.html"
+      "summary": "The Danish company seeks to convince investors it can compete in an increasingly crowded field it helped pioneer.",
+      "title": "Novo shares slide as drugmaker lays out post-Wegovy growth strategy",
+      "url": "https://www.cnbc.com/2026/09/21/novo-nordisk-stock-sales-target-obesity-drugs.html"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 11:47:28 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "The investment bank upgraded the home furnishings stock to buy from hold.",
+      "title": "This struggling home furnishings stock is on the cusp of a comeback, Jefferies says",
+      "url": "https://www.cnbc.com/2026/09/21/arhaus-could-be-on-the-cusp-of-a-comeback-jefferies-says.html"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 11:59:16 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "The rally followed a U.S.-Denmark-Greenland security pact aimed at expanding the military presence on the Arctic territory.",
+      "title": "U.S.-listed Greenland stocks surge after Trump announces security deal with Denmark",
+      "url": "https://www.cnbc.com/2026/09/21/greenland-trump-denmark-deal-stocks-mining.html"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 08:58:46 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Trump threatened to destroy Iran's economy or eliminate its leadership if Tehran doesn't strike a deal, complicating efforts at diplomacy.",
+      "title": "Iranian President Pezeshkian to head to New York for UN meeting as Trump warns of no-deal consequences",
+      "url": "https://www.cnbc.com/2026/09/21/us-iran-war-trump-hormuz.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-20T18:14:53.002303+00:00",
+  "probed_at": "2026-09-21T12:10:14.202699+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.64s",
+      "note": "耗时 2.40s",
       "ok": true
     },
     "cnbc": {
@@ -666,38 +1055,38 @@
       "ok": true
     },
     "edgar": {
-      "n": 0,
-      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
+      "n": 12,
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 2.78s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.62s",
+      "note": "耗时 1.23s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.59s",
-      "ok": true
-    },
-    "nasdaq_calendar_2026-09-20": {
-      "n": 0,
-      "note": "提前数天（预告）｜ 耗时 0.66s",
+      "note": "耗时 1.00s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 0.59s",
+      "note": "提前数天（预告）｜ 耗时 0.91s",
+      "ok": true
+    },
+    "nasdaq_calendar_2026-09-22": {
+      "n": 19,
+      "note": "提前数天（预告）｜ 耗时 0.85s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.61s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.26s",
+      "note": "耗时 1.29s",
       "ok": true
     }
   }

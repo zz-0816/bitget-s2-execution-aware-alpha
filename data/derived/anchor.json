@@ -1,130 +1,1124 @@
 {
- "fetched_utc": "2026-09-20T18:10:29Z",
+ "fetched_utc": "2026-09-21T11:59:30Z",
  "mcp": "https://agent.bitget.com/mcp",
- "session": "closed",
- "compare_label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
- "same_instant": false,
+ "session": "premarket",
+ "compare_label": "折溢价（同一时刻两个价，可比）",
+ "same_instant": true,
  "source": "mcp:bitget-mcp-server（第三方数据，不是本项目的实测量）",
  "bases": {
   "NVDA": {
    "stock_mid": 222.515,
-   "rtoken_mid": 221.195,
-   "deviation_bp": -59.32184347122635,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 224.52,
+   "deviation_bp": 90.10628496955368,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:59Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 942,
+    "n_recent": 29,
+    "fresh_days": 90,
+    "oldest_all": "2016-09-19",
+    "newest_all": "2026-09-09",
+    "provider": null,
+    "median": 330.0,
+    "min": 300.0,
+    "max": 515.0,
+    "p25": 315.0,
+    "p75": 350.0,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 1060.6060606060607,
+    "range_bp": 6515.151515151515,
+    "newest_recent": "2026-09-09",
+    "actions": [
+     "维持",
+     "重申",
+     "首次覆盖"
+    ],
+    "items": [
+     {
+      "firm": "Piper Sandler",
+      "target": 300.0,
+      "rating": "增持",
+      "action": "首次覆盖",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 390.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-03",
+      "days": 18
+     },
+     {
+      "firm": "Needham",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "重申",
+      "date": "2026-09-03",
+      "days": 18
+     },
+     {
+      "firm": "Wedbush",
+      "target": 345.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "UBS",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Truist Securities",
+      "target": 346.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 390.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "RBC Capital",
+      "target": 330.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Raymond James",
+      "target": 515.0,
+      "rating": "强力买进",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Oppenheimer",
+      "target": 315.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Needham",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 300.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 112,
+    "newest_scraped": "2026-09-20",
+    "oldest_scraped": "2018-05-25",
+    "stale_days": 1,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 0.82,
+     "target_low": 0.72,
+     "target_high": 0.98,
+     "fore_org_num": 42,
+     "report_period_scraped": "NextQtr.(Jan2025)"
+    }
+   },
+   "consensus_note": null
   },
   "TSLA": {
    "stock_mid": 364.185,
-   "rtoken_mid": 364.085,
-   "deviation_bp": -2.7458571879682783,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 369.8,
+   "deviation_bp": 154.179881104384,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:58Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 854,
+    "n_recent": 26,
+    "fresh_days": 90,
+    "oldest_all": "2016-06-21",
+    "newest_all": "2026-09-15",
+    "provider": null,
+    "median": 418.5,
+    "min": 24.86,
+    "max": 505.0,
+    "p25": 373.75,
+    "p75": 457.5,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 2001.1947431302272,
+    "range_bp": 11472.879330943846,
+    "newest_recent": "2026-09-15",
+    "actions": [
+     "维持",
+     "重申"
+    ],
+    "items": [
+     {
+      "firm": "Goldman Sachs",
+      "target": 360.0,
+      "rating": "中性",
+      "action": "重申",
+      "date": "2026-09-15",
+      "days": 6
+     },
+     {
+      "firm": "GLJ Research",
+      "target": 24.86,
+      "rating": "卖出",
+      "action": "重申",
+      "date": "2026-09-03",
+      "days": 18
+     },
+     {
+      "firm": "StoneX",
+      "target": 475.0,
+      "rating": "买入",
+      "action": "重申",
+      "date": "2026-09-02",
+      "days": 19
+     },
+     {
+      "firm": "GLJ Research",
+      "target": 24.86,
+      "rating": "卖出",
+      "action": "重申",
+      "date": "2026-08-17",
+      "days": 35
+     },
+     {
+      "firm": "Stifel",
+      "target": 491.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-02",
+      "days": 50
+     },
+     {
+      "firm": "Piper Sandler",
+      "target": 450.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-07-23",
+      "days": 60
+     },
+     {
+      "firm": "UBS",
+      "target": 385.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Truist Securities",
+      "target": 370.0,
+      "rating": "持有",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "TD Cowen",
+      "target": 460.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Roth Capital",
+      "target": 505.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "RBC Capital",
+      "target": 500.0,
+      "rating": "跑赢大盘",
+      "action": "重申",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 400.0,
+      "rating": "持股观望",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 116,
+    "newest_scraped": "2026-09-17",
+    "oldest_scraped": "2018-05-25",
+    "stale_days": 4,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 3.26,
+     "target_low": 2.1,
+     "target_high": 4.26,
+     "fore_org_num": 37,
+     "report_period_scraped": "NextYear(2025)"
+    }
+   },
+   "consensus_note": null
   },
   "AAPL": {
    "stock_mid": 334.815,
-   "rtoken_mid": 334.535,
-   "deviation_bp": -8.362827232948725,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 336.105,
+   "deviation_bp": 38.52873975180385,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:49Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 850,
+    "n_recent": 22,
+    "fresh_days": 90,
+    "oldest_all": "2017-01-03",
+    "newest_all": "2026-09-09",
+    "provider": null,
+    "median": 355.0,
+    "min": 245.0,
+    "max": 400.0,
+    "p25": 285.0,
+    "p75": 365.0,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 2253.521126760563,
+    "range_bp": 4366.197183098591,
+    "newest_recent": "2026-09-09",
+    "actions": [
+     "下调评级",
+     "维持",
+     "调高评级",
+     "重申"
+    ],
+    "items": [
+     {
+      "firm": "TD Cowen",
+      "target": 400.0,
+      "rating": "买入",
+      "action": "重申",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 303.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "B of A Securities",
+      "target": 370.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "HSBC",
+      "target": 366.0,
+      "rating": "买入",
+      "action": "重申",
+      "date": "2026-09-07",
+      "days": 14
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 360.0,
+      "rating": "增持",
+      "action": "重申",
+      "date": "2026-09-01",
+      "days": 20
+     },
+     {
+      "firm": "DA Davidson",
+      "target": 270.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-09-01",
+      "days": 20
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 303.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-08-31",
+      "days": 21
+     },
+     {
+      "firm": "Jefferies",
+      "target": 263.66,
+      "rating": "逊于大盘",
+      "action": "下调评级",
+      "date": "2026-08-09",
+      "days": 43
+     },
+     {
+      "firm": "China Renaissance",
+      "target": 280.0,
+      "rating": "持有",
+      "action": "下调评级",
+      "date": "2026-08-03",
+      "days": 49
+     },
+     {
+      "firm": "Wells Fargo",
+      "target": 350.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-07-30",
+      "days": 53
+     },
+     {
+      "firm": "TD Cowen",
+      "target": 400.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-30",
+      "days": 53
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 300.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-07-30",
+      "days": 53
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 116,
+    "newest_scraped": "2026-09-20",
+    "oldest_scraped": "2018-05-03",
+    "stale_days": 1,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 1.57,
+     "target_low": 1.48,
+     "target_high": 1.65,
+     "fore_org_num": 24,
+     "report_period_scraped": "NextQtr.(Mar2024)"
+    }
+   },
+   "consensus_note": null
   },
   "META": {
    "stock_mid": 668.485,
-   "rtoken_mid": 670.805,
-   "deviation_bp": 34.70534118192534,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 680.93,
+   "deviation_bp": 186.16722888322005,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:50Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 954,
+    "n_recent": 35,
+    "fresh_days": 90,
+    "oldest_all": "2017-01-02",
+    "newest_all": "2026-09-15",
+    "provider": null,
+    "median": 770.0,
+    "min": 595.0,
+    "max": 1000.0,
+    "p25": 707.5,
+    "p75": 815.0,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 1396.103896103896,
+    "range_bp": 5259.74025974026,
+    "newest_recent": "2026-09-15",
+    "actions": [
+     "假设",
+     "维持",
+     "调高评级",
+     "重申"
+    ],
+    "items": [
+     {
+      "firm": "Rosenblatt",
+      "target": 886.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-15",
+      "days": 6
+     },
+     {
+      "firm": "Citigroup",
+      "target": 800.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-15",
+      "days": 6
+     },
+     {
+      "firm": "Wedbush",
+      "target": 650.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-09-13",
+      "days": 8
+     },
+     {
+      "firm": "JP Morgan",
+      "target": 820.0,
+      "rating": "增持",
+      "action": "调高评级",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "Wedbush",
+      "target": 595.0,
+      "rating": "中性",
+      "action": "重申",
+      "date": "2026-08-31",
+      "days": 21
+     },
+     {
+      "firm": "Truist Securities",
+      "target": 763.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 886.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-26",
+      "days": 26
+     },
+     {
+      "firm": "Evercore ISI Group",
+      "target": 860.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-08-24",
+      "days": 28
+     },
+     {
+      "firm": "Wells Fargo",
+      "target": 640.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-07-29",
+      "days": 54
+     },
+     {
+      "firm": "Wedbush",
+      "target": 595.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-07-29",
+      "days": 54
+     },
+     {
+      "firm": "UBS",
+      "target": 715.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-29",
+      "days": 54
+     },
+     {
+      "firm": "Truist Securities",
+      "target": 770.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-29",
+      "days": 54
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 116,
+    "newest_scraped": "2026-09-20",
+    "oldest_scraped": "2018-05-25",
+    "stale_days": 1,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 9.38,
+     "target_low": 7.77,
+     "target_high": 10.0,
+     "fore_org_num": 47,
+     "report_period_scraped": "CurrentYear(2020)"
+    }
+   },
+   "consensus_note": null
   },
   "GOOGL": {
    "stock_mid": 350.84000000000003,
-   "rtoken_mid": 349.675,
-   "deviation_bp": -33.20601983810342,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 350.415,
+   "deviation_bp": -12.1137840611108,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:59Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 771,
+    "n_recent": 23,
+    "fresh_days": 90,
+    "oldest_all": "2016-07-28",
+    "newest_all": "2026-09-02",
+    "provider": null,
+    "median": 420.0,
+    "min": 350.0,
+    "max": 515.0,
+    "p25": 405.0,
+    "p75": 442.5,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 892.8571428571429,
+    "range_bp": 3928.5714285714284,
+    "newest_recent": "2026-09-02",
+    "actions": [
+     "假设",
+     "维持",
+     "重申"
+    ],
+    "items": [
+     {
+      "firm": "Rosenblatt",
+      "target": 410.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-02",
+      "days": 19
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 410.0,
+      "rating": "买入",
+      "action": "假设",
+      "date": "2026-08-19",
+      "days": 33
+     },
+     {
+      "firm": "Wells Fargo",
+      "target": 411.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Wedbush",
+      "target": 445.0,
+      "rating": "跑赢大盘",
+      "action": "重申",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "UBS",
+      "target": 379.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Truist Securities",
+      "target": 420.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Roth Capital",
+      "target": 440.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 393.0,
+      "rating": "中性",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "RBC Capital",
+      "target": 425.0,
+      "rating": "跑赢大盘",
+      "action": "重申",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Pivotal Research",
+      "target": 475.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Piper Sandler",
+      "target": 395.0,
+      "rating": "增持",
+      "action": "重申",
+      "date": "2026-07-22",
+      "days": 61
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 400.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-07-22",
+      "days": 61
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 116,
+    "newest_scraped": "2026-09-20",
+    "oldest_scraped": "2018-04-24",
+    "stale_days": 1,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 47.01,
+     "target_low": 43.42,
+     "target_high": 53.3,
+     "fore_org_num": 41,
+     "report_period_scraped": "NextYear(2019)"
+    }
+   },
+   "consensus_note": null
   },
   "SPY": {
-   "stock_mid": 762.965,
-   "rtoken_mid": 762.825,
-   "deviation_bp": -1.8349465571813433,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
-   "quote_utc": "2026-09-19T00:00:00Z",
+   "stock_mid": 767.02,
+   "rtoken_mid": 766.99,
+   "deviation_bp": -0.3911240906361335,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
+   "quote_utc": "2026-09-21T11:45:13Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": null,
+   "targets_note": "没有目标价数据（ETF 通常没有）",
+   "consensus": null,
+   "consensus_note": "没有一致预期数据"
   },
   "QQQ": {
    "stock_mid": 722.065,
-   "rtoken_mid": 721.105,
-   "deviation_bp": -13.295201955503122,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 728.485,
+   "deviation_bp": 88.9116630774232,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:59Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": null,
+   "targets_note": "没有目标价数据（ETF 通常没有）",
+   "consensus": null,
+   "consensus_note": "没有一致预期数据"
   },
   "SOXL": {
-   "stock_mid": 123.14,
-   "rtoken_mid": 123.095,
-   "deviation_bp": -3.654377131720132,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
-   "quote_utc": "2026-09-19T00:00:00Z",
+   "stock_mid": 131.62,
+   "rtoken_mid": 132.595,
+   "deviation_bp": 74.07688801094015,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
+   "quote_utc": "2026-09-21T11:45:19Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": null,
+   "targets_note": "没有目标价数据（ETF 通常没有）",
+   "consensus": null,
+   "consensus_note": "没有一致预期数据"
   },
   "HOOD": {
    "stock_mid": 119.91999999999999,
-   "rtoken_mid": 118.695,
-   "deviation_bp": -102.15143428952588,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 126.185,
+   "deviation_bp": 522.4316210807218,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:58Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 316,
+    "n_recent": 28,
+    "fresh_days": 90,
+    "oldest_all": "2021-08-04",
+    "newest_all": "2026-09-13",
+    "provider": null,
+    "median": 133.0,
+    "min": 105.0,
+    "max": 170.0,
+    "p25": 122.75,
+    "p75": 146.25,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 1766.9172932330825,
+    "range_bp": 4887.2180451127815,
+    "newest_recent": "2026-09-13",
+    "actions": [
+     "维持",
+     "调高评级",
+     "重申",
+     "首次覆盖"
+    ],
+    "items": [
+     {
+      "firm": "Deutsche Bank",
+      "target": 138.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-13",
+      "days": 8
+     },
+     {
+      "firm": "Citizens",
+      "target": 165.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-09-10",
+      "days": 11
+     },
+     {
+      "firm": "StoneX",
+      "target": 170.0,
+      "rating": "买入",
+      "action": "首次覆盖",
+      "date": "2026-09-08",
+      "days": 13
+     },
+     {
+      "firm": "Mizuho",
+      "target": 140.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-09-08",
+      "days": 13
+     },
+     {
+      "firm": "Bernstein",
+      "target": 160.0,
+      "rating": "跑赢大盘",
+      "action": "重申",
+      "date": "2026-09-08",
+      "days": 13
+     },
+     {
+      "firm": "Jefferies",
+      "target": 140.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-07",
+      "days": 14
+     },
+     {
+      "firm": "Goldman Sachs",
+      "target": 142.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-09-07",
+      "days": 14
+     },
+     {
+      "firm": "Cantor Fitzgerald",
+      "target": 150.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-09-07",
+      "days": 14
+     },
+     {
+      "firm": "Scotiabank",
+      "target": 136.0,
+      "rating": "好于板块",
+      "action": "首次覆盖",
+      "date": "2026-09-01",
+      "days": 20
+     },
+     {
+      "firm": "Piper Sandler",
+      "target": 145.0,
+      "rating": "增持",
+      "action": "重申",
+      "date": "2026-09-01",
+      "days": 20
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 150.0,
+      "rating": "增持",
+      "action": "调高评级",
+      "date": "2026-08-31",
+      "days": 21
+     },
+     {
+      "firm": "Cantor Fitzgerald",
+      "target": 115.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-08-02",
+      "days": 50
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 78,
+    "newest_scraped": "2026-09-20",
+    "oldest_scraped": "2021-09-13",
+    "stale_days": 1,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": -0.71,
+     "target_low": -1.12,
+     "target_high": -0.22,
+     "fore_org_num": 10,
+     "report_period_scraped": "NextYear(2023)"
+    }
+   },
+   "consensus_note": null
   },
   "MRVL": {
    "stock_mid": 243.33499999999998,
-   "rtoken_mid": 243.11,
-   "deviation_bp": -9.24651201019031,
-   "field": "drift_and_premium_bp",
-   "label": "休市偏移（= 折溢价 + 休市期间漂移，**两者无法分离**）",
-   "same_instant": false,
-   "session": "closed",
+   "rtoken_mid": 250.66,
+   "deviation_bp": 301.02533544290867,
+   "field": "premium_bp",
+   "label": "折溢价（同一时刻两个价，可比）",
+   "same_instant": true,
+   "session": "premarket",
    "quote_utc": "2026-09-18T23:59:55Z",
    "provider": null,
-   "rtoken_source": "market_feed.live"
+   "rtoken_source": "market_feed.live",
+   "targets": {
+    "n_all": 505,
+    "n_recent": 25,
+    "fresh_days": 90,
+    "oldest_all": "2016-07-27",
+    "newest_all": "2026-09-09",
+    "provider": null,
+    "median": 300.0,
+    "min": 224.0,
+    "max": 400.0,
+    "p25": 270.0,
+    "p75": 315.0,
+    "enough": true,
+    "min_targets": 8,
+    "dispersion_bp": 1500.0,
+    "range_bp": 5866.666666666667,
+    "newest_recent": "2026-09-09",
+    "actions": [
+     "维持",
+     "重申",
+     "首次覆盖"
+    ],
+    "items": [
+     {
+      "firm": "Piper Sandler",
+      "target": 270.0,
+      "rating": "增持",
+      "action": "首次覆盖",
+      "date": "2026-09-09",
+      "days": 12
+     },
+     {
+      "firm": "TD Cowen",
+      "target": 245.0,
+      "rating": "持有",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Oppenheimer",
+      "target": 325.0,
+      "rating": "跑赢大盘",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Needham",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Morgan Stanley",
+      "target": 246.0,
+      "rating": "持股观望",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Craig-Hallum",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Cantor Fitzgerald",
+      "target": 300.0,
+      "rating": "中性",
+      "action": "重申",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "B. Riley Securities",
+      "target": 315.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-27",
+      "days": 25
+     },
+     {
+      "firm": "Susquehanna",
+      "target": 265.0,
+      "rating": "积极",
+      "action": "维持",
+      "date": "2026-08-24",
+      "days": 28
+     },
+     {
+      "firm": "Rosenblatt",
+      "target": 300.0,
+      "rating": "买入",
+      "action": "维持",
+      "date": "2026-08-24",
+      "days": 28
+     },
+     {
+      "firm": "Wells Fargo",
+      "target": 310.0,
+      "rating": "增持",
+      "action": "维持",
+      "date": "2026-08-23",
+      "days": 29
+     }
+    ]
+   },
+   "targets_note": null,
+   "consensus": {
+    "n_periods": 116,
+    "newest_scraped": "2026-09-17",
+    "oldest_scraped": "2018-03-09",
+    "stale_days": 4,
+    "stale_limit": 30,
+    "usable": true,
+    "provider": null,
+    "sample": {
+     "fore_indicator_name": "EPS",
+     "target_consensus": 0.29,
+     "target_low": 0.27,
+     "target_high": 0.32,
+     "fore_org_num": 23,
+     "report_period_scraped": "NextQtr.(Apr2018)"
+    }
+   },
+   "consensus_note": null
   }
  }
 }

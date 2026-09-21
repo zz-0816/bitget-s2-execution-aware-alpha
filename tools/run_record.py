@@ -211,6 +211,14 @@ def code_fp():
 
 # ---------------------------------------------------------------- 一轮
 
+def _abs_or_none(v):
+    """取绝对值；不是数就返回 None（**不返回 0** —— 0 是一个真实取值）。"""
+    try:
+        return abs(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
 def one_round(base, *, replay=False, poll_news=False, qty=5000.0):
     """跑一轮真实决策并**如实**记录。任何异常都记成 ok=False，不抛。"""
     rec = {"ts": now_iso(), "base": base, "qty_usd": qty,
@@ -253,6 +261,16 @@ def one_round(base, *, replay=False, poll_news=False, qty=5000.0):
             "llm_cache_age_min": llm.get("cache_age_min"),
             "risk_verdict": risk.get("verdict"),
             "risk_hits": risk.get("hits") or [],
+            # ⚓ 外部锚偏离 + 📊 机构分歧度：**标定工具就靠这两个字段**
+            #    （`tools/anchor_calibration.py` 读它们，把代码里的"约定值"
+            #    换成实测分位数）。不记的话标定永远是 no_data —— 实测踩到过。
+            #    口径：偏离取**绝对值**（双向都是风险）；分歧度本身非负。
+            "anchor_dev_bp": _abs_or_none(
+                ((dec.get("anchor_used") or {}).get("deviation_bp"))),
+            "estimate_dispersion_bp": _abs_or_none(
+                (((dec.get("anchor_used") or {}).get("targets") or {})
+                 .get("dispersion_bp"))),
+            "anchor_session": (dec.get("anchor_used") or {}).get("session"),
             "rules_checked": risk.get("checked_rules")
                              or len(risk.get("rules") or []),
             "n_hypotheses": len(dec.get("risk_hypotheses") or []),

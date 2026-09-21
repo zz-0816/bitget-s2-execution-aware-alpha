@@ -198,6 +198,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     'sel:#ov-table tbody': '全标的概览表',
     'sel:#params-table tbody': '阈值表',
     snapshot: '数据快照',
+    acct: '🏦 真实账户（只读）',
   };
   const placeholders = ['加载中', '尚未运行', '读取中', '—', '失败', 'undefined', 'NaN', 'null'];
   for (const [key, label] of Object.entries(mustRender)) {
@@ -218,9 +219,35 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   }
 
   // 关键内容抽查：决策链必须真的把四层都画出来了
+  // ---- 🏦 账户区块：三态文案必须在，别把「读不到」画成「余额 0」----
+  //   这是本项目最贵的一类错（把缺数据说成安全），所以单独有一条断言。
+  {
+    const acctHtml = rendered.get('acct') || '';
+    const fix = fixtures['/api/account'] || {};
+    if (fix.available) {
+      if (!/余额/.test(acctHtml) || !/持仓/.test(acctHtml)) {
+        problems.push('账户区块没有同时渲染「余额」与「持仓」两段');
+      } else if (!/读到且确认|已读到|读不到/.test(acctHtml)) {
+        problems.push('账户区块没有写明三态（已读到 / 读到且确认 / 读不到）');
+      } else if (!/手续费率/.test(acctHtml)) {
+        problems.push('账户区块没有渲染手续费率对照');
+      } else {
+        notes.push('账户区块 ✓ 余额 + 持仓 + 三态文案 + 费率对照都在');
+      }
+    } else if (!/还没有取数结果/.test(acctHtml)) {
+      problems.push('账户端点没有取数结果时，页面没有如实说明（应是「还没有取数结果」）');
+    } else if (/权益|余额 0|0\.00/.test(acctHtml)) {
+      problems.push('账户端点没有取数结果时，页面里出现了像余额的数字'
+        + '（把「读不到」说成「余额 0」）');
+    } else {
+      notes.push('账户区块 ✓ 没有取数结果时如实说明，且不编数字');
+    }
+  }
+
   const v = rendered.get('verdict') || '';
   const r = rendered.get('risk') || '';
   const a = rendered.get('analysts') || '';
+
   if (!/stance=/.test(v)) problems.push('最终裁决里没有 stance 字段');
   if (!/单调性校验/.test(v)) problems.push('最终裁决里没有单调性校验标记');
   if (!/规则/.test(r)) problems.push('风控官区块里没有规则表');
@@ -254,13 +281,23 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       ' ｜ 生效=' + ((gm.effective || {}).severity || '—') + '）');
   }
   // 🔴 自相矛盾检测：② 行列着 LLM 判定，底部却说"未使用 LLM"。
-  //    实测踩到（外部事件胜出 -> 来源前缀不是 llm -> 旧判定逻辑误判）。
-  const llmListed = !!(gm.llm && gm.llm.source);
+  //    实测踩到两次，都是判据本身不够准：
+  //      ① 外部事件胜出 -> 来源前缀不是 llm -> 旧判定逻辑误判；
+  //      ② **LLM 调用失败**时 `llm.source` 会被写成 `static(LLM 未执行: …)` /
+  //         `static(LLM 失败 N 次: …)` —— 那**不是** LLM 判定，页面说"未使用 LLM"
+  //         是对的（闸门按 FAIL_CLOSED 退回确定性日历）。只看"有没有 source"会假报。
+  const llmSrc = String((gm.llm || {}).source || '');
+  const llmSkipped = /LLM\s*(未执行|失败|不可用|超时)/.test(llmSrc);
+  const llmListed = llmSrc !== '' && !llmSkipped;
   const saysNoLlm = /本次未使用 LLM/.test(gateHtml);
   if (llmListed && saysNoLlm) {
     problems.push('闸门面板自相矛盾：② 行有 LLM 判定，底部却说「本次未使用 LLM」');
   } else if (llmListed) {
     notes.push('LLM 参与标记一致 ✓（来源 ' + ((gm.effective || {}).source || '—') + '）');
+  } else if (llmSkipped) {
+    // 这条**必须是提示而不是问题**：LLM 不可用时页面如实写了"未使用"，
+    // 闸门也按 FAIL_CLOSED 暂停挂单 —— 那是设计行为，不是故障。
+    notes.push('LLM 未生效且页面如实标注 ✓（' + llmSrc.slice(0, 72) + '）');
   }
   // ---- 💵 入场损益测算：能把账算清，也能把"算不出来"说清 ----
   //   这一块最危险的失败方式是**看起来算得很全**：把"基差变动"这种真正的
@@ -530,6 +567,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   const out = { ok: problems.length === 0, problems, notes,
                 toastCount: (store.get('toasts') || { children: [] }).children.length,
+                acctText: rendered.get('acct') || '',
                 renderedKeys: [...rendered.keys()] };
   console.log(JSON.stringify(out, null, 1));
   process.exit(out.ok ? 0 : 1);

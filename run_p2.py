@@ -24,6 +24,8 @@
   /api/params              当前生效的全部阈值与来源（透明化）
   /api/snapshot            数据快照的边界说明（data/SNAPSHOT.md 原文）
   /api/alerts              持仓期巡检告警（data/positions/alerts.json，运行时产物）
+  /api/account             🏦 真实账户的**只读**摘要（data/account/read_latest.json，运行时产物）
+                           —— 由 tools/account_read.py --read 落盘；**本服务不去打交易所**
 
 历史教训（写在这里防复发）：这个仓库最初把项目一的 `web/` 一起复制了过来，
 但页面调用的是 `/api/overview`、`/api/timeline`、`/api/data-status` 这些
@@ -532,6 +534,60 @@ def read_alerts():
             "note": ""}
 
 
+_ACCT_MOD = None
+
+
+def _account_module():
+    """按**路径**加载 `tools/account_read.py`（不在 sys.path 里，也不重写它的逻辑）。"""
+    global _ACCT_MOD
+    if _ACCT_MOD is None:
+        import importlib.util
+        tool = os.path.join(P2, "tools", "account_read.py")
+        spec = importlib.util.spec_from_file_location("p2_account_read", tool)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _ACCT_MOD = mod
+    return _ACCT_MOD
+
+
+def read_account_summary():
+    """🏦 真实账户的**只读**摘要（由 `tools/account_read.py --read` 落盘，运行时产物）。
+
+    🔴 三条不许违反的规矩：
+
+      · **本服务不去打交易所**：只读本机落盘的那份取数结果。页面刷新一万次也不会
+        产生一次外部请求，更不会碰资金 —— 这是"页面只消费落盘文件"那条设计的一环。
+      · **三态不许混**：`empty`（读到且确实为空）与 `unavailable`（读不到）必须分开。
+        读不到时前端**必须**显示"读不到"，绝不能显示成"余额 0"。
+      · **复用唯一的真相源**：判定逻辑在 `tools/account_read.py::preflight()`，
+        这里只做搬运 —— 重写一遍就会有两套口径，迟早对不上。
+    """
+    rel = "data/account/read_latest.json"
+    path = os.path.join(P2, *rel.split("/"))
+    nxt = ("本机还没取过数。在仓库根目录跑一次：python tools/account_read.py --read"
+           "（它只读账户：不下单、不提币、不划转）")
+    if not os.path.exists(path):
+        return {"available": False, "why": "没有取数结果（%s 不存在）" % rel,
+                "next": nxt, "file": rel}
+    try:
+        with open(path, encoding="utf-8-sig") as fh:
+            payload = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"available": False, "why": "取数结果解析失败：%s" % type(exc).__name__,
+                "next": nxt, "file": rel}
+    try:
+        rep, _can = _account_module().preflight(payload)
+    except Exception as exc:  # noqa: BLE001 —— 读不懂就如实说，不编
+        return {"available": False,
+                "why": "取数结果读不懂：%s: %s" % (type(exc).__name__, exc),
+                "next": nxt, "file": rel}
+    rep.update({"available": True, "file": rel, "next": "",
+                # preflight() 把这个时刻放在 `source` 里；页面上叫它取数时刻更直白，
+                # 两个都给（免得前端要猜字段名 —— 字段名猜错就是"时刻未记录"）
+                "generated_utc": payload.get("_generated_utc")})
+    return rep
+
+
 # ================================================================ HTTP
 
 def make_handler():
@@ -609,6 +665,9 @@ def make_handler():
                         return self._json({"ok": True, "markdown": fh.read()})
                 if path == "/api/alerts":
                     return self._json(dict({"ok": True}, **read_alerts()))
+                if path == "/api/account":
+                    # 🏦 只读本机落盘的取数结果 —— 这一支**永远不会**发起外部请求
+                    return self._json(dict({"ok": True}, **read_account_summary()))
                 if path == "/api/assess":
                     base = (q.get("base") or ["NVDA"])[0].upper()
                     a = _assess(base)
@@ -679,7 +738,8 @@ def serve(host, port, tunnel=False, open_browser=False):
                    ("/api/overview", "全标的汇总"),
                    ("/api/params", "生效阈值与来源"),
                    ("/api/snapshot", "数据边界"),
-                   ("/api/alerts", "持仓期告警")):
+                   ("/api/alerts", "持仓期告警"),
+                   ("/api/account", "真实账户只读摘要（本机落盘）")):
         print("  %-26s %s" % (p, why))
     print("  Ctrl+C 退出", flush=True)
 
@@ -885,6 +945,24 @@ def http_smoke(verbose=True):
         st, d = get("/api/snapshot")
         chk(st == 200 and "SHA256" in d.get("markdown", ""),
             "/api/snapshot 返回快照清单")
+
+        # 🏦 /api/account 的两条硬规矩：**三态不许混** + **读不到要说得出下一步**
+        st, d = get("/api/account")
+        chk(st == 200, "/api/account 可用（有取数结果=%s）" % d.get("available"))
+        if d.get("available"):
+            st_bal = (d.get("balance") or {}).get("status")
+            chk(st_bal in ("ok", "zero", "unavailable"),
+                "余额是三态之一（%s）—— 读不到时**不许**显示成余额 0" % st_bal)
+            chk((d.get("positions") or {}).get("status") in
+                ("ok", "empty", "unavailable"),
+                "持仓是三态之一（%s）—— 「没有持仓」与「读不到持仓」分开"
+                % (d.get("positions") or {}).get("status"))
+            chk((d.get("verdict") or {}).get("can_trade") in (True, False, None),
+                "结论明说能不能下单（%s）" % (d.get("verdict") or {}).get("can_trade"))
+        else:
+            chk(bool(d.get("next")) and "account_read.py" in (d.get("next") or ""),
+                "没有取数结果时**给出下一步命令**，而不是编一个数字（%s）"
+                % (d.get("why") or "")[:40])
     except Exception as exc:  # noqa: BLE001
         chk(False, "HTTP 冒烟异常：%s: %s" % (type(exc).__name__, exc))
     finally:
@@ -908,6 +986,10 @@ def ui_layout_check():
 
     没有 Chrome/Edge 或 Node 时 **优雅跳过**（`ui_check.py` 自己会说明并返回 0）：
     评委机器上可能没装浏览器，不能因为缺浏览器就让整套自检变红。
+
+    ⚠️ **两个功能页都要量**：决策台（默认页）与**执行闭环**（真实账户区块 / 执行进度官）。
+       只量默认页的话，另一个页面里的溢出、字面标记、卡住的占位符**永远不会被发现** ——
+       而"平时没人翻的那一页"正是最容易烂掉的那一页。
     """
     import http.server
     handler = make_handler()
@@ -916,14 +998,17 @@ def ui_layout_check():
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     base = "http://127.0.0.1:%d" % port
     try:
-        return _run([sys.executable, os.path.join("tools", "ui_check.py"),
-                     "--url", base + "/",
-                     # 决策链要点了按钮才有东西可量
-                     "--click", "#run",
-                     "--until",
-                     "document.querySelectorAll('#stages .stage').length>0",
-                     "--wait", "4000"],
-                    "⑮ 前端布局验收（真浏览器：溢出/字面标记/截断/卡住的占位符）")
+        until = "document.querySelectorAll('#stages .stage').length>0"
+        return _run_any(
+            [[sys.executable, os.path.join("tools", "ui_check.py"),
+              "--url", base + "/",
+              # 决策链要点了按钮才有东西可量
+              "--click", "#run", "--until", until, "--wait", "4000"],
+             [sys.executable, os.path.join("tools", "ui_check.py"),
+              "--url", base + "/",
+              # 切到执行闭环：那个功能页默认 hidden，**不切过去就量不到它的布局**
+              "--click", "#tab-exec", "--until", until, "--wait", "4000"]],
+            "⑮ 前端布局验收（真浏览器：决策台 + 执行闭环；溢出/字面标记/截断/卡住的占位符）")
     finally:
         httpd.shutdown()
 

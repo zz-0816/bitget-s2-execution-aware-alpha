@@ -153,6 +153,20 @@
         <p class="pane-desc">下单<b>之后</b>那一段：裸露敞口 / 挂单停滞。这是赛道三「执行辅助」点名要的部分 —— 没有在途订单时它不产出任何结论，也<b>不会画绿灯</b>（没有数据 ≠ 没有风险）。</p>
       </div>
 
+      <!-- 🏦 真实账户（只读）：数据来自本机落盘的取数结果（tools/account_read.py --read）。
+           ⚠️ 页面不会去打交易所 —— 刷新一万次也不产生外部请求，更不会碰资金。
+              这是刻意的：「交易所读数 → 页面」之间只有一个可核验的中间文件。 -->
+      <div class="panel">
+        <h2 class="panel-title">🏦 真实账户（只读）
+          <span class="hint">读的是本机落盘的取数结果；<b>没有</b>与<b>读不到</b>是两种不同的显示</span>
+        </h2>
+        <div class="controls">
+          <span class="mono-dim" id="acct-meta" role="status" aria-live="polite"></span>
+          <button type="button" id="acct-refresh" class="btn btn-ghost">刷新账户</button>
+        </div>
+        <div id="acct"><div class="loading">读取中…</div></div>
+      </div>
+
       <div class="panel">
         <h2 class="panel-title">⑥ 执行进度官
           <span class="hint">三条硬规矩：无在途订单就不出结论 · 合成演示单必须显眼标注 · 不给新价位与新规模</span>

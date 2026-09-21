@@ -10,13 +10,12 @@
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 2,
+    "n_fresh": 1,
     "n_total": 87,
     "should_call_llm": true
   },
   "fresh_headlines": [
-    "[Mon, 21 Se] Meta Just Unveiled Massive 1 Petabit-Scale Subsea AI Superhighway",
-    "[Mon, 21 Se] Meta shares surge on Muse AI traction ahead of Connect"
+    "[Mon, 21 Se] Retailer Revolve announces partnership with Donatella Versace"
   ],
   "headlines_for_gate": [
     "[2026-09-21] ABVX 预定于 2026-09-21 发布财报（time-after-hours）",
@@ -878,12 +877,23 @@
     },
     {
       "category": "other",
+      "date": "Mon, 21 Sep 2026 19:23:43 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Ark Invest added nearly $25 million of CoreWeave as it trimmed several major AI and technology holdings",
+      "title": "Cathie Wood Makes a Big AI Bet and Cuts Bitcoin Exposure",
+      "url": "https://finance.yahoo.com/technology/ai/articles/cathie-wood-makes-big-ai-192343518.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
       "date": "Mon, 21 Sep 2026 19:03:47 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "1 Petabit Per Second, Across an Ocean Meta (NASDAQ:META) has put a number on its AI ambitions that lives outside the income statement. The company unveiled Petal, a transatlantic subsea cable engineer",
+      "summary": "Meta just announced a transatlantic cable project so large it redefines what undersea internet infrastructure can look like, and the company is betting its entire AI future on whether it works.",
       "title": "Meta Just Unveiled Massive 1 Petabit-Scale Subsea AI Superhighway",
       "url": "https://247wallst.com/investing/2026/09/21/meta-just-unveiled-massive-1-petabit-scale-subsea-ai-superhighway/?.tsrc=rss"
     },
@@ -944,17 +954,6 @@
     },
     {
       "category": "other",
-      "date": "Mon, 21 Sep 2026 16:45:35 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Wells Fargo just handed Meta a dramatically higher price target, and the reasoning behind it points to something bigger than a routine upgrade. Here is why one analyst believes the AI story at Meta is",
-      "title": "We Think Meta Could Keep Soaring Higher and Wells Fargo Agrees",
-      "url": "https://247wallst.com/investing/2026/09/21/we-think-meta-could-keep-soaring-higher-and-wells-fargo-agrees/?.tsrc=rss"
-    },
-    {
-      "category": "other",
       "date": "Mon, 21 Sep 2026 19:00:48 GMT",
       "kind": "news",
       "relevance": 0,
@@ -977,36 +976,36 @@
     },
     {
       "category": "other",
-      "date": "Mon, 21 Sep 2026 16:47:40 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "AMD has had a monster 2026 with the stock up more than 180% so far.",
-      "title": "AMD hits $1 trillion market cap for the first time as stock rides 5-day rally",
-      "url": "https://www.cnbc.com/2026/09/21/amd-stock-1-trillion-value.html"
-    },
-    {
-      "category": "other",
-      "date": "Mon, 21 Sep 2026 18:53:06 GMT",
+      "date": "Mon, 21 Sep 2026 19:36:24 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
       "summary": "An FAA equipment problem snarled air travel at Newark Liberty International Airport and Philadelphia International Airport Monday.",
-      "title": "Flights disrupted into Newark, New York, Philadelphia after cut Verizon cable",
+      "title": "Flights disrupted into Newark, New York, Philadelphia after Verizon cable cut",
       "url": "https://www.cnbc.com/2026/09/21/newark-philadelphia-nyc-flight-disruptions.html"
     },
     {
       "category": "other",
-      "date": "Mon, 21 Sep 2026 19:14:21 GMT",
+      "date": "Mon, 21 Sep 2026 19:28:49 GMT",
       "kind": "news",
-      "relevance": 3,
+      "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "Meta's Muse AI personal agent tool had 730,000 downloads over the roughly five days after its launch.",
-      "title": "Meta&apos;s Muse personal AI agent tops ChatGPT, Grok and Claude for post-launch downloads",
-      "url": "https://www.cnbc.com/2026/09/21/meta-muse-personal-ai-agent-downloads.html"
+      "summary": "MAGA Inc. entered September with $415.8 million as much of Trump’s promised midterm spending had yet to surface publicly.",
+      "title": "Much of Trump’s promised midterm election spending has yet to surface, new filing shows",
+      "url": "https://www.cnbc.com/2026/09/21/trump-maga-midterm-spending-war-chest.html"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 19:44:52 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "REVOLVE's partnership with Donatella Versace is the retailer's latest bid to create for young consumers.",
+      "title": "Retailer Revolve announces partnership with Donatella Versace",
+      "url": "https://www.cnbc.com/2026/09/21/revolve-partnership-donatella-versace.html"
     },
     {
       "category": "other",
@@ -1021,73 +1020,73 @@
     },
     {
       "category": "other",
-      "date": "Mon, 21 Sep 2026 18:28:49 GMT",
+      "date": "Mon, 21 Sep 2026 16:47:40 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "They're the latest metrics on how much the new Medicare coverage is expanding access to GLP-1 medicines since it launched in July.",
-      "title": "Eli Lilly CEO says 700,000 new seniors have started GLP-1s after Medicare coverage, and 70% are on Lilly drugs",
-      "url": "https://www.cnbc.com/2026/09/21/eli-lilly-ceo-david-ricks-glp-1s-medicare-coverage.html"
+      "summary": "AMD has had a monster 2026 with the stock up more than 180% so far.",
+      "title": "AMD hits $1 trillion market cap for the first time as stock rides 5-day rally",
+      "url": "https://www.cnbc.com/2026/09/21/amd-stock-1-trillion-value.html"
     },
     {
       "category": "other",
-      "date": "Mon, 21 Sep 2026 16:46:24 GMT",
+      "date": "Mon, 21 Sep 2026 19:14:21 GMT",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "President Trump has touted development of artificial intelligence by U.S. companies as a competitive advantage over China that he wants to maintain.",
-      "title": "Trump says DOJ will rein in AI &apos;if we have to&apos;",
-      "url": "https://www.cnbc.com/2026/09/21/trump-ai-doj.html"
+      "summary": "Meta's Muse AI personal agent tool had 730,000 downloads over the roughly five days after its launch.",
+      "title": "Meta&apos;s Muse personal AI agent tops ChatGPT, Grok and Claude for post-launch downloads",
+      "url": "https://www.cnbc.com/2026/09/21/meta-muse-personal-ai-agent-downloads.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-21T19:24:36.456316+00:00",
+  "probed_at": "2026-09-21T19:46:29.025317+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.62s",
+      "note": "耗时 1.61s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 1.05s",
+      "note": "耗时 1.04s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 2.87s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 2.74s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.60s",
+      "note": "耗时 0.58s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.57s",
+      "note": "耗时 0.64s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-21": {
       "n": 8,
-      "note": "提前数天（预告）｜ 耗时 1.29s",
+      "note": "提前数天（预告）｜ 耗时 0.28s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-22": {
       "n": 19,
-      "note": "提前数天（预告）｜ 耗时 1.18s",
+      "note": "提前数天（预告）｜ 耗时 0.24s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.83s",
+      "note": "耗时 0.87s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.04s",
+      "note": "耗时 1.02s",
       "ok": true
     }
   }

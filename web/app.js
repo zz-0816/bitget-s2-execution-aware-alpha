@@ -25,6 +25,7 @@ const API = {
   params: '/api/params',
   snapshot: '/api/snapshot',
   alerts: '/api/alerts',
+  account: '/api/account',
 };
 
 /* 面板/页面状态。
@@ -873,6 +874,114 @@ function renderCost(d) {
   animateBars(el);
 }
 
+/* ---------------- 🏦 真实账户（只读） ----------------
+   数据来自 /api/account，而**后端只读本机落盘**的取数结果
+   （tools/account_read.py --read 的产物）。所以页面这一侧根本没有
+   "点一下就去打交易所"的路径 —— 「交易所读数 → 页面」之间只有一个可核验的中间文件。
+
+   🔴 三态必须分开显示：empty（读到、而且确实是空的）与 unavailable（读不到）
+      不是一回事。把后者画成 0 仓位，就是把「缺数据」说成「安全」——
+      所以这两态的徽标颜色也不一样。 */
+
+const ACCT_TAG = { ok: 'badge', zero: 'badge unfavorable', empty: 'badge neutral',
+                   unavailable: 'badge unfavorable' };
+const ACCT_CN = { ok: '已读到', zero: '读到且确认', empty: '读到且确认',
+                  unavailable: '读不到' };
+
+function acctLine(status, headline, extra) {
+  const s = status || 'unavailable';
+  return '<div class="hashbox"><span class="' + (ACCT_TAG[s] || 'badge unfavorable') +
+    '">' + (ACCT_CN[s] || '未知') + '</span> <span>' + mdInline(headline || '') +
+    '</span>' + (extra ? '<div class="mono-dim">' + extra + '</div>' : '') + '</div>';
+}
+
+function renderAccount(d) {
+  const el = $('acct');
+  const meta = $('acct-meta');
+  const r = d || {};
+  if (meta) {
+    meta.innerHTML = r.available
+      ? ('取数于 ' + esc(r.generated_utc || '（时刻未记录）') + ' ｜ ' + esc(r.file || '') +
+         ' ｜ 本服务只读本地文件，不打交易所')
+      : '没有取数结果';
+  }
+  if (!r.available) {
+    el.innerHTML =
+      '<p class="hint neg">' + mdInline('还没有取数结果：' + (r.why || '')) + '</p>' +
+      '<p class="hint">在本机跑一次只读取数：<code>' + esc(r.next || '') + '</code></p>' +
+      '<p class="hint">账户数据是<b>运行时产物</b>，刻意不进仓库 —— 刚克隆下来的人会看到这一段。</p>';
+    return;
+  }
+  const bal = r.balance || {};
+  const pos = r.positions || {};
+  const fee = r.fee || {};
+  const vd = r.verdict || {};
+  const cred = r.cred || {};
+  // ⚠️ 服务端给的是 `bg_ff****************7fe4` 这种掩码 —— 那一串星号在页面上
+  //    会被"字面标记检查"数成 markdown 残留（实测：13 处，全来自它）。
+  //    页面本来也不需要整串掩码，压成 `bg_ff…7fe4` 这种更好读的形式。
+  const keyMask = String(cred.api_key_masked || '—').replace(/\*+/g, '…');
+  const bySym = fee.by_symbol || {};
+  const symKeys = Object.keys(bySym);
+  const feeRefs = Object.keys(fee.refs || {}).map((c) => {
+    const v = fee.refs[c] || [];
+    return esc(c) + ' ' + fmt(v[0]) + '/' + fmt(v[1]) + ' bp';
+  }).join(' ｜ ');
+  const symRows = symKeys.map((k) => {
+    const v = bySym[k] || {};
+    return '<tr><td class="mono-dim">' + esc(k) + '</td>' +
+      '<td class="mono">' + fmt(v.maker_bp) + '</td>' +
+      '<td class="mono">' + fmt(v.taker_bp) + '</td></tr>';
+  }).join('');
+  const posRows = (pos.rows || []).map((row) =>
+    '<p class="mono-dim">' + esc(JSON.stringify(row)) + '</p>').join('');
+  const coins = (bal.coins || []).map((c) =>
+    esc(String(c[0])) + ' ' + esc(String(c[1]))).join(' ｜ ');
+  const canTxt = vd.can_trade === true ? '<span class="pos">可以做单前检查</span>'
+    : (vd.can_trade === false ? '<span class="neg">不能下单</span>'
+      : '<span class="neg">未知（有读不到的项）</span>');
+
+  el.innerHTML =
+    '<table><tbody>' +
+      '<tr><th>授权</th><td>' + (r.authorized ? '<span class="pos">已授权</span>'
+        : '<span class="neg">未授权</span>') + '</td>' +
+      '<th>凭据</th><td class="mono-dim">' + esc(keyMask) +
+        '（服务端已掩码，不是明文）</td></tr>' +
+      '<tr><th>账户设置</th><td class="mono-dim">' + esc(String(r.settings || '—')) +
+        '</td><th>资金账户</th><td class="mono-dim">' +
+        (r.funding_assets === null || r.funding_assets === undefined ? '—'
+          : (r.funding_assets.length ? String(r.funding_assets.length) + ' 项' : '空')) +
+        '</td></tr>' +
+    '</tbody></table>' +
+
+    '<h3 class="sub-title">余额</h3>' +
+    acctLine(bal.status, bal.headline,
+             '权益 ' + fmt(bal.account_equity) + ' ｜ USDT ' + fmt(bal.usdt_equity) +
+             (coins ? ' ｜ ' + coins : '')) +
+
+    '<h3 class="sub-title">持仓</h3>' +
+    acctLine(pos.status, pos.headline,
+             (pos.count === undefined || pos.count === null ? '' : '条数 ' + pos.count)) +
+    posRows +
+
+    '<h3 class="sub-title">手续费率（与项目口径逐项对照）</h3>' +
+    '<p class="hint">项目假设：' + (feeRefs || '—') + '</p>' +
+    ((fee.mismatch || []).length
+      ? '<p class="hint neg">' + mdInline('与假设不一致：' + fee.mismatch.join('；')) + '</p>'
+      : '') +
+    '<details class="legend"><summary>逐 symbol 手续费率（' + symKeys.length +
+      ' 项 —— 费率是<b>逐 symbol</b> 的，所以要按自己的标的查）</summary>' +
+      '<div class="table-wrap"><table><thead><tr><th>symbol</th><th>maker bp</th>' +
+      '<th>taker bp</th></tr></thead><tbody>' +
+      (symRows || '<tr><td colspan="3" class="empty">—</td></tr>') +
+      '</tbody></table></div></details>' +
+
+    '<h3 class="sub-title">交易前置检查结论</h3>' +
+    '<div class="hashbox"><div>' + canTxt + '：' + mdInline(vd.why || '') + '</div></div>' +
+    (r.warnings || []).map((w) => '<p class="hint neg">' + mdInline(w) + '</p>').join('') +
+    (r.notes || []).map((n) => '<p class="hint">' + mdInline(n) + '</p>').join('');
+}
+
 function renderProv(d) {
   const man = d.input_manifest || [];
   $('prov').innerHTML =
@@ -1271,6 +1380,22 @@ async function loadSnapshot() {
   }
 }
 
+/* 🏦 取账户摘要 —— 注意：**后端不去打交易所**，它只读本机那份落盘的取数结果。
+   所以这个请求再频繁也不会产生一次外部调用，更不会碰资金。 */
+async function loadAccount() {
+  try {
+    renderAccount(await api(API.account));
+  } catch (e) {
+    const el = $('acct');
+    if (el) {
+      el.innerHTML = '<p class="hint neg">账户接口暂时取不到：' + esc(e.message) +
+        ' —— 检查本机服务是否在跑（python run_p2.py）。</p>';
+    }
+    const meta = $('acct-meta');
+    if (meta) meta.innerHTML = '';
+  }
+}
+
 /* ---------------- 右下角告警弹窗（接 data/positions/alerts.json） ---------------- */
 
 function toast(level, title, detail) {
@@ -1464,9 +1589,15 @@ async function boot() {
   if ($('pos-mode')) {
     $('pos-mode').onchange = () => runDecision(STATE.base, Number($('qty').value) || 5000);
   }
+  // 🏦 账户区块是**独立**的一块：它不参与决策链，也不随标的/金额变化。
+  //    手动刷新按钮的用途是"我刚刚在本机重新取过数了，重读一遍"。
+  if ($('acct-refresh')) {
+    $('acct-refresh').onclick = () => loadAccount();
+  }
 
   loadParams();
   loadSnapshot();
+  loadAccount();
   loadOverview();
   pollAlerts();
   setInterval(pollAlerts, 60000);

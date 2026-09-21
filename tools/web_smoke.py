@@ -50,7 +50,10 @@ ENDPOINTS = ["/api/health", "/api/bases", "/api/assess?base=NVDA",
              #    （order 为 null / stand_down），是**最容易渲染出 undefined** 的那条路径
              "/api/decision?base=META&qty=5000",
              "/api/overview?qty=5000",
-             "/api/params", "/api/snapshot", "/api/alerts"]
+             "/api/params", "/api/snapshot", "/api/alerts",
+             # 🏦 真实账户（只读）：后端只读**本机落盘**的取数结果（不打交易所）。
+             #    本机取过数就有，没取过则返回 available=false —— 两条路径都要能渲染。
+             "/api/account"]
 
 
 def collect(verbose=True):
@@ -150,13 +153,49 @@ def main(argv=None):
     else:
         ok = False
         print("  [!! ] 告警弹窗没有渲染出来（/api/alerts 的告警没进 DOM）")
+
+    # ---- 🏦 账户区块：**必须验"没有取数结果"那条路径** ----
+    # 本机取过数时，夹具里 /api/account 是有数据的 —— 于是"没取过数"这条分支
+    # **永远不会被测到**，而它恰恰是最危险的一条：一旦把 `unavailable` 画成
+    # "余额 0"，就是把「缺数据」说成了「安全」。所以这里**明确注入**一份
+    # "没有取数结果"的响应，检查页面如实说明、且不编数字。
+    probe2 = dict(fixtures)
+    probe2["/api/account"] = {
+        "ok": True, "available": False, "_synthetic_for_render_check": True,
+        "why": "没有取数结果（data/account/read_latest.json 不存在）",
+        "next": "本机还没取过数。在仓库根目录跑一次：python tools/account_read.py --read",
+        "file": "data/account/read_latest.json"}
+    probe2_path = args.fixtures + ".acct.json"
+    with io.open(probe2_path, "w", encoding="utf-8") as fh:
+        json.dump(probe2, fh, ensure_ascii=False)
+    p3 = subprocess.run([node, harness, probe2_path], cwd=P2,
+                        capture_output=True, text=True, encoding="utf-8",
+                        errors="replace")
+    try:
+        rep3 = json.loads(p3.stdout)
+        acct_txt = rep3.get("acctText") or ""
+    except (ValueError, TypeError):
+        acct_txt = ""
+        print("  [!! ] 注入「没有取数结果」后渲染失败：%s"
+              % (p3.stderr or p3.stdout)[-300:])
+    if "还没有取数结果" in acct_txt and "account_read.py" in acct_txt:
+        print("  [OK ] 没有取数结果时：页面如实写「还没有取数结果」+ 给出下一步命令")
+    else:
+        ok = False
+        print("  [!! ] 账户区块在「没有取数结果」时没有如实说明（实测：%s）"
+              % (acct_txt[:140] or "空"))
+    if "权益" in acct_txt or "0.00" in acct_txt or "读到且确认" in acct_txt:
+        ok = False
+        print("  [!! ] 没有取数结果时页面里出现了像余额的东西 —— "
+              "这就是把「读不到」说成了「余额 0」")
+
     if not args.keep:
-        for f in (args.fixtures, probe_path):
+        for f in (args.fixtures, probe_path, probe2_path):
             try:
                 os.remove(f)
             except OSError:
                 pass
-    print("\n页面渲染冒烟（含告警弹窗）%s" % ("通过" if ok else "**失败**"))
+    print("\n页面渲染冒烟（含告警弹窗 + 账户三态）%s" % ("通过" if ok else "**失败**"))
     return 0 if ok else 1
 
 

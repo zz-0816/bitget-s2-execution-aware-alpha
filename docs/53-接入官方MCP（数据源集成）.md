@@ -136,7 +136,7 @@ has no attribute 'get'`。
 |---|---|
 | `equity_estimates_consensus` / `price_target` | 是**第三方观点**，不是实测量。接进 evidence 会污染"每个数字都能点回实测来源"这条底线。要接必须先给 evidence 加 `source_kind: third_party` 这一层 —— 独立的一件事 |
 | `equity_ownership_*`（内部人 / 13F） | 与新闻源高度重叠，边际价值低于上面两项 |
-| Agent Hub `--read-only` / Agentic 账户 | **需要用户提供授权**（OAuth）。这是 `docs/52` P0-2 的路径，代码一行没写 —— 没 key 写出来也无法验证 |
+| Agent Hub `--read-only` / Agentic 账户 | **需要用户提供授权**（OAuth）。这是 `docs/52` P0-2 的路径。**2026-09-21 状态**：已定为**主路线**（`docs/52` §8）；`project2/account_feed.py` 里**可离线验证的部分已落地并自检**（只读保证 / 四来源降级 / 三态语义 / 脱敏指纹 / `--plan` / `--ingest` + `--base-map` 两腿归并）；**取数那一次调用仍未写**（没授权跑不了就没法验证），已被收敛成"手工跑一次只读查询 + `--ingest`"两步 |
 | Playbook / GetAgent 回测 | 赛道三手册明写"一般不需要" |
 | Chainbase AgentKey | 外部 Partner，**不是 Bitget 官方产品**；本项目当前用不上第 4 个数据源 |
 
@@ -177,6 +177,8 @@ python project2/agent_team.py --decision-selftest
                                                  "带外部事件复跑一致"等断言
 python run_p2.py --selftest                   -> 18 步全过、退出码 0
                                                  397 项 [OK] / 0 项 [!!] / 0 项 [skip]
+                                                 （⚠️ 这是**那一天的快照数**：每加一个工具就会涨，
+                                                   不要在任何地方写死它 —— 同 §4 的教训）
 tools/web_smoke.py                            -> 通过（含"闸门三源""LLM 参与标记一致"）
 实拍 docs/ui-v3/16-gate-three-sources.png     -> META：三源摊开，生效 caution（来源 mcp+llm）
 ```

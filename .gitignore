@@ -35,3 +35,8 @@ tools/bin/
 #    "可核验"就废了；`market_feed.guard_target()` 会在代码层拒绝）。
 # 这是**运行时**产物，像 data/run/ 一样不进库。
 data/live/
+
+# 🏦 真实账户的只读取数结果（tools/account_read.py --read）
+# ⚠️ 里面是**账户状态**（uid / 余额 / 持仓 / 手续费率），属运行时数据：
+#    不进库，也不该被当成"可提交的证据"。要复核就现场重跑一次取数。
+data/account/

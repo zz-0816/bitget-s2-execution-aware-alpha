@@ -999,12 +999,16 @@ def selftest(with_net=False):
     #        以及**落盘守卫**（绝不允许写进 data/spread/）
     #      · mcp_anchor：偏离换算、**口径守卫**（开市才叫折溢价，休市只能叫偏移）、
     #        缺失不硬算（读不到返回 None 而不是 0）
+    #      · account_read：**只读白名单**（下单/提币/划转连参数都传不进去）、
+    #        脱敏守卫（未掩码密钥一律拒写）、三态语义（空仓 = `list:null` 是**结论**）、
+    #        手续费率与 project2/execution_cost.py 的口径对照（漂了就报警）
     rc |= _run_any([[py, os.path.join("tools", "market_feed.py"), "--selftest"],
                     [py, os.path.join("tools", "mcp_anchor.py"), "--selftest"],
                     [py, os.path.join("project2", "ext_events.py"), "--selftest"],
                     [py, os.path.join("project2", "account_feed.py"), "--selftest"],
+                    [py, os.path.join("tools", "account_read.py"), "--selftest"],
                     [py, os.path.join("tools", "anchor_calibration.py"), "--selftest"]],
-                   "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + 阈值标定"
+                   "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + **真实账户取数** + 阈值标定"
                    "（schema 归一 / 落盘守卫 / 口径守卫 / **只读边界** / 样本量门槛）")
 
     if with_net:

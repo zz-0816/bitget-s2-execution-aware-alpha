@@ -1,8 +1,8 @@
 # 项目二数据快照（只读引用项目一的采样结果）
 
-- 清单生成：**2026-09-19 16:50 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
+- 清单生成：**2026-09-22 16:55 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
 - 上游导出脚本：`tools/export_p2_snapshot.py`（**项目一仓库内**，可重跑）
-- 合计：**40.2 MB**，29 项（其中冻结快照 16 项）
+- 合计：**58.4 MB**，35 项（其中冻结快照 23 项）
 
 ## ⚠️ 四条必须知道的边界
 
@@ -61,18 +61,25 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 | `data/derived/precise_fill_spot_bid.csv` | 复制 | 2,053 | 9 | `5830432dd331a2ac` | 现货腿成交率与逆向选择（逐笔实测） | - |
 | `data/derived/threshold_calibration.json` | 复制 | 3,268 | 0 | `9a19a24e6cb9e58f` | 僵持阈值敏感性分析结果（docs/36） | python tools/threshold_calibration.py |
 | `data/spread/2026-09-19.csv` | 复制 | 2,408,798 | 17,971 | `a9f84602523e7ae1` | 点差/中间价：定挂单价位与 route 对照 | - |
+| `data/spread/2026-09-20.csv` | 复制 | 1,645,078 | 12,390 | `8076414ca3adbb43` | 点差/中间价：定挂单价位与 route 对照 | - |
+| `data/spread/2026-09-21.csv` | 复制 | 3,566,093 | 26,875 | `82e357d4d2e9b752` | 点差/中间价：定挂单价位与 route 对照 | - |
+| `data/spread/2026-09-22.csv` | 复制 | 3,690,783 | 27,455 | `ebbcf1a6f85c0b94` | 点差/中间价：定挂单价位与 route 对照 | - |
+| `data/spread/2026-09-23.csv` | 复制 | 139,117 | 1,038 | `06c228b91d4eb1a6` | 点差/中间价：定挂单价位与 route 对照 | - |
 | `data/spread/orderbook-2026-09-19.csv` | **尾段截断**（保留最后 400 轮） | 7,295,377 | 66,730 | `af434742857325cb` | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） | - |
 | `data/spread/sentiment-2026-09-18.csv` | 复制 | 233 | 1 | `523fd25639f79e2b` | 情绪采样：OI 与资金费率的实测值 | python tools/sentiment_sampler.py |
-| `data/spread/trades-2026-09-12.csv` | 复制（全量） | 2,207,160 | 19,296 | `e253962ffe3d39e9` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据） | - |
-| `data/spread/trades-2026-09-13.csv` | 复制（全量） | 7,724,867 | 67,515 | `b871fa89e1736880` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据） | - |
-| `data/spread/trades-2026-09-14.csv` | **尾行截断** | 9,039,755 | 80,000 | `2b60be2de9acb44e` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据） | - |
-| `data/spread/trades-2026-09-19.csv` | **尾行截断** | 9,060,011 | 80,000 | `225ad82756d26956` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据） | - |
+| `data/spread/trades-2026-09-12.csv` | 复制（全量） | 2,207,160 | 19,296 | `e253962ffe3d39e9` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-13.csv` | 复制（全量） | 7,724,867 | 67,515 | `b871fa89e1736880` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-14.csv` | 尾部 8 万行 + **现货行全量**（补回 3445 笔） | 9,528,697 | 83,445 | `77790b618bdf2e09` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-19.csv` | 尾部 8 万行 + **现货行全量**（补回 916 笔） | 9,249,041 | 80,916 | `2139d5fa6258af87` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-20.csv` | 现货全量（4206 笔）+ 永续尾部 2 万行 | 2,788,404 | 24,206 | `37950ea3bff6ed0d` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-21.csv` | 现货全量（2946 笔）+ 永续尾部 2 万行 | 2,634,360 | 22,946 | `2f9cc7516bb25f05` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-22.csv` | 现货全量（**该日 0 笔**）+ 永续尾部 2 万行 | 2,285,930 | 20,000 | `76bc782ab2924643` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
 
 ### ② 本仓库派生物 —— 哈希与上游那张表**本就不该一致**，核验方式是『能重建』
 
 | 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |
 |---|---|---|---|---|---|---|
-| `data/derived/rag_index.json` | **本仓库重建** | 2,014,045 | 0 | `dfa853a36e87d368` （重建后会变） | RAG 索引（本仓库口径文档 + 本仓库决策案例） | python common/rag_memory.py --build |
+| `data/derived/rag_index.json` | **本仓库重建** | 2,658,377 | 0 | `dde16ab0ed7c28ff` （重建后会变） | RAG 索引（本仓库口径文档 + 本仓库决策案例） | python common/rag_memory.py --build |
 | `data/reports/debate-NVDA-20231114T221320Z.json` | 本项目生成 | 45,468 | 0 | `190cd5a76c8c2cf8` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 | `data/reports/debate-NVDA-20260917T181814Z-synthetic-viable.json` | 本项目生成 | 33,537 | 0 | `269992098af2a115` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 | `data/reports/debate-NVDA-20260918T051936Z.json` | 本项目生成 | 33,644 | 0 | `01cb9227095f74d9` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
@@ -80,14 +87,13 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 | `data/reports/debate-NVDA-20260918T152138Z.json` | 本项目生成 | 40,076 | 0 | `8af27d8b2848f5cf` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 | `data/reports/debate-NVDA-20260918T165129Z.json` | 本项目生成 | 42,596 | 0 | `710aa63762771848` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 | `data/reports/debate-NVDA-20260918T165244Z.json` | 本项目生成 | 46,877 | 0 | `4ba739e028c24900` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
-| `data/reports/debate-NVDA-20260919T164639Z.json` | 本项目生成 | 44,200 | 0 | `f735649882d712f0` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 | `data/reports/debate-NVDA-20260919T164703Z.json` | 本项目生成 | 44,156 | 0 | `a8a208b059273c93` （重建后会变） | 本项目决策日志（RAG 的『决策案例』来源，`--log` 产生） | python project2/agent_team.py --base NVDA --trader --log |
 
 ### ③ 运行期可变 —— 采样/事件驱动会写它们，哈希只作参考，**不作为核验依据**
 
 | 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |
 |---|---|---|---|---|---|---|
-| `data/derived/event_driven_state.json` | 本项目生成 | 4,748 | 0 | `29f0deba2ea2c43e` （参考值，运行期会变） | 事件驱动闸门的判定缓存（复用上次 LLM 判断 + TTL） | python project2/event_gate.py --selftest |
-| `data/derived/news_latest.json` | 运行期写入 | 38,606 | 0 | `31d0db34f56835d4` （参考值，运行期会变） | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
-| `data/derived/news_state.json` | 运行期写入 | 9,469 | 0 | `c0694330809694ae` （参考值，运行期会变） | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
+| `data/derived/event_driven_state.json` | 本项目生成 | 9,652 | 0 | `76bc1983ea08e1da` （参考值，运行期会变） | 事件驱动闸门的判定缓存（复用上次 LLM 判断 + TTL） | python project2/event_gate.py --selftest |
+| `data/derived/news_latest.json` | 运行期写入 | 47,794 | 0 | `1566a183440278f5` （参考值，运行期会变） | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
+| `data/derived/news_state.json` | 运行期写入 | 139,406 | 0 | `d3118d4919ef9fb9` （参考值，运行期会变） | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
 

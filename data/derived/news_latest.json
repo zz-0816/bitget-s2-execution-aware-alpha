@@ -1,24 +1,17 @@
 {
-  "base": "GOOGL",
+  "base": "QQQ",
   "categories": {
-    "earnings": 3,
-    "earnings_scheduled": 43,
-    "filing_material": 12,
+    "earnings": 2,
+    "earnings_scheduled": 42,
     "macro": 7,
-    "other": 38
+    "other": 39
   },
   "event_driven": {
     "first_run": false,
-    "n_fresh": 4,
-    "n_total": 103,
-    "should_call_llm": true
+    "n_fresh": 0,
+    "n_total": 90,
+    "should_call_llm": false
   },
-  "fresh_headlines": [
-    "[Tue, 22 Se] Well-Positioned Gig Economy Stocks Amid the Theme's Rising Adoption",
-    "[Tue, 22 Se] Alphabet Inc. (GOOGL) is Attracting Investor Attention: Here is What You Should Know",
-    "[Tue, 22 Se] Is Most-Watched Stock Alphabet Inc. (GOOG) Worth Betting on Now?",
-    "[Tue, 22 Se] Cloud AI Today - AI Summit Drives Economic Vision For Latin America"
-  ],
   "headlines_for_gate": [
     "[2026-09-22] AZO 预定于 2026-09-22 发布财报（time-pre-market）",
     "[2026-09-22] THO 预定于 2026-09-22 发布财报（time-pre-market）",
@@ -29,167 +22,11 @@
     "[2026-09-22] ESP 预定于 2026-09-22 发布财报（time-not-supplied）",
     "[2026-09-22] ELME 预定于 2026-09-22 发布财报（time-not-supplied）",
     "[2026-09-22] ZENA 预定于 2026-09-22 发布财报（time-not-supplied）",
-    "[2026-09-22] HERE 预定于 2026-09-22 发布财报（time-pre-market）",
     "[2026-09-22] ALPS 预定于 2026-09-22 发布财报（time-not-supplied）",
-    "[2026-09-22] BRLS 预定于 2026-09-22 发布财报（time-not-supplied）"
+    "[2026-09-22] BRLS 预定于 2026-09-22 发布财报（time-not-supplied）",
+    "[2026-09-22] AAME 预定于 2026-09-22 发布财报（time-not-supplied）"
   ],
   "items": [
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393517/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393515/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393513/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393511/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393509/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393506/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393503/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393500/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393497/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393494/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393491/xslF345X06/ownership.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Alphabet Inc.",
-      "date": "2026-09-16",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "GOOGL 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526393485/xslF345X06/ownership.xml"
-    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-22",
@@ -296,18 +133,6 @@
       "symbol": "ZENA",
       "time": "time-not-supplied",
       "title": "ZENA 预定于 2026-09-22 发布财报（time-not-supplied）",
-      "url": "https://www.nasdaq.com/market-activity/earnings"
-    },
-    {
-      "category": "earnings_scheduled",
-      "date": "2026-09-22",
-      "eps_forecast": "",
-      "kind": "earnings_scheduled",
-      "relevance": 5,
-      "source": "nasdaq_calendar",
-      "symbol": "HERE",
-      "time": "time-pre-market",
-      "title": "HERE 预定于 2026-09-22 发布财报（time-pre-market）",
       "url": "https://www.nasdaq.com/market-activity/earnings"
     },
     {
@@ -1059,92 +884,125 @@
       "url": "https://www.bea.gov/news/2026/us-international-transactions-and-investment-position-1st-quarter-2026-and-annual-update"
     },
     {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 12:51:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta Platform's Muse surge sets the stage for Connect 2026, as investors weigh fresh product catalysts against heavy AI spending, ad dependence and valuation.",
-      "title": "Buy, Hold or Sell META Stock Ahead of Meta Connect 2026?",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/buy-hold-sell-meta-stock-125100835.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 12:47:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The gig economy offers numerous advantages. If you wish to take advantage of this highly popular trend, focus on stocks like UBER, DASH and LYFT.",
-      "title": "Well-Positioned Gig Economy Stocks Amid the Theme's Rising Adoption",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/well-positioned-gig-economy-stocks-124700467.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 13:00:05 +0000",
-      "kind": "news",
-      "relevance": 3,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Recently, Zacks.com users have been paying close attention to Alphabet (GOOGL). This makes it worthwhile to examine what the stock has in store.",
-      "title": "Alphabet Inc. (GOOGL) is Attracting Investor Attention: Here is What You Should Know",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/alphabet-inc-googl-attracting-investor-130005253.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 13:00:02 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Alphabet (GOOG) has been one of the stocks most watched by Zacks.com users lately. So, it is worth exploring what lies ahead for the stock.",
-      "title": "Is Most-Watched Stock Alphabet Inc. (GOOG) Worth Betting on Now?",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/most-watched-stock-alphabet-inc-130002067.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 12:38:53 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Wall Street is getting cold feet on data centers, and communities across America are pushing back hard against new construction. The technology powering the AI revolution may be colliding with limits ",
-      "title": "AI May Be Ruined Data Centers",
-      "url": "https://247wallst.com/investing/2026/09/22/ai-may-be-ruined-data-centers/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 12:37:40 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The Inter-American Development Bank Group recently organized a significant meeting with heads of state and tech leaders from across Latin America and the Caribbean to push forward a collective agenda ",
-      "title": "Cloud AI Today - AI Summit Drives Economic Vision For Latin America",
-      "url": "https://finance.yahoo.com/technology/ai/articles/cloud-ai-today-ai-summit-123740833.html?.tsrc=rss"
-    },
-    {
       "category": "earnings",
-      "date": "Tue, 22 Sep 2026 12:34:19 +0000",
+      "date": "Tue, 22 Sep 2026 14:00:15 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Haas also expressed growing confidence that the company can beat its $2 billion AGI CPU revenue target.",
-      "title": "Arm Just Got a Major Vote of Confidence From Its CEO",
-      "url": "https://finance.yahoo.com/technology/ai/articles/arm-just-got-major-vote-123419524.html?.tsrc=rss"
+      "summary": "A quarterly index formula just made millions of passive investors larger SpaceX shareholders, and none of them had a say in it. The mechanics behind that forced buying also set up a collision with an ",
+      "title": "Index Funds Are Being Forced to Buy SpaceX Whether They Want It or Not",
+      "url": "https://247wallst.com/investing/2026/09/22/index-funds-are-being-forced-to-buy-spacex-whether-they-want-it-or-not/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 12:33:17 +0000",
+      "date": "Tue, 22 Sep 2026 11:20:00 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Googlebook pushes Gemini into premium PCs as Alphabet takes on Apple and established Windows laptop makers.",
-      "title": "Google Just Made a Big Move to Challenge Apple in Laptops",
-      "url": "https://finance.yahoo.com/technology/articles/google-just-made-big-move-123317226.html?.tsrc=rss"
+      "summary": "Tech stocks don't always beat the rest of the market.",
+      "title": "Where Will QQQ Be in 20 Years? Here's What the Nasdaq-100's Historical Growth Rate Suggests.",
+      "url": "https://www.fool.com/investing/2026/09/22/where-will-qqq-be-in-20-years-historical-growth/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 17:07:53 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Broad Market Indicators Broad-market exchange-traded funds IWM and IVV were higher. Actively t",
+      "title": "Exchange-Traded Funds Rise as US Equities Advance After Midday",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-rise-us-170753028.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 15:14:00 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "NEW YORK, September 21, 2026--NYCWFF returns October 15–18 with 50+ events featuring Rachael Ray, Bert Kreischer, mgk, Method Man, Whoopi Goldberg and more.",
+      "title": "The Biggest Names in Food, Entertainment and Culture Come Together at the 2026 Food Network New York City Wine &amp; Food Festival presented by Invesco QQQ",
+      "url": "https://finance.yahoo.com/media-advertising/articles/biggest-names-food-entertainment-culture-151400152.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 14:28:52 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "One AI server stock is outrunning its closest peers by a margin that a rising technology market alone cannot explain, and the gap raises a question about whether concentrated positioning or genuine de",
+      "title": "Super Micro Rises 6% as AI Server Bid Concentrates in One Name; Dell and Hewlett Packard Enterprise Tick Up",
+      "url": "https://247wallst.com/investing/2026/09/21/super-micro-rises-6-as-ai-server-bid-concentrates-in-one-name-dell-and-hewlett-packard-enterprise-tick-up/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 13:35:36 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "BlackRock just launched a new ETF that tracks the exact same index as QQQ but charges you less for the privilege, and that raises a question most investors have not seriously considered: is the king o",
+      "title": "BlackRock Just Declared War on QQQ. Here’s How You Can Collect the Spoils.",
+      "url": "https://247wallst.com/investing/2026/09/22/blackrock-just-declared-war-on-qqq-heres-how-you-can-collect-the-spoils/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 13:23:24 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "The broad market exchange-traded fund SPDR S&amp;P 500 ETF Trust (SPY) was up 0.7% and the actively trad",
+      "title": "Exchange-Traded Funds Rise, Equity Futures up Pre-Bell Monday as Oil Prices Decline",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-rise-equity-132324903.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 13:08:32 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "The broad market exchange-traded fund SPDR S&amp;P 500 ETF Trust (SPY) was up 0.1%, and the actively tra",
+      "title": "Exchange-Traded Funds Mixed, Equity Futures Up Pre-Bell Tuesday as Oil Prices Drop Due to Possible Diplomacy in US-Iran Conflict",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-mixed-equity-130832359.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 16:43:36 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Traders continued to keep an eye on developments between the U.S. and Iran.",
+      "title": "Nasdaq climbs to fresh all-time high; S&amp;P 500 is little changed as traders monitor Middle East tensions: Live updates",
+      "url": "https://www.cnbc.com/2026/09/21/stock-market-today-live-updates.html"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 16:14:00 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "The U.S. \"will no longer permit threats to America to gain a foothold anywhere in the Western Hemisphere,\" Trump told the UN leaders.",
+      "title": "Trump slams Iran and Cuba, defends AI growth and recounts record in UN speech",
+      "url": "https://www.cnbc.com/2026/09/22/trump-un-speech-today.html"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 16:05:57 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "JPMorgan’s commodity team admitted what many are thinking on the Iran situation and oil: We just don't know.",
+      "title": "Sullivan: Wall Street admits it doesn&apos;t know where oil is headed. There&apos;s one stock they do agree on",
+      "url": "https://www.cnbc.com/2026/09/22/sullivan-wall-street-admits-it-doesnt-know-where-oil-is-headed-theres-one-stock-they-do-agree-on.html"
     },
     {
       "category": "macro",
@@ -1159,29 +1017,40 @@
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 11:00:01 GMT",
+      "date": "Tue, 22 Sep 2026 16:18:42 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "The presentation comes as McDonald's U.S. business disappointed in its most recent quarter.",
-      "title": "McDonald&apos;s is hosting an investor day as its U.S. business struggles. Here are 4 things to expect",
-      "url": "https://www.cnbc.com/2026/09/22/mcdonalds-mcd-hosts-investor-day.html"
+      "summary": "These are the stocks posting the largest moves midday.",
+      "title": "Stocks making the biggest moves midday: Lennar, Capri, Vicor, Amgen &amp; more",
+      "url": "https://www.cnbc.com/2026/09/22/stocks-making-the-biggest-moves-midday-len-cpri-vicr-amg.html"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 12:28:51 GMT",
+      "date": "Tue, 22 Sep 2026 16:00:52 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "It's the latest move by the company as it and other event contract exchanges seek to gain greater participation by institutional traders.",
-      "title": "Kalshi asks CFTC to allow margin trading on its platform, letting users buy with borrowed funds",
-      "url": "https://www.cnbc.com/2026/09/22/kalshi-asks-cftc-to-allow-margin-trading-on-its-platform-letting-users-buy-with-borrowed-funds.html"
+      "summary": "Consumer agentic \"may power the next phase of the AI trade,\" analysts at UBS said.",
+      "title": "Meta&apos;s quick success with Muse puts consumers back in the driver&apos;s seat of the AI trade",
+      "url": "https://www.cnbc.com/2026/09/22/metas-success-with-muse-puts-consumers-back-in-the-drivers-seat-of-the-ai-trade.html"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 12:56:37 GMT",
+      "date": "Tue, 22 Sep 2026 15:57:54 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "President Donald Trump addressed the U.N. General Assembly on Tuesday and pledged to support AI, despite calls to pace advanced models.",
+      "title": "Altman and Amodei expected to join UN Security Council meeting about AI",
+      "url": "https://www.cnbc.com/2026/09/22/altman-amodei-unga-ai-safety.html"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 14:05:04 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
@@ -1189,98 +1058,54 @@
       "summary": "The reports raised hopes of renewed U.S.-Iran diplomacy, with U.S. stock futures mixed and oil prices lower.",
       "title": "Iran reportedly says it can reopen Strait of Hormuz within 7 days if U.S. eases military pressure",
       "url": "https://www.cnbc.com/2026/09/22/us-iran-war-trump-hormuz.html"
-    },
-    {
-      "category": "earnings",
-      "date": "Tue, 22 Sep 2026 11:30:01 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Aurora's founder and CEO told CNBC the company is targeting positive free cash flow by 2028, driven by a substantial increase in the number autonomous trucks.",
-      "title": "Autonomous trucking company Aurora looks to accelerate toward profitability",
-      "url": "https://www.cnbc.com/2026/09/22/aurora-autonomous-semi-ride.html"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 13:09:59 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "U.S. President Donald Trump said Russia has “lost control” of its diesel oil industry due to the Ukraine war, as he presses Kyiv to agree to an energy truce.",
-      "title": "Trump to press Zelenskyy for energy truce, says Russia has ‘lost control’ of oil due to Ukraine war",
-      "url": "https://www.cnbc.com/2026/09/22/trump-zelenskyy-ukraine-russia-putin-diesel-oil.html"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 12:34:09 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Here are Tuesday's biggest calls on Wall Street.",
-      "title": "Here are Tuesday&apos;s biggest analyst calls: Nvidia, Netflix, Broadcom, SanDisk, Meta, CoreWeave &amp; more",
-      "url": "https://www.cnbc.com/2026/09/22/big-wall-street-analyst-calls-tuesday.html"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 11:47:00 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Flight delays continued Tuesday but were far fewer compared with Monday, when an FAA flight data system failed and a damaged cable severed a backup system.",
-      "title": "Flight disruptions ease at Newark, Philadelphia airports following equipment outage",
-      "url": "https://www.cnbc.com/2026/09/22/flight-disruptions-ease-at-newark-philadelphia-after-equipment-outage.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-22T13:11:42.211793+00:00",
+  "probed_at": "2026-09-22T16:58:48.420451+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 2.03s",
+      "note": "耗时 1.76s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 2.29s",
+      "note": "耗时 1.33s",
       "ok": true
     },
     "edgar": {
-      "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.26s",
+      "n": 0,
+      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.66s",
+      "note": "耗时 0.57s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.61s",
+      "note": "耗时 0.57s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-22": {
-      "n": 19,
-      "note": "提前数天（预告）｜ 耗时 1.62s",
+      "n": 18,
+      "note": "提前数天（预告）｜ 耗时 2.29s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-23": {
       "n": 24,
-      "note": "提前数天（预告）｜ 耗时 1.64s",
+      "note": "提前数天（预告）｜ 耗时 1.35s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 1.58s",
+      "note": "耗时 0.99s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.02s",
+      "note": "耗时 1.22s",
       "ok": true
     }
   }

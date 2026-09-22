@@ -935,12 +935,16 @@ def llm_gate(base, now_ms, headlines, model, api_key, base_url,
 
     if "r" not in box:
         fallback = static_gate(base, now_ms)
-        fallback["source"] = ("static(LLM 失败 %d 次: %s)"
-                              % (box["attempts"], box["errors"][-1][:60]
-                                 if box["errors"] else "unknown"))
+        # 🔴 失败原因必须能定位：网络类错误记在 errors，"拿到了响应但输出不合格"
+        #    记在 bad —— 只看 errors 会把后者记成 "unknown"（实测踩过：三次都没成功，
+        #    日志里却只剩 "unknown"，完全没法判断是断网还是模型输出不合格）。
+        why = (box["errors"][-1][:60] if box["errors"]
+               else (box["bad"][-1][:60] if box["bad"] else "unknown"))
+        fallback["source"] = "static(LLM 失败 %d 次: %s)" % (box["attempts"], why)
         fallback["llm_ok"] = False
         fallback["llm_attempts"] = box["attempts"]
         fallback["llm_errors"] = box["errors"][-3:]
+        fallback["llm_bad"] = box["bad"][-3:]
         fallback["llm_dropped_thinking"] = box["dropped_thinking"]
         # 校验不合格也留痕：调用方要能分辨"模型没守规矩"与"网络坏了"——
         # 这两种失败的处置可能不同，混在一起就查不出来了。

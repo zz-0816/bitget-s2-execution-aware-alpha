@@ -1,6 +1,6 @@
 {
  "executed": true,
- "executed_utc": "2026-09-20T10:40:13.329486+00:00",
+ "executed_utc": "2026-09-22T09:33:06.758050+00:00",
  "model": "deepseek-v4-flash",
  "prompt_version": "v4-2026-09-20",
  "n_cases": 10,
@@ -49,7 +49,7 @@
    "dangerous": false,
    "llm_ok": true,
    "source": "llm",
-   "reason": "标题为 NVDA 申报 Form 4 内部人交易，属例行内部人交易",
+   "reason": "标题为 NVDA 申报 Form 4 内部人交易，属例行内部人交易，非事件窗口",
    "confidence": 0.95,
    "label_confidence": "high"
   },
@@ -77,7 +77,7 @@
    "dangerous": false,
    "llm_ok": true,
    "source": "llm",
-   "reason": "标题为另一家公司 NB 的自身财报发布事务，未点我方标的 NVDA，也无行业级含义",
+   "reason": "标题为另一家公司 NB 发布财报的自身事务，未点我方标的 NVDA，也无行业级含义",
    "confidence": 0.9,
    "label_confidence": "medium"
   },
@@ -91,7 +91,7 @@
    "dangerous": false,
    "llm_ok": true,
    "source": "llm",
-   "reason": "标题引用 CEO Jensen Huang 称 Nvidia Chip Sales Could Double Next Year，属我方标的 NVDA 的业绩前瞻性表态",
+   "reason": "标题引用 CEO Jensen Huang 称 Nvidia Chip Sales Could Double Next Year，属我方标的 NVDA 的业绩前瞻性表态，可能引发挂单逆向选择",
    "confidence": 0.7,
    "label_confidence": "medium"
   },
@@ -105,7 +105,7 @@
    "dangerous": false,
    "llm_ok": true,
    "source": "llm",
-   "reason": "标题涉及美联储加息路径（Fed rate hikes），属宏观利率消息",
+   "reason": "标题涉及美联储（Fed）加息路径（rate hikes），属宏观利率消息",
    "confidence": 0.7,
    "label_confidence": "high"
   },
@@ -119,7 +119,7 @@
    "dangerous": false,
    "llm_ok": true,
    "source": "llm",
-   "reason": "标题提到 AMD 因传闻获得 2027 GPU 优势，属同业竞争格局消息",
+   "reason": "标题提及AMD因传闻获得2027年GPU优势，属同业竞争格局消息，可能影响NVDA",
    "confidence": 0.7,
    "label_confidence": "medium"
   },

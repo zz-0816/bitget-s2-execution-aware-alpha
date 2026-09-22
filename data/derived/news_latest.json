@@ -1,12 +1,12 @@
 {
-  "base": "NVDA",
+  "base": "MRVL",
   "categories": {
     "earnings": 1,
     "earnings_scheduled": 44,
     "filing": 3,
     "filing_material": 9,
-    "macro": 8,
-    "other": 39
+    "macro": 9,
+    "other": 38
   },
   "event_driven": {
     "first_run": false,
@@ -15,7 +15,9 @@
     "should_call_llm": false
   },
   "headlines_for_gate": [
-    "[2026-09-03] NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-08-28] MRVL 申报：10-Q（季报）",
+    "[2026-08-27] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+    "[2026-08-19] MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-22] AZO 预定于 2026-09-22 发布财报（time-pre-market）",
     "[2026-09-22] THO 预定于 2026-09-22 发布财报（time-pre-market）",
     "[2026-09-22] KBH 预定于 2026-09-22 发布财报（time-after-hours）",
@@ -24,166 +26,164 @@
     "[2026-09-22] AREC 预定于 2026-09-22 发布财报（time-not-supplied）",
     "[2026-09-22] ESP 预定于 2026-09-22 发布财报（time-not-supplied）",
     "[2026-09-22] ELME 预定于 2026-09-22 发布财报（time-not-supplied）",
-    "[2026-09-22] ZENA 预定于 2026-09-22 发布财报（time-not-supplied）",
-    "[2026-09-22] HERE 预定于 2026-09-22 发布财报（time-pre-market）",
-    "[2026-09-22] ALPS 预定于 2026-09-22 发布财报（time-not-supplied）"
+    "[2026-09-22] ZENA 预定于 2026-09-22 发布财报（time-not-supplied）"
   ],
   "items": [
     {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-16",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062334/xslF345X06/wk-form4_1789598794.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-15",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026062124/xslF345X06/wk-form4_1789522603.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-02",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026060112/xslF345X06/wk-form4_1788380464.xml"
+    },
+    {
       "category": "filing",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-21",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-09-01",
       "form": "144",
       "form_meaning": "",
       "kind": "filing",
       "material": false,
       "relevance": 4,
       "source": "edgar",
-      "title": "NVDA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000192109426001040/xsl144X01/primary_doc.xml"
+      "title": "MRVL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195004726008892/xsl144X01/primary_doc.xml"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-28",
+      "form": "10-Q",
+      "form_meaning": "季报",
       "kind": "filing",
       "material": true,
-      "relevance": 4,
+      "relevance": 8,
       "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000124382126000007/xslF345X06/wk-form4_1789766132.xml"
+      "title": "MRVL 申报：10-Q（季报）",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000025/mrvl-20260801.htm"
     },
     {
       "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000128385426000010/xslF345X06/wk-form4_1789766082.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000169684126000012/xslF345X06/wk-form4_1789766007.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000158867026000014/xslF345X06/wk-form4_1789765959.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-18",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764926000012/xslF345X06/wk-form4_1789765856.xml"
-    },
-    {
-      "category": "filing",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-17",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000195824426000615/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-11",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000005/xslF345X06/wk-form4_1789160684.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-08",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119903926000014/xslF345X06/wk-form4_1788901755.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-04",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764726000009/xslF345X06/wk-form4_1788555631.xml"
-    },
-    {
-      "category": "filing",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-03",
-      "form": "3",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "NVDA 申报：3",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000215218826000003/xslF345X06/wk-form3_1788468666.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "NVIDIA CORP",
-      "date": "2026-09-03",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-27",
       "form": "8-K",
       "form_meaning": "重大事项（含财报发布、并购、高管变动）",
       "kind": "filing",
       "material": true,
       "relevance": 8,
       "source": "edgar",
-      "title": "NVDA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/nvda-20260902.htm"
+      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000022/mrvl-20260827.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-19",
+      "form": "8-K",
+      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 8,
+      "source": "edgar",
+      "title": "MRVL 申报：8-K（重大事项（含财报发布、并购、高管变动））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057525/xslF345X06/wk-form4_1787014784.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "144",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：144",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000195824426000520/xsl144X01/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-17",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026057399/xslF345X06/wk-form4_1786999519.xml"
+    },
+    {
+      "category": "filing",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-06",
+      "form": "SCHEDULE 13G/A",
+      "form_meaning": "",
+      "kind": "filing",
+      "material": false,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：SCHEDULE 13G/A",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000031506626002090/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    {
+      "category": "filing_material",
+      "company": "Marvell Technology, Inc.",
+      "date": "2026-08-03",
+      "form": "4",
+      "form_meaning": "内部人交易（Form 4）",
+      "kind": "filing",
+      "material": true,
+      "relevance": 4,
+      "source": "edgar",
+      "title": "MRVL 申报：4（内部人交易（Form 4））",
+      "url": "https://www.sec.gov/Archives/edgar/data/1835632/000162828026051905/xslF345X06/wk-form4_1785789180.xml"
     },
     {
       "category": "earnings_scheduled",
@@ -1067,113 +1067,157 @@
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 03:13:01 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "The AI chip giant's $108 billion forecast puts its AI chip sales to China at zero. On Thursday, the two governments holding them there will meet at the White House.",
-      "title": "Nvidia's Forecast Assumes No Data Center Chip Sales to China. The Sept. 24 U.S.-China Summit Could Change That.",
-      "url": "https://www.fool.com/investing/2026/09/21/nvidia-s-forecast-assumes-no-data-center-chip-sales-to-china-the-sept-24-u-s-china-summit-could-change-that/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 02:00:43 +0000",
+      "date": "Tue, 22 Sep 2026 01:26:25 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Iambic Therapeutics, Inc., an AI drug discovery company backed by Nvidia Corp. (NASDAQ:NVDA) and the Qatar Investment Authority, filed for an initial public offering, according to an S-1 filing with t",
-      "title": "Nvidia-Backed AI Drug Discovery Company Iambic Therapeutics Files for Nasdaq IPO, to Use Proceeds for Cancer Drug Development",
-      "url": "https://finance.yahoo.com/healthcare/articles/nvidia-backed-ai-drug-discovery-020043923.html?.tsrc=rss"
+      "summary": "Shares of networking chips designer Marvell Technology (NASDAQ: MRVL) jumped 6.1% in the afternoon session after the company announced it will showcase industry-first 2nm optical interconnect demonstr",
+      "title": "Marvell Technology (MRVL) Shares Skyrocket, What You Need To Know",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/marvell-technology-mrvl-shares-skyrocket-012625762.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 01:14:28 +0000",
+      "date": "Mon, 21 Sep 2026 20:33:00 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "In September 2026, Rackspace Technology, Inc. announced it had joined the NVIDIA Cloud Partner Program, enhancing its ability to deliver NVIDIA accelerated computing and governed AI cloud services for",
-      "title": "Why Rackspace Technology (RXT) Is Up 15.8% After Joining NVIDIA’s Cloud Partner Program",
-      "url": "https://finance.yahoo.com/technology/ai/articles/why-rackspace-technology-rxt-15-011428011.html?.tsrc=rss"
+      "summary": "The chip designer took new optical hardware to a European stage this week, and the timing lines up with where hyperscaler spending is heading.",
+      "title": "Marvell just made a move that changes the AI networking story",
+      "url": "https://www.thestreet.com/technology/marvell-ai-networking-power-efficiency-shift?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 01:12:24 +0000",
+      "date": "Mon, 21 Sep 2026 19:47:33 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Morningstar called Tesla a “believe-me story,” with its valuation hinging heavily on robotaxis, Optimus and other emerging businesses.",
-      "title": "TSLA Stock Hits Nearly 3-Week High: Nvidia Win Adds Muscle To ‘Physical AI’ Pivot Despite Optimus Delays",
-      "url": "https://stocktwits.com/news-articles/markets/equity/tsla-stock-nvidia-physical-ai-pivot-optimus-delays/cZMPEiwRBI8?.tsrc=rss"
+      "summary": "Marvell Takes Aim at AI Data Centers With New 2nm Optical Technology",
+      "title": "Marvell Shares Rally After Unveiling 1.6T Optical Technology for AI Networks",
+      "url": "https://finance.yahoo.com/technology/ai/articles/marvell-shares-rally-unveiling-1-194733178.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 01:03:18 +0000",
+      "date": "Mon, 21 Sep 2026 19:05:01 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Meta's Muse could usher in a wave of agentic AI-driven growth for chipmakers.",
-      "title": "Why Intel, Arm, and Other AI Chip Stocks Soared Today",
-      "url": "https://www.fool.com/investing/2026/09/21/why-intel-arm-amd-ai-chip-stocks-soared-today/?.tsrc=rss"
+      "summary": "Three demonstrations span short-reach, encrypted pluggable and inter-data-center links, but Marvell disclosed no orders or launch dates.",
+      "title": "Marvell Rises Over 3.3% as 2-Nanometer Optics Target AI's Copper Wall",
+      "url": "https://finance.yahoo.com/technology/ai/articles/marvell-rises-over-3-3-190501753.html?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 00:59:28 +0000",
+      "date": "Mon, 21 Sep 2026 19:01:28 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Dow Jones Futures: Falling oil prices and yields sparked a stock market rally. AMD, Intel, Micron, Nvidia and Sandisk are key movers.",
-      "title": "Dow Jones Futures: Falling Oil Prices, Yields Spark Market Rally; AMD, Intel, Micron, Nvidia, Sandisk Are Key Movers",
-      "url": "https://finance.yahoo.com/m/bc32a5e1-f207-3311-ba0b-143bb01bd032/dow-jones-futures%3A-falling.html?.tsrc=rss"
+      "summary": "The chipmaker announced plans to unveil next-generation technology at an upcoming tech conference.",
+      "title": "Why Marvell Stock Rallied Today",
+      "url": "https://www.fool.com/investing/2026/09/21/why-marvell-stock-rallied-today/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 05:00:48 +0000",
+      "date": "Mon, 21 Sep 2026 13:15:02 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Analysts keep hiking their stock price targets for chip-maker Marvell Technology (MRVL). As a result, two attractive plays are shorting out-of-the-money MRVL put options and put credit spreads.",
+      "title": "Marvell Technology Stock Price Targets Are Rising - What's the Best MRVL Play?",
+      "url": "https://www.barchart.com/story/news/4711440/marvell-technology-stock-price-targets-are-rising-what-s-the-best-mrvl-play?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 12:53:48 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "AMD has become the latest trillion-dollar company, as the AI investment boom sends its shares soaring and data-centre demand fuels record growth.View on euronews",
-      "title": "AMD joins trillion-dollar chipmaker club as AI demand surges",
-      "url": "https://www.euronews.com/2026/09/22/amd-joins-trillion-dollar-chipmaker-club-as-ai-demand-surges?.tsrc=rss"
+      "summary": "Marvell has dropped 20% in three months even as AI peers held steady, and one analyst sees that disconnect as the setup for gains that leave the Wall Street consensus looking timid.",
+      "title": "Marvell Technology Fell Hard Over 3 Months: It Has Momentum and a Wall Street Pro’s Confidence That 78% Gains are Coming",
+      "url": "https://247wallst.com/investing/2026/09/21/marvell-technology-fell-hard-over-3-months-it-has-momentum-and-a-wall-street-pros-confidence-that-78-gains-are-coming/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 04:50:02 +0000",
+      "date": "Mon, 21 Sep 2026 12:34:29 +0000",
       "kind": "news",
       "relevance": 0,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Wall Street is finally recognizing the potential of Muse.",
-      "title": "Meta Stock Is Still Too Cheap",
-      "url": "https://www.fool.com/investing/2026/09/22/meta-stock-is-still-too-cheap/?.tsrc=rss"
+      "summary": "If Jensen Huang is right, then Marvell could not only double but soar to around five times its current value.",
+      "title": "Can Investing in Marvell Technology Stock Double Your Money?",
+      "url": "https://www.fool.com/investing/2026/09/21/can-investing-in-marvell-technology-stock-double-your-money/?.tsrc=rss"
     },
     {
-      "category": "other",
-      "date": "Mon, 21 Sep 2026 20:34:33 GMT",
+      "category": "macro",
+      "date": "Mon, 21 Sep 2026 22:25:33 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "MAGA Inc. entered September with $415.8 million as much of Trump’s promised midterm spending had yet to surface publicly.",
-      "title": "Much of Trump’s promised midterm election spending has yet to surface, new filing shows",
-      "url": "https://www.cnbc.com/2026/09/21/trump-maga-midterm-spending-war-chest.html"
+      "summary": "Trump, facing low approval on the economy ahead of the midterm election, has an added incentive to emerge from the summit with China's Xi touting trade wins.",
+      "title": "Trump, Xi seek trade stability and deals, but AI, tariffs and Iran loom large. What to watch",
+      "url": "https://www.cnbc.com/2026/09/21/trump-xi-china-summit-trade-tariffs.html"
     },
     {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 04:00:28 GMT",
+      "category": "macro",
+      "date": "Tue, 22 Sep 2026 07:55:26 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "The $2.3 billion NSE IPO, India's largest public share sale issue so far this year, has drawn strong interest from investors, with bids of more than $10 billion.",
-      "title": "Investors rush into India’s National Stock Exchange IPO at valuation multiple above Nasdaq",
-      "url": "https://www.cnbc.com/2026/09/22/india-nse-ipo-billion-nasdaq.html"
+      "summary": "The Treasury Secretary said that Washington was pressuring Iran \"like never before\"",
+      "title": "U.S. threatens to &apos;shut down&apos; Iranian airlines as Houthis tighten pressure on oil route",
+      "url": "https://www.cnbc.com/2026/09/22/us-iran-war-trump-hormuz.html"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 05:15:21 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Alibaba shares jumped 3% in Hong Kong on Tuesday as the tech giant unveiled a new AI chip and plans to sharply expand its global data center capacity",
+      "title": "Alibaba shares jump as new AI chip, data center buildout plans unveiled",
+      "url": "https://www.cnbc.com/2026/09/22/alibaba-ai-alibabacloud-zhenwu-v900-.html"
+    },
+    {
+      "category": "macro",
+      "date": "Tue, 22 Sep 2026 07:24:18 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Oil rose Tuesday, amid concerns of growing Iran-U.S. tensions. after U.S. Treasury Secretary Scott Bessent told CNBC that all Iranian airlines will be shut down from Wednesday.",
+      "title": "Oil rises amid worries of growing Iran-U.S. tensions after Bessent issues Iranian airline shutdown warning",
+      "url": "https://www.cnbc.com/2026/09/22/oil-iran-us-bessent-un-crude.html"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 21 Sep 2026 23:03:57 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Meta's Muse AI personal agent tool had 730,000 and 2.5 million downloads over the roughly five-day and thirteen-day time frames after its launch.",
+      "title": "Meta&apos;s Muse AI agent downloads are surging. Here&apos;s how it compares to ChatGPT, Grok and Claude",
+      "url": "https://www.cnbc.com/2026/09/21/meta-muse-personal-ai-agent-downloads.html"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 22 Sep 2026 04:00:30 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Bonds from emerging Asian markets could provide investment opportunities, amid an environment of elevated level of global bond yields.",
+      "title": "Here&apos;s where UBS says to invest with global yields elevated",
+      "url": "https://www.cnbc.com/2026/09/22/heres-where-ubs-says-to-invest-with-global-yields-elevated.html"
     },
     {
       "category": "other",
@@ -1188,106 +1232,62 @@
     },
     {
       "category": "other",
-      "date": "Tue, 22 Sep 2026 04:40:56 GMT",
+      "date": "Tue, 22 Sep 2026 07:26:49 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "The three major averages jumped to start the week's trading, catching a tailwind from a rally in AI-related stocks, as well as lower yields and oil prices.",
-      "title": "Stock futures are little changed after S&amp;P 500 posts best day since early August: Live updates",
-      "url": "https://www.cnbc.com/2026/09/21/stock-market-today-live-updates.html"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 02:41:10 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Very little is known about which Chinese business executives, if any, are expected to attend.",
-      "title": "Here&apos;s who we know is going to the Trump-Xi dinner so far",
-      "url": "https://www.cnbc.com/2026/09/22/heres-who-we-know-is-going-to-the-trump-xi-dinner-so-far.html"
-    },
-    {
-      "category": "other",
-      "date": "Tue, 22 Sep 2026 04:00:30 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Bonds from emerging Asian markets could provide investment opportunities, amid an environment of elevated level of global bond yields.",
-      "title": "Here&apos;s where UBS says to invest with global yields elevated",
-      "url": "https://www.cnbc.com/2026/09/22/heres-where-ubs-says-to-invest-with-global-yields-elevated.html"
-    },
-    {
-      "category": "macro",
-      "date": "Tue, 22 Sep 2026 04:22:20 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Oil rose Tuesday, amid concerns of growing Iran-U.S. tensions. after U.S. Treasury Secretary Scott Bessent told CNBC that all Iranian airlines will be shut down from Wednesday.",
-      "title": "Oil rises amid worries of growing Iran-U.S. tensions after Bessent issues Iranian airline shutdown warning",
-      "url": "https://www.cnbc.com/2026/09/22/oil-iran-us-bessent-un-crude.html"
-    },
-    {
-      "category": "macro",
-      "date": "Tue, 22 Sep 2026 01:51:44 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "The Treasury Secretary said that Washington was pressuring Iran \"like never before\"",
-      "title": "All Iranian airlines to be &apos;shut down&apos; from Wednesday, Bessent tells CNBC",
-      "url": "https://www.cnbc.com/2026/09/22/us-iran-war-trump-hormuz.html"
+      "summary": "Global brokerage Bernstein said foreign investors had little reason to invest in India as large businesses were struggling to reinvent themselves.",
+      "title": "India&apos;s large caps stuck in &apos;bygone economic era&apos;, says Bernstein, as foreign investors head for the exit",
+      "url": "https://www.cnbc.com/2026/09/22/foreign-investors-bernstein-india-tata-reliance.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-22T05:40:19.427559+00:00",
+  "probed_at": "2026-09-22T08:12:42.658138+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 2.78s",
+      "note": "耗时 1.84s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.89s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "edgar": {
       "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 2.39s",
+      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.36s",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.66s",
+      "note": "耗时 0.59s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.77s",
+      "note": "耗时 0.56s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-22": {
       "n": 19,
-      "note": "提前数天（预告）｜ 耗时 1.18s",
+      "note": "提前数天（预告）｜ 耗时 1.14s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-23": {
       "n": 25,
-      "note": "提前数天（预告）｜ 耗时 1.29s",
+      "note": "提前数天（预告）｜ 耗时 1.32s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.68s",
+      "note": "耗时 0.82s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 1.00s",
+      "note": "耗时 1.47s",
       "ok": true
     }
   }

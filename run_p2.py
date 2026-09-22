@@ -1092,9 +1092,12 @@ def selftest(with_net=False):
                     [py, os.path.join("project2", "ext_events.py"), "--selftest"],
                     [py, os.path.join("project2", "account_feed.py"), "--selftest"],
                     [py, os.path.join("tools", "account_read.py"), "--selftest"],
+                    [py, os.path.join("tools", "backtest_replay.py"), "--selftest"],
                     [py, os.path.join("tools", "anchor_calibration.py"), "--selftest"]],
-                   "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + **真实账户取数** + 阈值标定"
-                   "（schema 归一 / 落盘守卫 / 口径守卫 / **只读边界** / 样本量门槛）")
+                   "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + **真实账户取数**"
+                   " + **快照重放回测** + 阈值标定"
+                   "（schema 归一 / 落盘守卫 / 口径守卫 / **只读边界** / 样本量门槛"
+                   " / 盈亏公式与费率口径对拍）")
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],

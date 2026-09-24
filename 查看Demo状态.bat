@@ -6,7 +6,7 @@ REM  The quick-tunnel domain changes on every restart, so this
 REM  file (and data\run\public_url.txt) is the source of truth
 REM  for "what link do I give the judges right now".
 REM
-REM  ASCII-ONLY on purpose - see 启动Demo.bat for the reason.
+REM  ASCII-ONLY on purpose - the start-demo bat explains why.
 REM ===========================================================
 cd /d "%~dp0"
 

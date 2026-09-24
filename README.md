@@ -28,12 +28,11 @@ python run_p2.py                 # ③ 起网页 http://127.0.0.1:8788
 **想让它跑在"实时模式"而不是"离线演示"**（两者的差别**只在数据年龄**）：
 
 ```powershell
-# ① 持续同步项目一的新样本进来（只写最近两天；冻结的历史日会被拒绝覆盖）
-python tools/sync_p1_samples.py --loop --interval-sec 240
-python tools/sync_p1_samples.py --status     # 看还差几分钟到实时
-
-# ② 情绪/资金费由本项目自己采（项目一那边没在采这个）
-python tools/sentiment_sampler.py --loop --interval 300
+# 最省事：双击 启动数据同步.bat（同步 + 情绪采样，180 秒一轮；关掉窗口才停）
+# 等价的两条命令（想自己控节奏时用）：
+python tools/sync_p1_samples.py --loop --interval-sec 240   # ① 同步项目一新样本（只写最近两天）
+python tools/sentiment_sampler.py --loop --interval 300     # ② 情绪/资金费（项目一没在采这个）
+python tools/sync_p1_samples.py --status                    # 看还差几分钟到实时
 ```
 
 > 📌 判定规则（`project2/agent_team.py::time_basis`）：`data/spread/` 的最新时刻距今
@@ -42,6 +41,12 @@ python tools/sentiment_sampler.py --loop --interval 300
 > ⚠️ 本项目自带的 `tools/market_feed.py` 虽然能取实时行情，但它**只写 `data/live/`**
 > （刻意不污染证据基座），而决策链不读那个目录 —— **挂着它不能解除离线模式**。
 > 实时模式下若某个输入停了，页面会弹红条（"实时模式但输入已停"）—— 那是真告警，别忽略。
+>
+> ⚠️ **`启动数据同步.bat` 刻意是"纯 ASCII 正文 + CRLF 行尾"，中文提示一律由 Python 打印。**
+> 原因不是洁癖：cmd.exe 按本机代码页（简体中文 = 936）解码批处理文件，而 UTF-8 的汉字是
+> 3 字节 vs GBK 的 2 字节 —— 配上**裸 LF 行尾**，行尾那个悬空字节会**把换行一起吃掉**、
+> 把两行粘成一行（实测事故：`echo` 变成 `?echo`、`python tools\sentiment_sampler.py`
+> 只剩后半截 `\sentiment_sampler.py`）。`tools/bat_lint.py` 守住这条规矩（自检 ⑧附）。
 
 接真实仓位是**可选**的第四步（要先完成一次 Bitget Agentic OAuth 授权，
 授权后**不需要**你交 API key）：
@@ -238,6 +243,7 @@ python run_p2.py --selftest --net  # 额外跑 ⑲ 消息面源、⑳ 事件判�
 | ⑥ | 持仓期巡检 | 裸露敞口无人报警 |
 | ⑦ | 可计算事件（期权到期/休市） | 日历口径漂移 |
 | ⑧ | 配置解析（.env 优先级） | key 泄露 / 配置没生效 |
+| ⑧附 | **启动脚本卫生**（`.bat` 纯 ASCII / CRLF / 无 BOM / 引用的脚本存在） | 双击 bat 时 cmd 按**代码页**解码：UTF-8 多字节 + 裸 LF 会**吃掉换行、把两行粘成一行**（实测 `echo` 变 `?echo`）；脚本改名后 bat **静默失效** |
 | ⑨ | 事件判定校准集（schema + 覆盖 + 留出规则） | 拿答案喂模型还自称校准过 |
 | ⑩ | 盘口重截断（保留最后 N 轮） | 盘口与成交来自**两个不同时段** |
 | ⑪ | 保活守护（地址解析 / 退避 / 状态落盘 / 隧道默认值） | 链接悄悄死掉、地址抓错 |

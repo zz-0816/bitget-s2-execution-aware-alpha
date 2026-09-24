@@ -4,9 +4,9 @@ REM  Project 2 - Execution Demo  (background, keep-alive)
 REM
 REM  Starts the keep-alive supervisor detached from this window,
 REM  so closing the window does NOT stop the demo.
-REM  Stop it with:  停止Demo.bat   (or tools\demo_launcher.py stop)
+REM  Stop it with the stop-demo bat (or tools\demo_launcher.py stop).
 REM
-REM  ASCII-ONLY on purpose - see 启动Demo.bat for the reason.
+REM  ASCII-ONLY on purpose - the start-demo bat explains why.
 REM ===========================================================
 cd /d "%~dp0"
 

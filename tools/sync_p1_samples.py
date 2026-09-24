@@ -325,6 +325,35 @@ def selftest():
 
 # ────────────────────────────────────────────── 入口
 
+def intro(log=print):
+    """打印启动脚本（.bat）的中文说明。
+
+    ⚠️ 这段文字**必须**留在这里，不能写进 `.bat`：批处理文件一旦包含非 ASCII
+    字节，cmd.exe 会按本机代码页（简体中文 = 936/GBK）解码，而文件是 UTF-8 ——
+    一个汉字 3 字节 vs GBK 2 字节，配上**裸 LF 行尾**就会吃掉换行、把两行粘成
+    一行（2026-09-25 实测事故：`echo` 变成 `?echo`、情绪采样那行丢了前缀）。
+    所以 `.bat` 保持纯 ASCII，中文一律由 Python 打印。守这条规矩的是
+    `tools/bat_lint.py`。
+    """
+    log("=" * 68)
+    log(" 项目二 · 数据同步（让 Demo 保持在「实时模式」）")
+    log("-" * 68)
+    log(" 每轮做三件事：")
+    log("   ① 从项目一拉最新样本（轮级盘口 / 成交 / 盘口五档，只写最近两天）")
+    log("   ② 采情绪与资金费（项目一没在采，所以本项目自己采）")
+    log("   ③ 打印新鲜度判定")
+    log("")
+    log(" 为什么需要它：决定「离线演示 / 实时模式」的**只有数据年龄**")
+    log(" （快照最新时刻距今 ≤ 10 分钟 -> 实时）。本仓库按设计不采集数据，")
+    log("   所以靠这个循环持续喂。")
+    log("")
+    log(" 关掉这个窗口就停；要长期挂着就把它最小化。")
+    log(" 随时查状态：python tools\\sync_p1_samples.py --status")
+    log("=" * 68)
+    log("")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="🔄 持续同步项目一样本 -> data/spread/")
     ap.add_argument("--src", default=None, help="项目一 data/spread 目录")
@@ -336,12 +365,16 @@ def main(argv=None):
     ap.add_argument("--allow-old", action="store_true",
                     help="⚠️ 允许覆盖已冻结的老日（一般不用，会改哈希）")
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--intro", action="store_true",
+                    help="打印本窗口在做什么（给 .bat 用：中文提示只能由 Python 打印）")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
 
     if a.selftest:
         return selftest()
+    if a.intro:
+        return intro()
 
     src = find_src(a.src)
     if a.status:

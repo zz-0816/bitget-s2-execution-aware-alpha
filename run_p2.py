@@ -1040,6 +1040,9 @@ def selftest(with_net=False):
              "⑦ 可计算事件（期权到期/休市）"),
             ([py, os.path.join("common", "config.py"), "--check"],
              "⑧ 配置解析（含 .env 优先级）"),
+            ([py, os.path.join("tools", "bat_lint.py"), "--selftest"],
+             "⑧附 启动脚本卫生（.bat 纯 ASCII + CRLF —— cmd 按代码页解码，"
+             "多字节会吃掉换行；实测事故见 tools/bat_lint.py 头注）"),
             ([py, os.path.join("tools", "event_calibration.py"), "--selftest"],
              "⑨ 事件判定校准集（schema + 覆盖 + **校准集不得进 RAG** 的留出检查）"),
             ([py, os.path.join("tools", "retruncate_orderbook.py"), "--selftest"],

@@ -5,7 +5,7 @@ REM
 REM  Kills the whole process tree (otherwise orphan cloudflared
 REM  processes pile up - a real problem we hit).
 REM
-REM  ASCII-ONLY on purpose - see 启动Demo.bat for the reason.
+REM  ASCII-ONLY on purpose - the start-demo bat explains why.
 REM ===========================================================
 cd /d "%~dp0"
 

@@ -38,6 +38,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
 
 P2 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -154,6 +155,29 @@ def rows_of(path):
         return 0
 
 
+def _is_rolling_day(rel):
+    """`data/spread/` 里的文件是否属于"最近两天"（北京口径）—— 即**滚动日**。
+
+    滚动日的文件正在被 `tools/sync_p1_samples.py` 每几分钟刷新一次，哈希必然一直变。
+    若还按"冻结快照"逐字节核验，`--verify` 会**恒红**，于是没人再看它 ——
+    那正是本文件反复强调的"清单撒谎"。
+
+    所以：**最近两天 → ③ 运行期可变（只查存在）**；再往前 → ① 冻结（逐字节）。
+    好处是**不需要人工维护**：每次跑都自己算。
+    """
+    if not rel.startswith("data/spread/"):
+        return False
+    m = re.search(r"(\d{4}-\d{2}-\d{2})\.csv$", rel)
+    if not m:
+        return False
+    try:
+        d = dt.datetime.strptime(m.group(1), "%Y-%m-%d").date()
+    except ValueError:
+        return False
+    today = (dt.datetime.now(dt.UTC) + dt.timedelta(hours=8)).date()
+    return d >= today - dt.timedelta(days=1)
+
+
 def collect():
     """按 SPEC 收集实际存在的文件 -> [{rel, cls, status, why, by, bytes, rows, sha}]"""
     out, seen = [], set()
@@ -170,7 +194,12 @@ def collect():
                 continue
             seen.add(rel)
             st = status or TRADES_NOTE.get(os.path.basename(rel), "复制")
-            out.append({"rel": rel, "cls": cls, "status": st, "why": why,
+            cls_i, why_i = cls, why
+            if _is_rolling_day(rel):
+                cls_i = RUNTIME
+                st = "**滚动日**（持续同步刷新中，哈希仅参考）"
+                why_i = why + " ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新"
+            out.append({"rel": rel, "cls": cls_i, "status": st, "why": why_i,
                         "by": by, "bytes": os.path.getsize(p),
                         "rows": rows_of(p), "sha": sha256_16(p)})
     for pat, cls, why, by in EXTRA_GLOBS:

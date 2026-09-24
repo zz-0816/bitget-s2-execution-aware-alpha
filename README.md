@@ -25,6 +25,24 @@ python run_p2.py                 # ③ 起网页 http://127.0.0.1:8788
 要求 **Python ≥ 3.11**（代码用 `datetime.UTC`；实测 3.14.5rc1 / 3.12）。
 **零第三方依赖**（纯标准库），所以没有"装不上依赖"这一类失败模式。
 
+**想让它跑在"实时模式"而不是"离线演示"**（两者的差别**只在数据年龄**）：
+
+```powershell
+# ① 持续同步项目一的新样本进来（只写最近两天；冻结的历史日会被拒绝覆盖）
+python tools/sync_p1_samples.py --loop --interval-sec 240
+python tools/sync_p1_samples.py --status     # 看还差几分钟到实时
+
+# ② 情绪/资金费由本项目自己采（项目一那边没在采这个）
+python tools/sentiment_sampler.py --loop --interval 300
+```
+
+> 📌 判定规则（`project2/agent_team.py::time_basis`）：`data/spread/` 的最新时刻距今
+> **≤ 10 分钟 → `wallclock` 实时模式**；超过就按数据自带时刻判（`asof` = 离线演示）。
+> 所以"能不能当实时程序用"**只取决于数据供给是否持续，代码一行都不用改**。
+> ⚠️ 本项目自带的 `tools/market_feed.py` 虽然能取实时行情，但它**只写 `data/live/`**
+> （刻意不污染证据基座），而决策链不读那个目录 —— **挂着它不能解除离线模式**。
+> 实时模式下若某个输入停了，页面会弹红条（"实时模式但输入已停"）—— 那是真告警，别忽略。
+
 接真实仓位是**可选**的第四步（要先完成一次 Bitget Agentic OAuth 授权，
 授权后**不需要**你交 API key）：
 

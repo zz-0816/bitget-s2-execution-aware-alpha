@@ -4938,11 +4938,17 @@ def decision_selftest():
             "实时模式按阈值判：%s（最旧 %s 滞后 %s 分钟 vs 阈值 %.0f）"
             % (_f_live["verdict"], _f_live["oldest"], _f_live["oldest_age_min"],
                DATA_FRESH_MIN))
-        # 真实数据：本仓库快照确实停在 09-19，所以 wallclock 下**必须**判 stale。
-        # （这不是"测试碰巧通过"，而是这个判据存在的理由本身。）
-        chk(_f_live["verdict"] == "stale",
-            "实测快照滞后 %s 分钟 -> 实时模式下判 **stale**（这就是它存在的理由）"
-            % _f_live["oldest_age_min"])
+        # 🔴 这里**不能**依赖"本仓库快照停在哪一天"。原来写的是
+        #    "快照确实停在 09-19，所以 wallclock 下必须判 stale" ——
+        #    一旦有人把持续同步打开（`tools/sync_p1_samples.py`），数据变新鲜，
+        #    这条就**假失败**了（实测踩到）。改成**构造**滞后：把 now 前推一小时。
+        _asof = time_basis().get("data_asof_ms")
+        _f_stale = data_freshness(
+            now_ms=(_asof + 60 * 60 * 1000) if _asof else None, basis="wallclock")
+        chk(_f_stale["verdict"] == "stale",
+            "把 now 前推 1 小时 -> 实时模式下判 **stale**（实得 %s，滞后 %s 分钟）"
+            "—— 这才是这个判据存在的理由"
+            % (_f_stale["verdict"], _f_stale.get("oldest_age_min")))
         chk(all(s.get("file") and s.get("ts_utc") is not None
                 and s.get("age_min") is not None for s in _f_live["sources"]),
             "%d 个输入源每条都带 文件 + 时刻 + 滞后分钟（没有猜测值）"

@@ -998,7 +998,11 @@ def ui_layout_check():
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     base = "http://127.0.0.1:%d" % port
     try:
-        until = "document.querySelectorAll('#stages .stage').length>0"
+        # ⚠️ 等到"页面真的画完"再量。原来只等决策链（`#stages`），而
+        #    **全标的概览要跑 10 个标的（约 10 秒）**，于是它常常还停在骨架屏上
+        #    -> 被判成"卡住的占位符"。实测：切到实时模式、数据变大后这条开始偶发失败。
+        until = ("document.querySelectorAll('#stages .stage').length>0"
+                 " && !document.querySelector('#ov-table .skeleton')")
         return _run_any(
             [[sys.executable, os.path.join("tools", "ui_check.py"),
               "--url", base + "/",
@@ -1093,11 +1097,13 @@ def selftest(with_net=False):
                     [py, os.path.join("project2", "account_feed.py"), "--selftest"],
                     [py, os.path.join("tools", "account_read.py"), "--selftest"],
                     [py, os.path.join("tools", "backtest_replay.py"), "--selftest"],
+                    [py, os.path.join("tools", "sync_p1_samples.py"), "--selftest"],
+                    [py, os.path.join("tools", "sentiment_sampler.py"), "--selftest"],
                     [py, os.path.join("tools", "anchor_calibration.py"), "--selftest"]],
                    "⑱ 行情通道 + 外部锚 + 外部事件 + 仓位接入 + **真实账户取数**"
-                   " + **快照重放回测** + 阈值标定"
+                   " + **快照重放回测** + **持续同步 / 情绪采样** + 阈值标定"
                    "（schema 归一 / 落盘守卫 / 口径守卫 / **只读边界** / 样本量门槛"
-                   " / 盈亏公式与费率口径对拍）")
+                   " / 盈亏公式与费率口径对拍 / 滚动日只写最近两天且拒绝覆盖冻结日）")
 
     if with_net:
         rc |= _run([py, os.path.join("tools", "news_sources.py"), "--base", "NVDA"],

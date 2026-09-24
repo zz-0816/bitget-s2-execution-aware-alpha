@@ -450,6 +450,18 @@ function renderAnalysts(d) {
                         neutral: 'v-neutral' };
   $('analysts').innerHTML = list.map((a) => {
     const unfav = String(a.verdict) === 'unfavorable';
+    /* 🔴 结论段分两份（2026-09-25，用户实拍反馈"不要显示技术类的东西，只展示证据"）：
+       正文只放**人话**（后端给的 `note_plain`），工程细节（来源串 / prompt 版本 /
+       sha256 / 文件路径 / 内部标识）折进「技术细节」。**信息一条都没删** ——
+       日志里两段都在（`notes` 仍是全文），只是默认不再糊在读者脸上。
+       `notes` 只在没有 `note_plain` 时兜底（旧日志 / 旧接口）。 */
+    const noteTxt = a.note_plain || a.notes || '';
+    const traceBox = (a.trace && a.trace.length)
+      ? '<details class="a-trace"><summary>技术细节（' + a.trace.length + ' 条）</summary>' +
+        '<div class="a-trace-list">' +
+        a.trace.map((t) => '<div>' + mdInline(String(t)) + '</div>').join('') +
+        '</div></details>'
+      : '';
     const ev = (a.evidence || []).map((e) => {
       const t = KIND_TAG[e.kind];
       const kc = KIND_CLS[e.kind];
@@ -491,7 +503,8 @@ function renderAnalysts(d) {
       '<div><span class="badge ' + esc(a.verdict) + '">' + esc(a.verdict) + '</span>' +
       (a.valid ? '' : ' <span class="tag veto">已作废</span>') +
       ' <span class="mono-dim">证据 ' + (a.evidence || []).length + ' 条</span></div>' +
-      (a.notes ? '<div class="a-notes">' + mdInline(a.notes) + '</div>' : '') +
+      (noteTxt ? '<div class="a-notes">' + mdInline(noteTxt) + '</div>' : '') +
+      traceBox +
       (a.invalid_reason ? '<div class="a-notes neg">作废原因：' + mdInline(a.invalid_reason) + '</div>' : '') +
       (ev ? '<div class="a-ev">' + ev + '</div>' : '') +
       srcBox +
@@ -565,7 +578,9 @@ function renderGate(d) {
     ? (mdInline(gm.llm.severity || '—') +
        ' <span class="mono-dim">' + mdInline(String(gm.llm.reason || '').slice(0, 60)) +
        (gm.llm.frozen ? ' ｜ 冻结复用' : '') +
-       (gm.llm.source ? ' ｜ ' + mdInline(gm.llm.source) : '') + '</span>')
+       // 来源**只显示人话版**：`source_plain` 由后端 event_gate.plain_source 给出，
+       // 词典只此一份（前端不自己翻译技术串，否则两处口径会漂）。
+       (gm.llm.source ? ' ｜ ' + mdInline(gm.llm.source_plain || gm.llm.source) : '') + '</span>')
     : '<span class="mono-dim">未参与（无 key / 明确用 static）</span>';
   const extRow = gm.ext
     ? (mdInline(gm.ext.severity || '—') +

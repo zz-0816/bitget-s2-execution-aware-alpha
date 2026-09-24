@@ -1091,6 +1091,54 @@ def _save_cache(base, llm, d, now_ms, ttl_min):
     return bases[base]
 
 
+# ---------------------------------------------------------------- 人话映射
+#
+# 🔴 来源串（`llm(cache: 无新条目, 判定龄 1min｜TTL 30min)`、`static(LLM 失败 3 次: …)`）
+#    是**工程细节**：它该进日志、进证据、进复跑比对，但**不该原样糊在给人看的页面上**
+#    （2026-09-25 用户实拍反馈：一句话里塞了文件路径、prompt 版本、sha256、内部标识）。
+#    所以翻译只放在这里 —— 来源串的"出生地"，全世界**独此一份**；页面读 `*_plain`，
+#    原始串一律**不删**（折进页面的「技术细节」，日志照写全文）。
+#    未知形态**原样返回**：不隐藏、不猜（与"未知键不隐藏"的既有约定一致）。
+_PLAIN_SRC_AGE = re.compile(r"判定龄\s*([\d.]+)\s*min")
+
+
+def plain_cache_age(src):
+    """从来源串里取"这条判定有多旧"的**人话说法**。
+
+    `< 1 分钟` 统一说"刚刚" —— 写"复用 0 分钟前的判定"没有信息量（实测踩到）。
+    返回 None = 来源串里没有可用的判定龄（调用方自己给兜底说法）。
+    词典只此一份：页面上**两处**（分析卡正文、证据行的"判断来源"）都从这里取。
+    """
+    m = _PLAIN_SRC_AGE.search(str(src or ""))
+    if not m:
+        return None
+    _a = float(m.group(1))
+    return "刚刚的判定" if _a < 1 else "%.0f 分钟前的判定" % _a
+
+
+def plain_source(src):
+    """工程来源串 -> 一句人话。未知形态原样返回。"""
+    s = str(src or "").strip()
+    if not s:
+        return ""
+    if s.startswith("llm(cache"):
+        _age = plain_cache_age(s)
+        return ("LLM（复用：%s）" % _age) if _age else "LLM（复用上一次判定）"
+    if s.startswith("llm(frozen"):
+        return "LLM（复跑：用冻结的判定）"
+    if s.startswith("llm"):
+        return "LLM"
+    if s.startswith("static(LLM 失败"):
+        return "确定性日历（LLM 调用失败后兜底）"
+    if s.startswith("static(LLM 未执行"):
+        return "确定性日历（本轮未调用 LLM）"
+    if s.startswith("static"):
+        return "确定性日历"
+    if s.startswith("mcp:"):
+        return "外部事件源（MCP）"
+    return s
+
+
 def _cache_detail(dec, now_ms):
     """缓存复用的**如实标注**：判定龄 + 无新条目的理由 + 原始判定版本与指纹。"""
     prev = dec.get("cache") or {}
@@ -1326,6 +1374,8 @@ def assess(base, now_ms=None, cost=None, size_usd=None, mode="auto",
         "event": {"in_window": bool(ev.get("in_window")),
                   "severity": sev, "reason": ev.get("reason", ""),
                   "source": ev.get("source", ""),
+                  # 来源串的**人话版**：页面显示它，`source` 原样保留给日志/证据/复跑
+                  "source_plain": plain_source(ev.get("source", "")),
                   "fail_closed": bool(ev.get("fail_closed")),
                   # ⭐ 这次判断具体用了哪一版 prompt（T4-A）：可事后核验
                   "prompt_version": ev.get("prompt_version") or PROMPT_VERSION,
@@ -1603,6 +1653,27 @@ def _prompt_event_driven_selftest():
         chk(_cd["severity"] == MOCK_LLM_VERDICT["severity"],
             "🔴 复用缓存**不改 severity**：缓存里是 %s，复用后仍是 %s"
             "（绝不当成 none）" % (MOCK_LLM_VERDICT["severity"], _cd["severity"]))
+        # 人话映射：工程串**一个字节都不改**，只是另给一份给人看的说法
+        _ps = plain_source(_cd["source"])
+        chk(_ps.startswith("LLM（复用") and "cache" not in _ps and "TTL" not in _ps,
+            "来源串有**人话版**：%r -> %r（页面上不再出现 cache/TTL 这类工程词）"
+            % (_cd["source"], _ps))
+        # ⚠️ 少覆盖一种形态 = 那种形态会原样漏到页面上，所以逐个钉死
+        _forms = {"llm": "LLM",
+                  "static": "确定性日历",
+                  "llm(frozen)": "LLM（复跑：用冻结的判定）",
+                  "static(LLM 失败 3 次: unknown)": "确定性日历（LLM 调用失败后兜底）",
+                  "static(LLM 未执行: static(LLM 失败 3 次: unknown))":
+                      "确定性日历（本轮未调用 LLM）",
+                  "mcp:bitget-mcp-server": "外部事件源（MCP）"}
+        _miss = {k: plain_source(k) for k, want in _forms.items() if plain_source(k) != want}
+        chk(not _miss, "来源形态**全覆盖**（%d 种实际形态，漏一个就漏到页面上）%s"
+            % (len(_forms), "" if not _miss else "：漏了 %s" % _miss))
+        chk(plain_source("某天冒出来的新形态") == "某天冒出来的新形态",
+            "未知来源形态**原样返回**（不隐藏、不猜）")
+        chk(plain_source("llm(cache: 无新条目, 判定龄 0min｜TTL 30min)")
+            == "LLM（复用：刚刚的判定）",
+            "判定龄 < 1 分钟 -> 说「刚刚」（不写没有信息量的「0 分钟前」）")
 
         # ② 缓存过 TTL -> 照常调 LLM
         d2 = gate_decision("NVDA", _heads, items=_items,

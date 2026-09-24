@@ -351,8 +351,15 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
     在此之前 LLM 判出的 `block` **只到了辩论层**，硬闸门读的始终是确定性日历。
     """
     e = []
+    # 🔴 结论段分两份（2026-09-25，用户实拍反馈"不要在页面上显示技术类的东西"）：
+    #    · `note`  = **给人看的**：这件事是什么、结论是什么、为什么；
+    #    · `trace` = **工程细节**：文件路径 / 来源串 / prompt 版本与 sha256 / 内部标识。
+    #    页面上 `note` 直接显示、`trace` 折进「技术细节」；两段都进日志（`notes` = 全文），
+    #    所以**审计信息一个字节都没少**，只是不再糊在读者脸上。
     note = ""
+    trace = []
     sev, src, reason = None, None, ""
+    _src_plain = ""         # 来源串的**人话版**（页面显示它；原文进 trace/日志）
     _ev_probe = {}          # 事件判定里那几个"可复现"字段（prompt 指纹/缓存信息）
     frozen = assess_override is not None
     # ⚠️ `headlines=None` = 调用方没指定 -> 自动取消息面；
@@ -360,11 +367,13 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
     #    初版写成 `if headlines is None and auto_fetch` 之后再判 `if headlines`，
     #    于是显式传 [] 也会去自动抓 —— 真 LLM 接上后**自检变得间歇性失败**（踩到）。
     if headlines is None and auto_fetch and not frozen:
-        headlines, hsrc = _headlines_from_news(base)
+        headlines, hsrc, hsrc_plain = _headlines_from_news(base)
         if headlines:
-            note = "标题来源：%s。" % hsrc
+            note = "标题来源：%s。" % hsrc_plain
         elif hsrc:
-            note = "（%s）" % hsrc
+            note = "（%s）" % hsrc_plain
+        if hsrc:
+            trace.append("标题来源：%s" % hsrc)
     try:
         import event_gate as _eg
         try:
@@ -393,7 +402,8 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
                     "rag_used": False,
                 }
                 note += ("🔒 **复用冻结的事件判定**（复跑/复现用，本次**不调 LLM**）："
-                         "severity=%s。" % (fe.get("severity") or "none"))
+                         "判定结论 %s。" % (fe.get("severity") or "none"))
+                _src_plain = _eg.plain_source(fe.get("source") or "llm(frozen)")
             else:
                 # ⚠️ `auto_headlines=False`：这一路的标题由**我们自己**管
                 #    （上面已经抓过并做过新鲜度判断）。不显式关掉的话，
@@ -406,10 +416,12 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
             src = a["event"].get("source", "static")
             reason = a["event"].get("reason", "") or ""
             _ev_probe = a.get("event") or {}
+            # 来源串的人话版：event_gate 已经算好了，这里只取用（**不重复实现词典**）
+            _src_plain = _ev_probe.get("source_plain") or _eg.plain_source(src)
             e.append(ev("事件严重度", sev, "project2/event_gate.py"))
             e.append(ev("判断置信度（受来源约束）", "%.2f" % a["confidence"],
                         "project2/event_gate.py"))
-            e.append(ev("判断来源", src, "project2/event_gate.py"))
+            e.append(ev("判断来源", _src_plain or src, "project2/event_gate.py"))
             if a["event"].get("reason"):
                 e.append(ev("事件理由", a["event"]["reason"][:60],
                             "project2/event_gate.py"))
@@ -431,32 +443,44 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
             if used_llm and _ev.get("cache_reused"):
                 # ⭐ 复用缓存也必须**说清楚是复用**：别让日志看起来像刚调过 LLM。
                 #    代价（最坏判定龄 = TTL）在 docs/42 §3 里写明了。
-                note += ("♻️ 本次**复用上一次 LLM 判定**（来源=%s，判定龄 %.0f 分钟）："
-                         "事件驱动闸门判定本轮**全是已见过的条目**（%s），"
+                # ⚠️ 判定龄可能缺（`?`）或近似 0（缓存刚落盘就复用）——措辞规则
+                #    **只此一份**（`_eg.plain_cache_age`），免得两处说法不一致
+                #    （实测踩到：正文写"刚刚"、证据行写"0 分钟前"）。
+                #    判定龄取不到时**不要**退化成"（上一次判定…）"——句首已经说了
+                #    "复用上一次 LLM 判定"，那样会变成"（上一次判定，30 分钟内有效）"的重复。
+                _age_txt = _eg.plain_cache_age(src)
+                _cond = ("%s，%.0f 分钟内有效" % (_age_txt, float(_eg.EVENT_CACHE_TTL_MIN))
+                         if _age_txt else "%.0f 分钟内有效" % float(_eg.EVENT_CACHE_TTL_MIN))
+                _n_cand = len(_drv.get("cand_keys") or []) or len(headlines or [])
+                note += ("♻️ 本次**复用上一次 LLM 判定**（%s）："
+                         "事件驱动闸门判定本轮**全是已见过的条目**（%d 条候选），"
                          "所以没有重复调用 LLM。"
                          "🔴 复用的是上一次判定的**原值**，没有因为『无新条目』降级；"
-                         "最新申报由 EDGAR 立即触发路径兜住（新 8-K/10-Q/10-K 会强制重判）。"
-                         % (src, a["event"].get("cache_age_min") or 0.0,
-                            (_drv.get("reason") or "")[:60]))
+                         "新出现的 8-K/10-Q/10-K 申报由 EDGAR 立即触发重判。"
+                         % (_cond, _n_cand))
+                trace.append("来源=%s" % src)
+                trace.append("事件驱动：%s" % str(_drv.get("reason") or "")[:90])
             elif used_llm:
-                note += ("✅ 本次由 **LLM** 判事件（来源=%s，tokens 输入 %s / 输出 %s）"
-                         "—— 运行期职责已真实执行。"
+                note += ("✅ 本次由 **LLM** 判事件 —— 运行期职责已真实执行。"
                          "⚠️ 置信度被压到 %.2f 不是 LLM 的问题："
-                         "日历里**没有一条带可回溯来源**，按 CONF_CAP_NO_SOURCE 封顶"
-                         % (src, n_tok.get("prompt_tokens"),
-                            n_tok.get("completion_tokens"), a["confidence"]))
+                         "日历里**没有一条带可回溯来源**，按规则给置信度封顶"
+                         % a["confidence"])
+                trace.append("来源=%s" % src)
+                trace.append("tokens 输入 %s / 输出 %s"
+                             % (n_tok.get("prompt_tokens"),
+                                n_tok.get("completion_tokens")))
+                trace.append("置信度封顶规则：CONF_CAP_NO_SOURCE")
             else:
-                note += ("⚠️ **本次未使用 LLM**（来源=%s）："
+                note += ("⚠️ **本次未使用 LLM**："
                          "事件判断退化为确定性日历，只能挡可计算事件"
-                         "（期权到期/休市），**挡不住突发新闻与财报**" % src)
+                         "（期权到期/休市），**挡不住突发新闻与财报**")
+                trace.append("来源=%s" % src)
             # prompt 可回溯：某次判断用的是哪一版 prompt（T4-A）
             if _ev.get("prompt_sha256"):
-                note += ("｜prompt %s（source=%s, sha256=%s…）"
-                         % (_ev.get("prompt_version"),
-                            _ev.get("prompt_source"),
-                            str(_ev.get("prompt_sha256"))[:16]))
-            if _drv.get("reason"):
-                note += "｜事件驱动：%s" % str(_drv.get("reason"))[:70]
+                trace.append("prompt %s（source=%s, sha256=%s…）"
+                             % (_ev.get("prompt_version"),
+                                _ev.get("prompt_source"),
+                                str(_ev.get("prompt_sha256"))[:16]))
         except Exception as exc:  # noqa: BLE001
             e.append(ev("闸门调用异常", repr(exc)[:60], "project2/event_gate.py"))
     except ImportError:
@@ -468,12 +492,18 @@ def analyst_news(base, now_ms=None, mode="auto", headlines=None, auto_fetch=True
         "neutral" if sev == "caution" else "favorable")
     # 置信度：有可回溯来源（LLM 判断成功）才允许高；否则封顶 0.40
     conf = 0.85 if ("✅ 本次由" in note or "♻️" in note) else 0.4
-    r = report("news", verdict, conf, e, note)
+    # `notes` = 全文（人话 ｜ 工程细节）—— 日志/审计**信息一个不少**，只是排版变了；
+    # 页面读 `note_plain`（人话）并把 `trace` 折进「技术细节」。
+    r = report("news", verdict, conf, e,
+               note + ("｜" + "｜".join(trace) if trace else ""))
+    r["note_plain"] = note
+    r["trace"] = trace
     # ⭐ 把**原始严重度**带出去：硬闸门要用它（不止辩论层）。
     #    之前只留了 verdict（favorable/neutral/unfavorable），硬闸门拿不到
     #    "这是 block 还是 caution"，于是 LLM 判出的 block 根本进不了硬闸门。
     #    这个字段同时是**日志里的 llm_event**（复跑时原样传回来冻结输入）。
     r["event"] = {"severity": (sev or "none"), "source": src or "static",
+                  "source_plain": _src_plain or (src or "确定性日历"),
                   "reason": reason, "frozen": bool(frozen),
                   "confidence": conf,
                   # 下面几个只在真的调过 LLM 时有值；冻结复用会把它们带回来，
@@ -992,29 +1022,40 @@ def _headlines_from_news(base, max_age_min=30, max_items=12):
     取用规则（避免"旧闻当新闻"，也避免凭空造标题）：
       · 只认 ≤ `max_age_min` 分钟内抓到的结果；过期就返回 None，让 LLM 按"无标题"判
       · 优先用 `fresh_headlines`（事件驱动那批），退回 `headlines_for_gate`
+
+    返回 `(heads, hsrc, hsrc_plain)`：`hsrc` 是**工程口径**（含文件路径，进日志与
+    「技术细节」），`hsrc_plain` 是给页面看的同一件事（不带路径）。
     """
     p = os.path.join(DERIVED, "news_latest.json")
     if not os.path.exists(p):
-        return None, "无消息面落盘（先跑 python tools\\news_sources.py --save）"
+        return (None, "无消息面落盘（先跑 python tools\\news_sources.py --save）",
+                "消息面还没抓取过（本轮给不出候选标题）")
     try:
         with open(p, encoding="utf-8-sig") as fh:
             d = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
-        return None, "消息面落盘不可读：%s" % str(exc)[:50]
+        return (None, "消息面落盘不可读：%s" % str(exc)[:50],
+                "消息面落盘读不出来（本轮给不出候选标题）")
     try:
         t = dt.datetime.fromisoformat(d.get("probed_at", ""))
         age = (dt.datetime.now(dt.UTC) - t).total_seconds() / 60.0
     except (TypeError, ValueError):
         age = 9e9
     if age > max_age_min:
-        return None, ("消息面已过期 %.1f 分钟（阈值 %d 分钟）—— 不拿旧闻当新闻"
-                      % (age, max_age_min))
+        return (None,
+                ("消息面已过期 %.1f 分钟（阈值 %d 分钟）—— 不拿旧闻当新闻"
+                 % (age, max_age_min)),
+                ("消息面已过期（%.1f 分钟前抓的，超过 %.0f 分钟阈值）—— 不拿旧闻当新闻"
+                 % (age, max_age_min)))
     heads = d.get("fresh_headlines") or d.get("headlines_for_gate") or []
     heads = [h for h in heads[:max_items] if h]
     if not heads:
-        return None, "消息面里没有候选标题（当日无重大申报/事件）"
-    return heads, ("来自 data/derived/news_latest.json（%.1f 分钟前抓取，%d 条）"
-                   % (age, len(heads)))
+        return (None, "消息面里没有候选标题（当日无重大申报/事件）",
+                "本轮消息面里没有候选标题（当日无重大申报/事件）")
+    return (heads,
+            ("来自 data/derived/news_latest.json（%.1f 分钟前抓取，%d 条）"
+             % (age, len(heads))),
+            ("本轮 %d 条候选标题，抓取于 %.1f 分钟前" % (len(heads), age)))
 
 
 def analyst_execution_risk(base, cost=None, now_ms=None, size_usd=None):
@@ -3205,6 +3246,10 @@ def build_log(*, base, items, debate, cost, decision, qty_usd, miss_bp, urgent,
                       "valid": i["valid"],
                       "invalid_reason": i["invalid_reason"],
                       "evidence": i["report"]["evidence"],
+                      # 结论段分两份：页面只显示 `note_plain`（人话），
+                      # `trace` 折进「技术细节」；`notes` 仍是**全文**（日志/审计照旧）。
+                      "note_plain": i["report"].get("note_plain"),
+                      "trace": i["report"].get("trace"),
                       "notes": i["report"]["notes"]} for i in items],
         "evidence_index": evidence,
         "debate": {

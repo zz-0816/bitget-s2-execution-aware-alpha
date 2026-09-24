@@ -582,16 +582,20 @@ select option { background: var(--surface-2); color: var(--text); }
 
 /* 证据来源：默认折叠成一行"备注"，点开才列出 指标 → 文件。
    为什么收起来：一张卡上十来个指标各挂一条路径，既占版面又没人看；
-   但"每个数字都能点回数据文件"是本项目的底线，所以只收不删。 */
-.acard .a-src summary {
+   但"每个数字都能点回数据文件"是本项目的底线，所以只收不删。
+   2026-09-25 同理新增 .a-trace（技术细节：来源串/prompt 版本/sha256）——
+   用户实拍反馈"不要在页面上显示技术类的东西"，于是**人话留正文、工程细节折进这里**。 */
+.acard .a-src, .acard .a-trace { margin-top: var(--sp-2); }
+
+.acard .a-src summary, .acard .a-trace summary {
   font-size: var(--fs-11); color: var(--text-faint);
   cursor: pointer; list-style-position: inside;
   transition: color var(--dur-2) var(--ease-out-2);
 }
-.acard .a-src summary:hover { color: var(--text-dim); }
-.acard .a-src[open] summary { color: var(--text-dim); }
-.acard .a-src-list { margin-top: var(--sp-1); }
-.acard .a-src-list div {
+.acard .a-src summary:hover, .acard .a-trace summary:hover { color: var(--text-dim); }
+.acard .a-src[open] summary, .acard .a-trace[open] summary { color: var(--text-dim); }
+.acard .a-src-list, .acard .a-trace-list { margin-top: var(--sp-1); }
+.acard .a-src-list div, .acard .a-trace-list div {
   font-size: var(--fs-11); color: var(--text-faint);
   line-height: 1.55; word-break: break-all;
 }

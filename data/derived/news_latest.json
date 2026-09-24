@@ -1,23 +1,18 @@
 {
-  "base": "TSLA",
+  "base": "SOXL",
   "categories": {
     "earnings": 1,
     "earnings_scheduled": 28,
-    "filing": 5,
-    "filing_material": 7,
     "macro": 10,
     "other": 37
   },
   "event_driven": {
     "first_run": false,
     "n_fresh": 0,
-    "n_total": 88,
+    "n_total": 76,
     "should_call_llm": false
   },
   "headlines_for_gate": [
-    "[2026-07-23] TSLA 申报：10-Q（季报）",
-    "[2026-07-22] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-    "[2026-07-02] TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
     "[2026-09-24] COST 预定于 2026-09-24 发布财报（time-after-hours）",
     "[2026-09-24] VFS 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] HUBG 预定于 2026-09-24 发布财报（time-not-supplied）",
@@ -26,165 +21,12 @@
     "[2026-09-24] DAVA 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] YRD 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] IH 预定于 2026-09-24 发布财报（time-not-supplied）",
-    "[2026-09-24] EONR 预定于 2026-09-24 发布财报（time-not-supplied）"
+    "[2026-09-24] EONR 预定于 2026-09-24 发布财报（time-not-supplied）",
+    "[2026-09-24] CMMB 预定于 2026-09-24 发布财报（time-not-supplied）",
+    "[2026-09-24] ASTC 预定于 2026-09-24 发布财报（time-not-supplied）",
+    "[2026-09-24] ALAR 预定于 2026-09-24 发布财报（time-not-supplied）"
   ],
   "items": [
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-09-09",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926106432/xslF345X06/tm2625055d1_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-09-08",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726009212/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-23",
-      "form": "10-Q",
-      "form_meaning": "季报",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "TSLA 申报：10-Q（季报）",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/tsla-20260630.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-22",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049213/tsla-20260722.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-07-02",
-      "form": "8-K",
-      "form_meaning": "重大事项（含财报发布、并购、高管变动）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 8,
-      "source": "edgar",
-      "title": "TSLA 申报：8-K（重大事项（含财报发布、并购、高管变动））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026046717/tsla-20260702.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-17",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075213/xslF345X06/tm2618092-2_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-17",
-      "form": "SCHEDULE 13G/A",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：SCHEDULE 13G/A",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926075203/xslSCHEDULE_13G_X02/primary_doc.xml"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-09",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926071970/xslF345X06/tm2617365-1_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-06-08",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726005795/xsl144X01/primary_doc.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-29",
-      "form": "SD",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：SD",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926068275/tm2615395d1_sd.htm"
-    },
-    {
-      "category": "filing_material",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-15",
-      "form": "4",
-      "form_meaning": "内部人交易（Form 4）",
-      "kind": "filing",
-      "material": true,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：4（内部人交易（Form 4））",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000110465926062860/xslF345X06/tm2614845-1_4seq1.xml"
-    },
-    {
-      "category": "filing",
-      "company": "Tesla, Inc.",
-      "date": "2026-05-13",
-      "form": "144",
-      "form_meaning": "",
-      "kind": "filing",
-      "material": false,
-      "relevance": 4,
-      "source": "edgar",
-      "title": "TSLA 申报：144",
-      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000195004726004463/xsl144X01/primary_doc.xml"
-    },
     {
       "category": "earnings_scheduled",
       "date": "2026-09-24",
@@ -875,113 +717,124 @@
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 13:20:30 +0000",
+      "date": "Mon, 14 Sep 2026 17:40:30 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "What goes down fast can go back up just as quickly when sentiment recovers.",
+      "title": "Why Direxion Daily Semiconductor Bull 3X ETF Dropped Today",
+      "url": "https://www.fool.com/investing/2026/09/14/direxion-daily-semiconductor-bull-3x-etf-dropped/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Mon, 14 Sep 2026 11:31:25 +0000",
+      "kind": "news",
+      "relevance": 0,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "In an interview with CNBC, Yardeni stated that existing data center constraints make a significant slowdown in AI infrastructure construction unlikely.",
+      "title": "Ed Yardeni Says ‘I’m Not Particularly Concerned’ About AI Slowdown Fears, Maintains 8,400 Year-End S&amp;P 500 Target",
+      "url": "https://stocktwits.com/news-articles/markets/equity/ai-stocks-slide-slowdown-fears-ed-yardeni-not-particularly-concerned/cZtmbt4RBRZ?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Wed, 26 Aug 2026 21:00:04 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "The 8:30 Hosts Julie Hyman, Jake Conley, and Pras Subramanian discuss Tesla (TSLA) opening the doors to its new Semi factory in Sparks, Nev., in a showing to boost investor confidence in its electric ",
-      "title": "Tesla to open doors of its Nevada Semi truck factory",
-      "url": "https://finance.yahoo.com/video/tesla-open-doors-nevada-semi-132030238.html?.tsrc=rss"
+      "summary": "&lt;p&gt;Here are the daily ETF fund flows for August 25, 2026.&lt;/p&gt;",
+      "title": "Daily ETF Flows: SOXL Inflows Total $520M",
+      "url": "http://www.etf.com/sections/daily-etf-flows/daily-etf-flows-soxl-inflows-total-520m?utm_source=yahoo-finance&amp;utm_medium=rss&amp;utm_campaign=yahoo-finance-rss&amp;.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 11:00:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla will open the doors to its new Semi factory in Sparks, Nevada on Thursday, just as investors look for proof that the long-delayed electric Semi is finally ready to scale.",
-      "title": "Tesla Semi event puts the spotlight on trucking as busy month for EV maker rolls on",
-      "url": "https://finance.yahoo.com/markets/article/tesla-semi-event-puts-the-spotlight-on-trucking-as-busy-month-for-ev-maker-rolls-on-110000023.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 10:00:00 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Yahoo Finance Executive Editor Brian Sozzi sits down with former Meta CTO and Gigascale Capital founding partner Mike Schroepfer to discuss the massive energy demands of artificial intelligence and wh",
-      "title": "Surviving Mark Zuckerberg's intense founder era: Fmr Meta CTO",
-      "url": "https://finance.yahoo.com/video/surviving-mark-zuckerbergs-intense-founder-era-fmr-meta-cto-100000110.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 15:12:25 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla will have product demos for the Cybercab, Semi and new Roadster planned within the span of a month. The stock edged lower Thursday.",
-      "title": "Tesla Semi Joins Parade Of New Model Showcases; Stock Falls",
-      "url": "https://finance.yahoo.com/m/f28da475-1d49-3bd0-be2b-e765cdc95df9/tesla-semi-joins-parade-of.html?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 14:58:38 +0000",
-      "kind": "news",
-      "relevance": 0,
-      "source": "yahoo",
-      "source_name": "Yahoo Finance·个股头条",
-      "summary": "Enterprise AI accounts for $165 of the bank’s SpaceX valuation, while rockets contribute only $8. The model depends on compute, connectivity and Tesla’s physical-AI capabilities.",
-      "title": "Morgan Stanley says Tesla robotics strengthens SpaceX’s $300 AI case",
-      "url": "https://blockspace.media/insight/morgan-stanley-spacex-ai-valuation/?.tsrc=rss"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 14:39:00 +0000",
+      "date": "Thu, 20 Aug 2026 11:36:30 +0000",
       "kind": "news",
       "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "TSLA's record Semi deal boosts commercial momentum, but shrinking margins, heavy spending and a rich valuation keep execution risks in focus.",
-      "title": "Tesla's Biggest Semi Deal Yet: Is TSLA Stock a Buy Now?",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/teslas-biggest-semi-deal-yet-143900930.html?.tsrc=rss"
+      "summary": "SOXL's implied volatility just hit 123%, making it one of the market's riskiest ETFs to hold outright. Here's how a bear call spread lets you collect income from that volatility instead, with defined ",
+      "title": "SOXL IV Just Hit 123%. These 2 Options Strategies That Pay You for the Risk.",
+      "url": "https://www.barchart.com/story/news/3947024/soxl-iv-just-hit-123-these-2-options-strategies-that-pay-you-for-the-risk?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 12:42:15 +0000",
+      "date": "Wed, 19 Aug 2026 23:35:42 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "New road tests in Brussels found Tesla's driver-assistance system repeatedly exceeded posted limits and attempted prohibited overtakes.",
-      "title": "Tesla's FSD Just Hit a Major Roadblock Ahead of EU Review",
-      "url": "https://finance.yahoo.com/technology/articles/teslas-fsd-just-hit-major-124215606.html?.tsrc=rss"
+      "summary": "Triple-leveraged semiconductor exposure sounds like a recipe for disaster, yet one ETF quietly turned a modest stake into something that rivals a year of aggressive trading. The math behind it challen",
+      "title": "SOXL Turns Every 1% Nvidia Move Into 3%. Here’s What $10,000 Did in the Last 12 Months",
+      "url": "https://247wallst.com/investing/etf/2026/08/19/soxl-turns-every-1-nvidia-move-into-3-heres-what-10000-did-in-the-last-12-months/?.tsrc=rss"
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 12:09:00 +0000",
+      "date": "Wed, 05 Aug 2026 22:07:00 +0000",
       "kind": "news",
-      "relevance": 0,
+      "relevance": 3,
       "source": "yahoo",
       "source_name": "Yahoo Finance·个股头条",
-      "summary": "Tesla’s battery cathode plant in Texas is up and running. Battery makers, including Tesla, assemble completed batteries, but they often source cathode material from suppliers in China, Korea, Japan, a",
-      "title": "Tesla’s In-House Battery Plant Could Give Cybercab a Major Edge",
-      "url": "https://finance.yahoo.com/m/dab7d559-b934-3c61-b1f9-4e36dc4ebaea/tesla%E2%80%99s-in-house-battery.html?.tsrc=rss"
+      "summary": "Investors are flocking to an ETF that enhances the daily exposure of leading chip stocks. Buyer beware.",
+      "title": "The SOXL ETF Is a Popular—and Dangerous—Way to Play Chip Stocks",
+      "url": "https://finance.yahoo.com/m/9030f354-1f6e-3fa3-a195-21f4081a9ba9/the-soxl-etf-is-a-popular%E2%80%94and.html?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Wed, 05 Aug 2026 02:09:34 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "SOXL rewarded patient semiconductor bulls with one of the most explosive yearly returns on U.S. exchanges, then erased a fifth of that gain in a single month. Understanding exactly why reveals the hid",
+      "title": "This 3x Semiconductor ETF Turned $10,000 Into $56,000, Then Lost a Fifth in One Month",
+      "url": "https://247wallst.com/investing/etf/2026/08/04/this-3x-semiconductor-etf-turned-10000-into-56000-then-lost-a-fifth-in-one-month/?.tsrc=rss"
+    },
+    {
+      "category": "other",
+      "date": "Tue, 04 Aug 2026 15:42:47 +0000",
+      "kind": "news",
+      "relevance": 3,
+      "source": "yahoo",
+      "source_name": "Yahoo Finance·个股头条",
+      "summary": "Some of SOXL's favorite semiconductor stocks are very popular this morning.",
+      "title": "Why Direxion Daily Semiconductor Bull 3X ETF Jumped Today",
+      "url": "https://www.fool.com/investing/2026/08/04/why-direxion-daily-semiconductor-bull-3x-etf-jumpe/?.tsrc=rss"
     },
     {
       "category": "macro",
-      "date": "Thu, 24 Sep 2026 15:41:37 GMT",
+      "date": "Thu, 24 Sep 2026 17:01:47 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
-      "summary": "U.S. Treasury yields continued their upward momentum after hitting a 19-year high on Wednesday.",
-      "title": "30-year Treasury yield hits highest level since 2004 as bond market rout continues",
-      "url": "https://www.cnbc.com/2026/09/24/us-treasury-yields-bonds-fed-inflation.html"
+      "summary": "Stocks fell on Thursday as Treasury yields kept marching higher, with traders anticipating further rate hikes from the Federal Reserve.",
+      "title": "S&amp;P 500 bounces slightly on report U.S. and Iran discussing reopening of Strait of Hormuz: Live updates",
+      "url": "https://www.cnbc.com/2026/09/23/stock-market-today-live-updates.html"
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 16:38:08 GMT",
+      "date": "Thu, 24 Sep 2026 16:48:38 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
       "summary": "Oracle is reportedly looking to delay payment on Project Jupiter if it the data center fails to come online in 2028",
-      "title": "Oracle sends &apos;force majeure&apos; notice about data center project — stock sinks 5%",
+      "title": "Oracle sends &apos;force majeure&apos; notice about data center project — stock sinks 4%",
       "url": "https://www.cnbc.com/2026/09/24/oracle-data-center-force-majeure.html"
+    },
+    {
+      "category": "other",
+      "date": "Thu, 24 Sep 2026 14:23:33 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "The national average for a gallon of diesel reached $6.51 on Thursday, nearly $3 more than the same period a year ago, according to data from AAA.",
+      "title": "Big business warns Trump against diesel export ban in joint letter",
+      "url": "https://www.cnbc.com/2026/09/24/chamber-commerce-business-roundtable-trump-diesel-export-ban-iran-war.html"
     },
     {
       "category": "other",
@@ -1006,17 +859,6 @@
       "url": "https://www.cnbc.com/2026/09/24/treasury-yields-warsh-bessent-fed-national-debt-analysis.html"
     },
     {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 14:23:33 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "The national average for a gallon of diesel reached $6.51 on Thursday, nearly $3 more than the same period a year ago, according to data from AAA.",
-      "title": "Big business warns Trump against diesel export ban in joint letter",
-      "url": "https://www.cnbc.com/2026/09/24/chamber-commerce-business-roundtable-trump-diesel-export-ban-iran-war.html"
-    },
-    {
       "category": "macro",
       "date": "Thu, 24 Sep 2026 16:05:26 GMT",
       "kind": "news",
@@ -1029,7 +871,7 @@
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 16:37:02 GMT",
+      "date": "Thu, 24 Sep 2026 17:13:14 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
@@ -1040,7 +882,7 @@
     },
     {
       "category": "macro",
-      "date": "Thu, 24 Sep 2026 14:26:05 GMT",
+      "date": "Thu, 24 Sep 2026 17:12:04 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
@@ -1051,51 +893,51 @@
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-24T16:38:35.121845+00:00",
+  "probed_at": "2026-09-24T17:33:38.729934+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 1.81s",
+      "note": "耗时 1.12s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.90s",
+      "note": "耗时 1.08s",
       "ok": true
     },
     "edgar": {
-      "n": 12,
-      "note": "延迟：分钟级（法定披露第一落点）｜ 耗时 1.46s",
+      "n": 0,
+      "note": "该标的没有对应美股经营主体（ETF/基金类），EDGAR 一级源不适用",
       "ok": true
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 0.64s",
+      "note": "耗时 0.61s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.58s",
+      "note": "耗时 0.63s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-24": {
       "n": 18,
-      "note": "提前数天（预告）｜ 耗时 0.69s",
+      "note": "提前数天（预告）｜ 耗时 0.67s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-25": {
       "n": 10,
-      "note": "提前数天（预告）｜ 耗时 0.68s",
+      "note": "提前数天（预告）｜ 耗时 0.57s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.78s",
+      "note": "耗时 0.69s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 3.35s",
+      "note": "耗时 0.88s",
       "ok": true
     }
   }

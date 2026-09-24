@@ -342,6 +342,10 @@ def _project_decision(base, qty=5000.0, miss_bp=None, urgent=False,
             "confidence": (i.get("report") or {}).get("confidence"),
             "evidence": (i.get("report") or {}).get("evidence") or [],
             "sources": (i.get("report") or {}).get("sources") or [],
+            # 结论段分两份：页面只显示 `note_plain`（人话），`trace` 折进「技术细节」；
+            # `notes` 仍是**全文**（日志/审计照旧）。见 agent_team.analyst_news 的注释。
+            "note_plain": (i.get("report") or {}).get("note_plain"),
+            "trace": (i.get("report") or {}).get("trace") or [],
             "notes": (i.get("report") or {}).get("notes") or "",
             "valid": bool(i.get("valid")),
             "invalid_reason": i.get("invalid_reason") or "",

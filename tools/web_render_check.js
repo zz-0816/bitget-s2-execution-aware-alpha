@@ -268,6 +268,24 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     notes.push('分析师卡批注 ✓（第三方标注 + 严重度色条 + 折叠溯源都在；'
       + '不利标注 ' + (a.match(/tag veto/g) || []).length + ' 处）');
   }
+  // ---- 结论段**只说人话**，工程细节必须折进「技术细节」（2026-09-25 实拍反馈）----
+  //   判据只扫 `.a-notes`（结论段）本身：折叠的「证据来源」里**本来就该有**文件路径
+  //   （那是刻意的，见"溯源只折叠不删除"），整段扫 #analysts 会误报。
+  const noteTxt = (a.match(/<div class="a-notes[^"]*">[\s\S]*?<\/div>/g) || [])
+    .join(' ').replace(/<[^>]+>/g, ' ');
+  const LEAKS = [['data/', '文件路径'], ['sha256', 'prompt 指纹'],
+                 ['cache:', '缓存标记'], ['TTL', '缓存术语'],
+                 ['_hit', '内部标识（no_new_items_cache_hit 这类）']];
+  const leaked = LEAKS.filter((kv) => noteTxt.indexOf(kv[0]) >= 0).map((kv) => kv[1]);
+  if (leaked.length) {
+    problems.push('分析师结论段里露出了工程细节（' + leaked.join('、')
+      + '）—— 这些应折进「技术细节」，正文只留证据与结论');
+  }
+  if (!/技术细节/.test(a)) {
+    problems.push('分析师卡里没有「技术细节」折叠块（后端 `trace` 没渲染出来？）');
+  } else if (!leaked.length) {
+    notes.push('结论段只说人话 ✓（工程细节折进「技术细节」）');
+  }
   if (/不可用|暂不可用/.test(rendered.get('verdict') || '')) {
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }

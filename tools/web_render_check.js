@@ -254,6 +254,20 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   if ((a.match(/acard/g) || []).length < 5) {
     problems.push('分析师卡片少于 5 张（实际 ' + (a.match(/acard/g) || []).length + '）');
   }
+  // ---- 分析师卡的**批注**（按实拍反馈加的三类标注）----
+  //   它们是"读者能不能分清 实测 / 第三方 / 不利"的关键，坏了必须有人知道。
+  if (!/第三方/.test(a)) {
+    problems.push('分析师卡里没有「第三方」批注（`kind=third_party` 必须被标出来）');
+  }
+  if (!/v-unfavorable|v-favorable|v-neutral/.test(a)) {
+    problems.push('分析师卡没有严重度色条类（v-*）');
+  }
+  if (!/证据来源/.test(a)) {
+    problems.push('分析师卡里没有折叠的「证据来源」（溯源被删了？只许收起来）');
+  } else {
+    notes.push('分析师卡批注 ✓（第三方标注 + 严重度色条 + 折叠溯源都在；'
+      + '不利标注 ' + (a.match(/tag veto/g) || []).length + ' 处）');
+  }
   if (/不可用|暂不可用/.test(rendered.get('verdict') || '')) {
     problems.push('前端报"风险引擎不可用" —— 说明端点或字段对不上');
   }

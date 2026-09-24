@@ -2,14 +2,14 @@
   "base": "SOXL",
   "categories": {
     "earnings": 1,
-    "earnings_scheduled": 28,
-    "macro": 8,
-    "other": 39
+    "earnings_scheduled": 29,
+    "macro": 10,
+    "other": 37
   },
   "event_driven": {
     "first_run": false,
     "n_fresh": 0,
-    "n_total": 76,
+    "n_total": 77,
     "should_call_llm": false
   },
   "headlines_for_gate": [
@@ -21,10 +21,10 @@
     "[2026-09-24] DAVA 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] YRD 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] IH 预定于 2026-09-24 发布财报（time-not-supplied）",
+    "[2026-09-24] RAVE 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] EONR 预定于 2026-09-24 发布财报（time-not-supplied）",
     "[2026-09-24] CMMB 预定于 2026-09-24 发布财报（time-not-supplied）",
-    "[2026-09-24] ASTC 预定于 2026-09-24 发布财报（time-not-supplied）",
-    "[2026-09-24] ALAR 预定于 2026-09-24 发布财报（time-not-supplied）"
+    "[2026-09-24] ASTC 预定于 2026-09-24 发布财报（time-not-supplied）"
   ],
   "items": [
     {
@@ -121,6 +121,18 @@
       "symbol": "IH",
       "time": "time-not-supplied",
       "title": "IH 预定于 2026-09-24 发布财报（time-not-supplied）",
+      "url": "https://www.nasdaq.com/market-activity/earnings"
+    },
+    {
+      "category": "earnings_scheduled",
+      "date": "2026-09-24",
+      "eps_forecast": "",
+      "kind": "earnings_scheduled",
+      "relevance": 5,
+      "source": "nasdaq_calendar",
+      "symbol": "RAVE",
+      "time": "time-not-supplied",
+      "title": "RAVE 预定于 2026-09-24 发布财报（time-not-supplied）",
       "url": "https://www.nasdaq.com/market-activity/earnings"
     },
     {
@@ -816,7 +828,7 @@
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 15:14:45 GMT",
+      "date": "Thu, 24 Sep 2026 16:17:54 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
@@ -827,14 +839,25 @@
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 15:06:59 GMT",
+      "date": "Thu, 24 Sep 2026 16:27:29 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
       "source_name": "CNBC·财经",
       "summary": "District Judge Tim Kelly said the three outlets should have their access immediately restored from the ban the president had announced on Sept. 18.",
-      "title": "White House still blocks some reporters despite judge&apos;s order lifting Trump ban",
+      "title": "White House starts allowing blocked reporters in after judge lifts Trump ban",
       "url": "https://www.cnbc.com/2026/09/24/judge-lifts-trumps-white-house-ban-on-cnn-ms-now-and-politico.html"
+    },
+    {
+      "category": "macro",
+      "date": "Thu, 24 Sep 2026 15:40:19 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "Elevated Treasury yields will complicate both Federal Reserve policy and Treasury financing.",
+      "title": "Analysis: Higher Treasury yields deliver a reality check on a hot, inflation-prone economy",
+      "url": "https://www.cnbc.com/2026/09/24/treasury-yields-warsh-bessent-fed-national-debt-analysis.html"
     },
     {
       "category": "other",
@@ -849,6 +872,17 @@
     },
     {
       "category": "macro",
+      "date": "Thu, 24 Sep 2026 16:05:26 GMT",
+      "kind": "news",
+      "relevance": 0,
+      "source": "cnbc",
+      "source_name": "CNBC·财经",
+      "summary": "The tech giants surged to all-time highs this week, a surprising show of strength given that the group has floundered for much of this year.",
+      "title": "The &apos;Magnificent Seven&apos; is bucking the market trend. Why the jump in Treasury yields may be helping",
+      "url": "https://www.cnbc.com/2026/09/24/magnificent-seven-rallies-as-treasury-yields-rise.html"
+    },
+    {
+      "category": "macro",
       "date": "Thu, 24 Sep 2026 14:26:05 GMT",
       "kind": "news",
       "relevance": 0,
@@ -860,7 +894,7 @@
     },
     {
       "category": "other",
-      "date": "Thu, 24 Sep 2026 15:30:03 GMT",
+      "date": "Thu, 24 Sep 2026 16:26:47 GMT",
       "kind": "news",
       "relevance": 0,
       "source": "cnbc",
@@ -868,41 +902,19 @@
       "summary": "Trump greeted China's Xi at Joint Base Andrews, marking the U.S. president's first time traveling to the facility to welcome a foreign leader.",
       "title": "Trump, Xi to talk Taiwan, AI, trade and Iran as DC summit kicks off",
       "url": "https://www.cnbc.com/2026/09/24/trump-xi-meeting-china-washington.html"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 15:09:50 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Sometimes a company is perfectly positioned for a secular change. Josh Brown thinks this optical name is one of them.",
-      "title": "An optical stock has been on Josh Brown&apos;s list all year. The chart looks explosive",
-      "url": "https://www.cnbc.com/2026/09/24/an-optical-stock-has-been-on-josh-browns-list-all-year-the-chart-looks-explosive.html"
-    },
-    {
-      "category": "other",
-      "date": "Thu, 24 Sep 2026 15:35:55 GMT",
-      "kind": "news",
-      "relevance": 0,
-      "source": "cnbc",
-      "source_name": "CNBC·财经",
-      "summary": "Cox analysts said Ford and General Motors are seeing sales lag because they don't have many hybrid vehicles.",
-      "title": "Hyundai expected to outsell Ford in third quarter as Detroit automakers lack hybrids",
-      "url": "https://www.cnbc.com/2026/09/24/hyundai-set-to-outsell-ford-in-q3-as-detroit-automakers-lack-hybrids.html"
     }
   ],
   "latency_note": "本工具的下限 = 轮询间隔；采样器本身是 30~60 秒节奏，所以再快也没有观察意义",
-  "probed_at": "2026-09-24T15:43:17.387369+00:00",
+  "probed_at": "2026-09-24T16:27:37.871399+00:00",
   "sources": {
     "bea": {
       "n": 8,
-      "note": "耗时 2.84s",
+      "note": "耗时 3.33s",
       "ok": true
     },
     "cnbc": {
       "n": 8,
-      "note": "耗时 0.83s",
+      "note": "耗时 0.81s",
       "ok": true
     },
     "edgar": {
@@ -912,32 +924,32 @@
     },
     "fed_all": {
       "n": 8,
-      "note": "耗时 2.00s",
+      "note": "耗时 0.62s",
       "ok": true
     },
     "fed_monetary": {
       "n": 8,
-      "note": "耗时 0.67s",
+      "note": "耗时 0.57s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-24": {
-      "n": 18,
-      "note": "提前数天（预告）｜ 耗时 0.68s",
+      "n": 19,
+      "note": "提前数天（预告）｜ 耗时 0.72s",
       "ok": true
     },
     "nasdaq_calendar_2026-09-25": {
       "n": 10,
-      "note": "提前数天（预告）｜ 耗时 0.63s",
+      "note": "提前数天（预告）｜ 耗时 0.70s",
       "ok": true
     },
     "sec_press": {
       "n": 8,
-      "note": "耗时 0.74s",
+      "note": "耗时 0.71s",
       "ok": true
     },
     "yahoo": {
       "n": 8,
-      "note": "耗时 4.15s",
+      "note": "耗时 1.56s",
       "ok": true
     }
   }

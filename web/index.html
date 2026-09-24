@@ -98,6 +98,15 @@
             <span class="hint">互不读对方结论；<b>没有引用已实测的量的结论一律作废</b></span>
           </h2>
           <div class="analysts" id="analysts"><div class="loading">尚未运行</div></div>
+          <!-- 批注图例：标签的含义必须写在页面上，否则"第三方/不利"就成了暗号。
+               卡片左侧色条同理，这里一并说清。 -->
+          <div class="ev-legend" id="ev-legend">
+            <span class="tag agent">第三方</span>别人的数据或判断，<b>不是</b>本项目的实测量 ·
+            <span class="tag">派生</span>本仓库从实测量派生的数 ·
+            <span class="tag caution">约定值</span>按约定取值、非实测 ·
+            <span class="tag veto">不利</span>该卡片判为不利时，数值为负的那几行 ·
+            卡片左侧色条：<span class="neg">红 = 不利</span> / <span class="pos">绿 = 有利</span> / <span class="mono-dim">黄 = 中性</span>
+          </div>
         </section>
 
         <section class="panel detail-panel" id="p-debate" role="tabpanel" aria-label="多空辩论" hidden>

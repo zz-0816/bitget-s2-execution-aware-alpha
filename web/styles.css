@@ -541,23 +541,44 @@ select option { background: var(--surface-2); color: var(--text); }
   to   { opacity: 1; transform: none; }
 }
 
-/* ============================== 10. 分析师卡 ============================== */
-.analysts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-3); }
+/* ============================== 10. 分析师卡 ==============================
+   ⚠️ 布局取舍（按实拍反馈改的）：原来 minmax(240px) → 1440 宽下挤成 5 列，
+   每张卡又窄又高（证据一条一行竖排），字号只能压到 fs-11 才塞得下。
+   现在：**每行两列**（卡变宽）＋**证据区内部两列**（高度约减半）＋字号提到 fs-12。
+   变宽之后那行结论（notes）也从四五条 wraps 降到两三条，整块高度显著下降。 */
+.analysts { display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: var(--sp-3); }
 .acard {
   background: var(--surface-2); border: 1px solid var(--line-subtle);
   border-radius: var(--r-sm); padding: var(--sp-3);
+  /* 左侧色条 = 卡片的**严重度批注**（不利红 / 有利绿 / 中性黄），一眼能扫 */
+  border-left: 3px solid var(--line);
   transition: border-color var(--dur-2) var(--ease-out-2),
               transform var(--dur-2) var(--ease-out-2);
 }
 .acard:hover { border-color: var(--line); transform: translateY(-1px); }
+.acard.v-unfavorable { border-left-color: var(--danger); }
+.acard.v-favorable   { border-left-color: var(--ok); }
+.acard.v-neutral     { border-left-color: var(--warn); }
 .acard.invalid { opacity: .6; border-style: dashed; }
 .acard .a-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-1); }
 .acard .a-dim  { font-weight: var(--fw-semi); font-size: var(--fs-13); }
 .acard .a-conf { font-size: var(--fs-11); color: var(--text-faint); }
-.acard .a-notes { font-size: var(--fs-12); color: var(--text-dim); margin-top: var(--sp-2); }
-.acard .a-ev { margin-top: var(--sp-2); border-top: 1px dashed var(--line-subtle); padding-top: var(--sp-2); }
-.acard .a-ev div { font-size: var(--fs-11); color: var(--s11); line-height: 1.6; }
+/* 「重点」批注：分析师的结论句用左侧竖线框出来（比证据高一级、也更亮） */
+.acard .a-notes {
+  font-size: var(--fs-12); color: var(--text); margin-top: var(--sp-2);
+  border-left: 2px solid var(--accent-line); padding-left: var(--sp-2);
+}
+.acard .a-ev {
+  margin-top: var(--sp-2); border-top: 1px dashed var(--line-subtle); padding-top: var(--sp-2);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--sp-3);
+}
+.acard .a-ev div { font-size: var(--fs-12); color: var(--s11); line-height: 1.55; }
+/* 行级「不利」批注：卡片判为不利时，负向读数整行标红（符号本身就是事实，不靠猜） */
+.acard .a-ev div.ev-neg { color: var(--danger); }
 .acard .a-src { margin-top: var(--sp-2); }
+
+/* 批注图例：标签的含义必须写在页面上，否则"第三方/不利"成了暗号 */
+.ev-legend { font-size: var(--fs-11); color: var(--text-faint); margin-top: var(--sp-1); line-height: 1.9; }
 
 /* 证据来源：默认折叠成一行"备注"，点开才列出 指标 → 文件。
    为什么收起来：一张卡上十来个指标各挂一条路径，既占版面又没人看；

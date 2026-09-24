@@ -439,17 +439,29 @@ function renderFinalPlan(d) {
 
 function renderAnalysts(d) {
   const list = d.analysts || [];
+  // ⭐ 来源类别必须留在行上：`third_party` 是**别人的数据/判断**，不是我们量出来的 ——
+  //    不标出来，读者会把分析师目标价当成本项目的实测。类别来自后端 `kind` 字段。
+  //    🔴 这里的类名一律写成**完整字面量**（不拼接），这样设计检查能静态看到；
+  //       拼出来的类名会掉进"JS 用了、CSS 没定义"的假警报里。
+  const KIND_TAG = { third_party: '第三方', declared: '约定值', derived: '派生' };
+  const KIND_CLS = { third_party: 'tag agent', declared: 'tag caution', derived: 'tag' };
+  // 卡片级严重度（左侧色条）：不利红 / 有利绿 / 中性黄
+  const VERDICT_CLS = { unfavorable: 'v-unfavorable', favorable: 'v-favorable',
+                        neutral: 'v-neutral' };
   $('analysts').innerHTML = list.map((a) => {
-    // 证据行只留"指标 = 值"。原来每行尾巴都挂一个文件路径（← data/…），
-    // 十来个指标就是十来个路径，卡片被撑得很长，读者也不看。
-    // ⭐ 但**来源类别**必须留在行上：`third_party` 是**别人的数据/判断**，
-    //    不是我们量出来的 —— 不标出来，读者会把分析师目标价当成我们的实测。
-    const KIND_TAG = { third_party: '第三方', declared: '约定值', derived: '派生' };
+    const unfav = String(a.verdict) === 'unfavorable';
     const ev = (a.evidence || []).map((e) => {
       const t = KIND_TAG[e.kind];
-      return '<div>· ' + mdInline(e.metric) + ' = <b>' + mdInline(e.value) + '</b>' +
-        (t ? ' <span class="tag ' + (e.kind === 'third_party' ? 'agent' : '') + '">' +
-             esc(t) + '</span>' : '') + '</div>';
+      const kc = KIND_CLS[e.kind];
+      // 「不利」批注 = 卡片已判不利 且 该行数值是负的（值以 - 或 − 开头）。
+      // 不猜语义：负号本身就是事实，且只在卡片确实不利时才标，
+      // 免得读者把普通的负数当成"这条证据有问题"。
+      const neg = unfav && /^\s*[-\u2212]/.test(String(e.value || ''));
+      return '<div' + (neg ? ' class="ev-neg"' : '') + '>' +
+        (neg ? '<span class="tag veto">不利</span> ' : '') +
+        mdInline(e.metric) + ' = <b>' + mdInline(e.value) + '</b>' +
+        (t ? ' <span class="' + esc(kc) + '">' + esc(t) + '</span>' : '') +
+        '</div>';
     }).join('');
     /* 溯源没有删，只是**收起来**：默认折叠，点开才逐条列出"指标 ← 文件"。
        项目原则是"页面上每个数字都能点回数据文件"，所以不能拿掉，
@@ -472,7 +484,8 @@ function renderAnalysts(d) {
       ? '<details class="a-src"><summary>证据来源（' + pairs.length + ' 条）</summary>' +
         '<div class="a-src-list">' + pairs.join('') + '</div></details>'
       : '';
-    return '<div class="acard' + (a.valid ? '' : ' invalid') + '">' +
+    return '<div class="acard ' + esc(VERDICT_CLS[a.verdict] || 'v-neutral') +
+        (a.valid ? '' : ' invalid') + '">' +
       '<div class="a-head"><span class="a-dim">' + esc(a.dimension) + '</span>' +
       '<span class="a-conf">置信度 ' + fmt(a.confidence, 2) + '</span></div>' +
       '<div><span class="badge ' + esc(a.verdict) + '">' + esc(a.verdict) + '</span>' +

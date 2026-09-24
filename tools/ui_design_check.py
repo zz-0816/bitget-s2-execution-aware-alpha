@@ -162,7 +162,11 @@ def run(strict=False):
            "stand_down", "favorable", "unfavorable", "neutral", "veto", "agent",
            "bull", "bear", "info", "best", "on", "err", "active", "invalid",
            "hit", "agent-rule", "pos", "neg", "r-line", "r-warn", "r-cell",
-           "basis-asof", "num", "skip-link", "flash-up", "flash-down", "skeleton"}
+           "basis-asof", "num", "skip-link", "flash-up", "flash-down", "skeleton",
+           # 分析师卡片的严重度色条与行级批注：类名来自 JS 里的映射对象
+           # （VERDICT_CLS[verdict] / KIND_CLS[kind] —— 完整字面量，但不写在 class=" 里），
+           # 静态扫描看不到调用点。这正是白名单存在的理由。
+           "v-unfavorable", "v-favorable", "v-neutral", "ev-neg", "ev-legend"}
     missing = sorted(c for c in used if c not in in_css and c not in DYN)
     unused = sorted(c for c in in_css
                     if c not in used and c not in ALLOW_UNUSED and c not in DYN)

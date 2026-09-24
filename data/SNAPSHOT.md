@@ -1,8 +1,8 @@
 # 项目二数据快照（只读引用项目一的采样结果）
 
-- 清单生成：**2026-09-24 15:43 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
+- 清单生成：**2026-09-24 16:24 UTC**（本文件由 `tools/snapshot_manifest.py` 生成，可 `--verify` 就地核验）
 - 上游导出脚本：`tools/export_p2_snapshot.py`（**项目一仓库内**，可重跑）
-- 合计：**85.8 MB**，41 项（其中冻结快照 22 项）
+- 合计：**89.2 MB**，44 项（其中冻结快照 25 项）
 
 ## ⚠️ 四条必须知道的边界
 
@@ -64,7 +64,9 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 | `data/spread/2026-09-20.csv` | 复制 | 1,645,078 | 12,390 | `8076414ca3adbb43` | 点差/中间价：定挂单价位与 route 对照 | - |
 | `data/spread/2026-09-21.csv` | 复制 | 3,566,093 | 26,875 | `82e357d4d2e9b752` | 点差/中间价：定挂单价位与 route 对照 | - |
 | `data/spread/2026-09-22.csv` | 复制 | 3,690,783 | 27,455 | `ebbcf1a6f85c0b94` | 点差/中间价：定挂单价位与 route 对照 | - |
+| `data/spread/2026-09-23.csv` | 复制 | 2,556,839 | 19,024 | `8aa87aab699dfbf2` | 点差/中间价：定挂单价位与 route 对照 | - |
 | `data/spread/orderbook-2026-09-19.csv` | **尾段截断**（保留最后 400 轮） | 7,295,377 | 66,730 | `af434742857325cb` | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） | - |
+| `data/spread/orderbook-2026-09-23.csv` | **尾段截断**（保留最后 400 轮） | 8,266,788 | 75,560 | `c99996a296abb10d` | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） | - |
 | `data/spread/sentiment-2026-09-18.csv` | 复制 | 233 | 1 | `523fd25639f79e2b` | 情绪采样：OI 与资金费率的实测值 | python tools/sentiment_sampler.py |
 | `data/spread/trades-2026-09-12.csv` | 复制（全量） | 2,207,160 | 19,296 | `e253962ffe3d39e9` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
 | `data/spread/trades-2026-09-13.csv` | 复制（全量） | 7,724,867 | 67,515 | `b871fa89e1736880` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
@@ -73,6 +75,7 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 | `data/spread/trades-2026-09-20.csv` | 现货全量（4206 笔）+ 永续尾部 2 万行 | 2,788,404 | 24,206 | `37950ea3bff6ed0d` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
 | `data/spread/trades-2026-09-21.csv` | 现货全量（2946 笔）+ 永续尾部 2 万行 | 2,634,360 | 22,946 | `2f9cc7516bb25f05` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
 | `data/spread/trades-2026-09-22.csv` | 现货全量（**该日 0 笔**）+ 永续尾部 2 万行 | 2,285,930 | 20,000 | `76bc782ab2924643` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
+| `data/spread/trades-2026-09-23.csv` | 复制 | 2,283,917 | 20,000 | `7f59bd502597e28c` | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** | - |
 
 ### ② 本仓库派生物 —— 哈希与上游那张表**本就不该一致**，核验方式是『能重建』
 
@@ -92,14 +95,14 @@ python tools/snapshot_manifest.py --verify    # 冻结项不一致 -> 退出码 
 
 | 路径 | 处理 | 字节 | 行数 | SHA256(16) | 用途 | 重建/写入者 |
 |---|---|---|---|---|---|---|
-| `data/derived/event_driven_state.json` | 本项目生成 | 12,175 | 0 | `4e2e531c77e26ffb` （参考值，运行期会变） | 事件驱动闸门的判定缓存（复用上次 LLM 判断 + TTL） | python project2/event_gate.py --selftest |
-| `data/derived/news_latest.json` | 运行期写入 | 41,491 | 0 | `d4afb57dd610a4e4` （参考值，运行期会变） | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
-| `data/derived/news_state.json` | 运行期写入 | 246,676 | 0 | `db6e5f935396ce20` （参考值，运行期会变） | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
-| `data/spread/2026-09-23.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,556,839 | 19,024 | `8aa87aab699dfbf2` （参考值，运行期会变） | 点差/中间价：定挂单价位与 route 对照 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
-| `data/spread/2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 3,760,439 | 28,002 | `18537bb5ace25e47` （参考值，运行期会变） | 点差/中间价：定挂单价位与 route 对照 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
-| `data/spread/orderbook-2026-09-23.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 8,266,788 | 75,560 | `c99996a296abb10d` （参考值，运行期会变） | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
-| `data/spread/orderbook-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 8,266,593 | 75,700 | `99321b5e8ea1709d` （参考值，运行期会变） | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
-| `data/spread/sentiment-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,444 | 20 | `e47945e72c642d8a` （参考值，运行期会变） | 情绪采样：OI 与资金费率的实测值 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | python tools/sentiment_sampler.py |
-| `data/spread/trades-2026-09-23.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,283,917 | 20,000 | `7f59bd502597e28c` （参考值，运行期会变） | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
-| `data/spread/trades-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,282,035 | 20,000 | `ebda5a5987a6fcd0` （参考值，运行期会变） | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/derived/event_driven_state.json` | 本项目生成 | 7,320 | 0 | `238dc4e0c404d09e` （参考值，运行期会变） | 事件驱动闸门的判定缓存（复用上次 LLM 判断 + TTL） | python project2/event_gate.py --selftest |
+| `data/derived/news_latest.json` | 运行期写入 | 42,852 | 0 | `87f114d026cd32b8` （参考值，运行期会变） | 最近一次消息面抓取（事件闸门输入） | python tools/news_sources.py --base NVDA --save |
+| `data/derived/news_state.json` | 运行期写入 | 249,591 | 0 | `62807d36da326f36` （参考值，运行期会变） | **事件驱动**的已见清单（避免重复调 LLM） | python tools/news_sources.py --event-driven --save |
+| `data/spread/2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 3,827,535 | 28,501 | `39b7704063a5c132` （参考值，运行期会变） | 点差/中间价：定挂单价位与 route 对照 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/spread/2026-09-25.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 64,223 | 479 | `89e726b2d351ab44` （参考值，运行期会变） | 点差/中间价：定挂单价位与 route 对照 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/spread/orderbook-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 8,264,087 | 75,670 | `89d40189453f47d5` （参考值，运行期会变） | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/spread/orderbook-2026-09-25.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 991,424 | 9,080 | `051703e043b91be3` （参考值，运行期会变） | 5 档盘口：容量/深度/首档约束（原文单日 37 MB） ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/spread/sentiment-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 16,738 | 140 | `5aae9de17935637b` （参考值，运行期会变） | 情绪采样：OI 与资金费率的实测值 ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | python tools/sentiment_sampler.py |
+| `data/spread/trades-2026-09-24.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,281,879 | 20,000 | `17a01a74095f8efc` （参考值，运行期会变） | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
+| `data/spread/trades-2026-09-25.csv` | **滚动日**（持续同步刷新中，哈希仅参考） | 2,281,383 | 20,000 | `f2dce99848325e7a` （参考值，运行期会变） | 逐笔成交：成交率/逆向选择/联合分布，以及『最后一笔成交距今』（停牌判据）。⚠️ 截断规则见 TRADES_NOTE —— **现货行一条都不能丢** ｜ ⚠️ 最近两天的文件由 tools/sync_p1_samples.py 持续刷新 | - |
 
